@@ -23,6 +23,7 @@ This stack is designed for **home / lab use**:
 | Headers | CSP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy |
 | Rate limits | 10 req/s on `/`, 30 req/s on `/api/`; **5 req/min** on `/login` and `/setup` |
 | CSRF | Flask session tokens on all POST forms |
+| API | `/api/*` requires login when auth or internet mode; optional `GUI_API_TOKEN` Bearer |
 | Auth | Application login (`GUI_AUTH_ENABLED`) or nginx Basic Auth |
 | Admin guard | `/admin*` hidden when auth off unless `ADMIN_PUBLIC=true` |
 | TLS | Optional; HSTS when TLS enabled |
@@ -121,7 +122,7 @@ Mount in `compose.sidecar.yaml` (see example file comments).
 | Risk | Severity | Mitigation |
 |------|----------|------------|
 | GUI container runs nginx as root | Low (local) | Bind GUI to localhost |
-| API has no separate auth token | Medium | Enable `GUI_AUTH_ENABLED`; CSRF on writes |
+| API has no separate auth token | Medium | Enable `GUI_AUTH_ENABLED`; set `GUI_API_TOKEN` for Bearer access |
 | KMS protocol unencrypted on 1688 | Medium | Expected for KMS; limit exposure |
 | Password in env vars | Low | Docker secrets for production |
 | py-kms upstream trust | Low | Commit pinned in Dockerfile |

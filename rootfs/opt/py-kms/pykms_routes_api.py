@@ -3,14 +3,28 @@
 import csv
 import io
 
-from flask import Blueprint, Response, jsonify
+from flask import Blueprint, Response, jsonify, request
 
 import pykms_activation as activation
 import pykms_audit as audit
-import pykms_csrf as csrf
+import pykms_auth as auth
+from pykms_routes_auth import current_user
 from pykms_services import build_stats, env_check, load_clients, uptime_seconds
 
 api_bp = Blueprint('api', __name__)
+
+
+@api_bp.before_request
+def require_api_auth():
+    if request.path in ('/livez', '/readyz'):
+        return None
+    if not request.path.startswith('/api/'):
+        return None
+    if not auth.api_protection_enabled():
+        return None
+    if auth.verify_api_bearer() or current_user():
+        return None
+    return jsonify({'error': 'Unauthorized'}), 401
 
 
 @api_bp.route('/api/v1/stats')

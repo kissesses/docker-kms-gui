@@ -14,6 +14,32 @@ def is_enabled():
     return os.environ.get('GUI_AUTH_ENABLED', 'false').lower() in ('1', 'true', 'yes')
 
 
+def api_protection_enabled():
+    """Whether /api/* requires authentication."""
+    if os.environ.get('INTERNET_MODE', 'false').lower() in ('1', 'true', 'yes'):
+        return True
+    raw = os.environ.get('API_AUTH_REQUIRED')
+    if raw is not None and str(raw).strip() != '':
+        return str(raw).lower() in ('1', 'true', 'yes')
+    return is_enabled()
+
+
+def verify_api_bearer():
+    """Validate Authorization: Bearer token against GUI_API_TOKEN."""
+    import secrets
+    expected = os.environ.get('GUI_API_TOKEN', '').strip()
+    if not expected:
+        return False
+    from flask import request
+    header = request.headers.get('Authorization', '')
+    if not header.startswith('Bearer '):
+        return False
+    supplied = header[7:].strip()
+    if not supplied:
+        return False
+    return secrets.compare_digest(supplied, expected)
+
+
 def _connect():
     os.makedirs(os.path.dirname(AUTH_DB_PATH) or '.', exist_ok=True)
     con = sqlite3.connect(AUTH_DB_PATH)

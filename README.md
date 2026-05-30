@@ -336,7 +336,13 @@ Full list: [`.env.example`](.env.example)
 | `GET /livez` | Liveness probe |
 | `GET /readyz` | Readiness probe |
 
-When `GUI_AUTH_ENABLED=true`, all routes except `/livez`, `/readyz`, `/login`, `/setup` require a session.
+When `GUI_AUTH_ENABLED=true` or `INTERNET_MODE=true`, all `/api/*` routes require a logged-in session (401 JSON if missing). `/livez` and `/readyz` stay public.
+
+Optional automation token — set `GUI_API_TOKEN` in `.env` and pass header:
+
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" https://your-server/api/v1/stats
+```
 
 ---
 

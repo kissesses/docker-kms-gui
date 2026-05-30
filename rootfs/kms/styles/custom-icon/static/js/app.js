@@ -14,6 +14,10 @@ const PyKmsApp = (function() {
     return parts.join(' ');
   }
 
+  function fetchJson(url) {
+    return fetch(url, { credentials: 'same-origin' }).then(function(r) { return r.json(); });
+  }
+
   function showToast(message, type) {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -102,8 +106,7 @@ const PyKmsApp = (function() {
   }
 
   function refreshStats() {
-    return fetch('/api/v1/stats')
-      .then(function(r) { return r.json(); })
+    fetchJson('/api/v1/stats')
       .then(function(data) {
         if (data.error) {
           setServerStatus(false, 'Offline');
@@ -171,8 +174,7 @@ const PyKmsApp = (function() {
   function initActivationsLive() {
     initCommon();
     function refreshActivations() {
-      fetch('/api/v1/activations')
-        .then(function(r) { return r.json(); })
+      fetchJson('/api/v1/activations')
         .then(function(data) {
           if (!data.summary) return;
           document.querySelectorAll('[data-act-stat]').forEach(function(el) {

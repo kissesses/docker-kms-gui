@@ -81,6 +81,9 @@ def create_app():
         if path.startswith('/admin') and not auth.is_enabled() and not config.ADMIN_PUBLIC:
             return redirect(url_for('pages.dashboard'))
 
+        if path.startswith('/api/'):
+            return None
+
         if not auth.is_enabled():
             return None
         if path.startswith('/static/'):
