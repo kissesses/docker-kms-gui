@@ -2,6 +2,17 @@ const PyKmsApp = (function() {
   let refreshTimer = null;
   let shellReady = false;
   let statsTimer = null;
+  const REFRESH_KEY = 'pykms-auto-refresh';
+
+  function msg(key, params) {
+    let s = (window.PyKmsI18n || {})[key] || key;
+    if (params) {
+      Object.keys(params).forEach(function(k) {
+        s = s.replace('{' + k + '}', String(params[k]));
+      });
+    }
+    return s;
+  }
 
   function formatUptime(seconds) {
     const d = Math.floor(seconds / 86400);
@@ -141,10 +152,10 @@ const PyKmsApp = (function() {
     fetchJson('/api/v1/stats')
       .then(function(data) {
         if (data.error) {
-          setServerStatus(false, 'Offline');
+          setServerStatus(false, msg('status.offline'));
           return;
         }
-        setServerStatus(true, 'Online · ' + (data.count_clients || 0) + ' clients');
+        setServerStatus(true, msg('status.online', { n: data.count_clients || 0 }));
         document.querySelectorAll('[data-stat]').forEach(function(el) {
           const key = el.getAttribute('data-stat');
           if (data[key] !== undefined) el.textContent = data[key];
@@ -156,7 +167,7 @@ const PyKmsApp = (function() {
         updateDistBar(data);
         drawClientChart(data.chart_windows || 0, data.chart_office || 0);
       })
-      .catch(function() { setServerStatus(false, 'Unreachable'); });
+      .catch(function() { setServerStatus(false, msg('status.unreachable')); });
   }
 
   function startStatsPolling(intervalMs) {
@@ -258,7 +269,9 @@ const PyKmsApp = (function() {
     const counter = document.getElementById('client-filter-count');
     if (counter) {
       const total = document.querySelectorAll('.client-row').length;
-      counter.textContent = visible < total ? 'Showing ' + visible + ' of ' + total : '';
+      counter.textContent = visible < total
+        ? msg('clients.showing', { visible: visible, total: total })
+        : '';
     }
   }
 
@@ -314,7 +327,7 @@ const PyKmsApp = (function() {
         const appId = btn.dataset.appId;
         const machine = btn.dataset.machineName || 'Client';
         title.textContent = machine;
-        body.innerHTML = '<p class="panel-desc">Loading session…</p>';
+        body.innerHTML = '<p class="panel-desc">' + msg('modal.loading') + '</p>';
         modal.hidden = false;
         modal.setAttribute('aria-hidden', 'false');
         fetchJson('/api/v1/clients/' + encodeURIComponent(clientId) + '/' + encodeURIComponent(appId) + '/session')
@@ -327,7 +340,7 @@ const PyKmsApp = (function() {
             convertTimestamps();
           })
           .catch(function() {
-            body.innerHTML = '<div class="alert alert-error">Failed to load session</div>';
+            body.innerHTML = '<div class="alert alert-error">' + msg('modal.failed') + '</div>';
           });
       });
     });
@@ -340,9 +353,9 @@ const PyKmsApp = (function() {
       }).join('');
     }
     return ''
-      + '<section class="modal-section"><h3 class="panel-subtitle">Received from client</h3><dl class="info-list">' + rows(data.received_from_client) + '</dl></section>'
-      + '<section class="modal-section"><h3 class="panel-subtitle">Sent to client</h3><dl class="info-list">' + rows(data.sent_to_client) + '</dl></section>'
-      + '<section class="modal-section"><h3 class="panel-subtitle">Schedule</h3><dl class="info-list">' + rows(data.schedule) + '</dl></section>';
+      + '<section class="modal-section"><h3 class="panel-subtitle">' + msg('modal.received') + '</h3><dl class="info-list">' + rows(data.received_from_client) + '</dl></section>'
+      + '<section class="modal-section"><h3 class="panel-subtitle">' + msg('modal.sent') + '</h3><dl class="info-list">' + rows(data.sent_to_client) + '</dl></section>'
+      + '<section class="modal-section"><h3 class="panel-subtitle">' + msg('modal.schedule') + '</h3><dl class="info-list">' + rows(data.schedule) + '</dl></section>';
   }
 
   function initClientsTable() {
@@ -366,13 +379,20 @@ const PyKmsApp = (function() {
 
     const refreshSelect = document.getElementById('auto-refresh');
     if (refreshSelect) {
-      refreshSelect.addEventListener('change', function() {
+      const saved = localStorage.getItem(REFRESH_KEY);
+      if (saved !== null && refreshSelect.querySelector('option[value="' + saved + '"]')) {
+        refreshSelect.value = saved;
+      }
+      function applyRefresh() {
         if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
         const seconds = parseInt(refreshSelect.value, 10);
+        localStorage.setItem(REFRESH_KEY, refreshSelect.value);
         if (seconds > 0) {
           refreshTimer = setInterval(function() { window.location.reload(); }, seconds * 1000);
         }
-      });
+      }
+      refreshSelect.addEventListener('change', applyRefresh);
+      applyRefresh();
     }
   }
 
@@ -380,9 +400,9 @@ const PyKmsApp = (function() {
     const text = el.textContent.trim();
     navigator.clipboard.writeText(text).then(function() {
       el.classList.add('copied');
-      showToast('Copied to clipboard', 'success');
+      showToast(msg('toast.copied'), 'success');
       setTimeout(function() { el.classList.remove('copied'); }, 1200);
-    }).catch(function() { showToast('Copy failed', 'error'); });
+    }).catch(function() { showToast(msg('toast.copy_failed'), 'error'); });
   }
 
   function bindGvlkCopy(elements) {

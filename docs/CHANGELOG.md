@@ -9,6 +9,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.12.0] — 2026-05-30
+
+### Added
+
+- **i18n (RU/EN)** — full Russian translations for clients, admin, setup, dashboard, protocol UI and JS strings (`window.PyKmsI18n`)
+- **Auto-refresh persistence** — clients page interval saved in `localStorage` (`pykms-auto-refresh`)
+
+### Changed
+
+- **License** removed from top navigation (page still available at `/license`)
+
+### Fixed
+
+- Health badges and server-side notes use locale-aware `pykms_i18n` keys
+- i18n works outside Flask request context (tests, background tasks)
+
+---
+
 ## [1.11.0] — 2026-05-30
 
 ### Added

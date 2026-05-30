@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Activations · Admin · KMS-GUI{% endblock %}
+{% block title %}{{ t('admin.activations') }} · {{ t('admin.title') }} · KMS-GUI{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1 class="page-title">Administration</h1>
-            <p class="page-subtitle">Activation policy, renewal windows and client ↔ server binding</p>
+            <h1 class="page-title">{{ t('admin.title') }}</h1>
+            <p class="page-subtitle">{{ t('admin.subtitle_activations') }}</p>
         </div>
     </div>
 </div>
@@ -26,70 +26,70 @@
 
 <div class="stat-grid">
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Active clients</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('activations.active_clients') }}</span></div>
         <div class="stat-value" data-act-stat="total">{{ summary.total }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Activated</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('activations.activated') }}</span></div>
         <div class="stat-value" data-act-stat="activated">{{ summary.activated }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Healthy</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('activations.healthy') }}</span></div>
         <div class="stat-value" data-act-stat="healthy">{{ summary.healthy }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Need attention</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('activations.need_attention') }}</span></div>
         <div class="stat-value">{{ summary.due_soon + summary.overdue + summary.at_risk }}</div>
     </div>
 </div>
 
 <div class="panel-grid">
     <div class="panel">
-        <h2 class="panel-title">KMS server policy</h2>
-        <p class="panel-desc">Intervals sent to clients when they contact this KMS host (port {{ policy.port }}).</p>
+        <h2 class="panel-title">{{ t('activations.policy_title') }}</h2>
+        <p class="panel-desc">{{ t('activations.policy_desc').replace('{port}', policy.port|string) }}</p>
         <dl class="info-list">
             <div class="info-row">
-                <dt>Renewal interval</dt>
+                <dt>{{ t('activations.renewal_interval') }}</dt>
                 <dd>{{ policy.renewal_interval_fmt }} <span class="cell-meta">({{ policy.renewal_interval_minutes }} min)</span></dd>
             </div>
             <div class="info-row">
-                <dt>Activation retry</dt>
+                <dt>{{ t('activations.activation_retry') }}</dt>
                 <dd>{{ policy.activation_interval_fmt }} <span class="cell-meta">({{ policy.activation_interval_minutes }} min)</span></dd>
             </div>
             <div class="info-row">
-                <dt>Reported client count</dt>
+                <dt>{{ t('activations.reported_count') }}</dt>
                 <dd>{{ policy.client_count }}</dd>
             </div>
             <div class="info-row">
-                <dt>Windows threshold</dt>
+                <dt>{{ t('activations.windows_threshold') }}</dt>
                 <dd>
                     {% if policy.threshold_windows_met %}
-                    <span class="badge badge-ok">≥25 met</span>
+                    <span class="badge badge-ok">{{ t('activations.threshold_met_win') }}</span>
                     {% else %}
-                    <span class="badge badge-warn">&lt;25 — client OS may not activate</span>
+                    <span class="badge badge-warn">{{ t('activations.threshold_warn_win') }}</span>
                     {% endif %}
                 </dd>
             </div>
             <div class="info-row">
-                <dt>Office / Server threshold</dt>
+                <dt>{{ t('activations.office_threshold') }}</dt>
                 <dd>
                     {% if policy.threshold_office_met %}
-                    <span class="badge badge-ok">≥5 met</span>
+                    <span class="badge badge-ok">{{ t('activations.threshold_met_office') }}</span>
                     {% else %}
                     <span class="badge badge-warn">&lt;5</span>
                     {% endif %}
                 </dd>
             </div>
             <div class="info-row">
-                <dt>HWID mode</dt>
+                <dt>{{ t('activations.hwid_mode') }}</dt>
                 <dd class="mono">{{ policy.hwid }}</dd>
             </div>
             <div class="info-row">
-                <dt>KMS validity</dt>
-                <dd>{{ policy.licensing_validity_days }} days per activation cycle</dd>
+                <dt>{{ t('activations.kms_validity') }}</dt>
+                <dd>{{ t('activations.validity_days').replace('{n}', policy.licensing_validity_days|string) }}</dd>
             </div>
             <div class="info-row">
-                <dt>Policy source</dt>
+                <dt>{{ t('activations.policy_source') }}</dt>
                 <dd>{{ policy.updated_at_fmt }}</dd>
             </div>
         </dl>
@@ -104,41 +104,41 @@
         {% endif %}
         {% endif %}
         <div class="panel-divider"></div>
-        <h3 class="panel-subtitle">Edit policy</h3>
+        <h3 class="panel-subtitle">{{ t('activations.edit_policy') }}</h3>
         <form method="post" class="auth-form auth-form-inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="action" value="save_policy">
-            <label class="form-label" for="client_count">Client count</label>
+            <label class="form-label" for="client_count">{{ t('activations.client_count') }}</label>
             <input class="input form-input" type="number" id="client_count" name="client_count" min="1" max="9999" value="{{ policy.client_count }}" required>
-            <label class="form-label" for="activation_interval_minutes">Activation retry (min)</label>
+            <label class="form-label" for="activation_interval_minutes">{{ t('activations.activation_min') }}</label>
             <input class="input form-input" type="number" id="activation_interval_minutes" name="activation_interval_minutes" min="15" max="43200" value="{{ policy.activation_interval_minutes }}" required>
-            <label class="form-label" for="renewal_interval_minutes">Renewal interval (min)</label>
+            <label class="form-label" for="renewal_interval_minutes">{{ t('activations.renewal_min') }}</label>
             <input class="input form-input" type="number" id="renewal_interval_minutes" name="renewal_interval_minutes" min="15" max="43200" value="{{ policy.renewal_interval_minutes }}" required>
             <label class="form-label" for="hwid">HWID</label>
             <input class="input form-input" type="text" id="hwid" name="hwid" value="{{ policy.hwid }}">
-            <button type="submit" class="btn btn-primary">Save policy</button>
+            <button type="submit" class="btn btn-primary">{{ t('activations.save_policy') }}</button>
         </form>
     </div>
 
     <div class="panel">
-        <h2 class="panel-title">How it works</h2>
+        <h2 class="panel-title">{{ t('activations.how_title') }}</h2>
         <ul class="admin-list">
-            <li><strong>Client ↔ Server</strong> — each machine binds to this KMS via EPID and machine ID stored in the database.</li>
-            <li><strong>Renewal</strong> — activated clients re-contact the server about every {{ policy.renewal_interval_fmt }}.</li>
-            <li><strong>Activation retry</strong> — if activation fails, clients retry every {{ policy.activation_interval_fmt }}.</li>
-            <li><strong>Grace</strong> — “Notifications Mode” means activation is pending; Windows runs in notification grace.</li>
-            <li>Changing intervals requires updating KMS container env and restarting the <code>kms</code> service.</li>
+            <li>{{ t('activations.how1') }}</li>
+            <li>{{ t('activations.how2').replace('{interval}', policy.renewal_interval_fmt) }}</li>
+            <li>{{ t('activations.how3').replace('{interval}', policy.activation_interval_fmt) }}</li>
+            <li>{{ t('activations.how4') }}</li>
+            <li>{{ t('activations.how5') }}</li>
         </ul>
         <div class="quick-grid">
-            <a href="/clients" class="quick-link">All clients</a>
-            <a href="/api/v1/activations" class="quick-link">API JSON</a>
-            <a href="/admin" class="quick-link">Account</a>
+            <a href="/clients" class="quick-link">{{ t('activations.all_clients') }}</a>
+            <a href="/api/v1/activations" class="quick-link">{{ t('activations.api_json') }}</a>
+            <a href="/admin" class="quick-link">{{ t('admin.account') }}</a>
         </div>
     </div>
 </div>
 
-<h2 class="section-title">Client activation bindings</h2>
-<p class="section-desc">Per-machine status, last contact, next expected renewal and license horizon.</p>
+<h2 class="section-title">{{ t('activations.bindings_title') }}</h2>
+<p class="section-desc">{{ t('activations.bindings_desc') }}</p>
 
 {% if overview.clients %}
 <div class="card-grid activation-grid">
@@ -154,14 +154,14 @@
             </div>
             <div class="entity-card-heading">
                 <h3 class="entity-card-title">{{ client.binding_label }}</h3>
-                <p class="entity-card-subtitle">{{ client.machineIp or 'Unknown IP' }}</p>
+                <p class="entity-card-subtitle">{{ client.machineIp or t('common.unknown_ip') }}</p>
             </div>
             <span class="badge health-{{ client.health }}">{{ client.health_note }}</span>
         </header>
 
         <div class="binding-flow" aria-label="Client to KMS binding">
             <div class="binding-node">
-                <span class="binding-node-label">Client</span>
+                <span class="binding-node-label">{{ t('common.client') }}</span>
                 <code class="detail-mono">{% if client.clientMachineId|length > 20 %}{{ client.clientMachineId[:20] }}…{% else %}{{ client.clientMachineId }}{% endif %}</code>
             </div>
             <div class="binding-arrow" aria-hidden="true">↔</div>
@@ -173,10 +173,10 @@
 
         <dl class="detail-list">
             <div class="detail-row">
-                <dt>License</dt>
+                <dt>{{ t('activations.license') }}</dt>
                 <dd>
                     <span class="badge {% if client.licenseStatus == 'Activated' %}badge-ok{% else %}badge-warn{% endif %}">
-                        {{ client.licenseStatus }}
+                        {% if client.licenseStatus == 'Activated' %}{{ t('clients.status_activated') }}{% elif client.licenseStatus == 'Notifications Mode' %}{{ t('clients.status_notify') }}{% else %}{{ client.licenseStatus }}{% endif %}
                     </span>
                 </dd>
             </div>
@@ -185,28 +185,28 @@
                 <dd><code class="detail-mono">{{ client.binding_epid }}</code></dd>
             </div>
             <div class="detail-row">
-                <dt>Last contact</dt>
-                <dd>{{ client.last_seen_fmt }} <span class="cell-meta">({{ client.since_contact_fmt }} ago)</span></dd>
+                <dt>{{ t('activations.last_contact') }}</dt>
+                <dd>{{ client.last_seen_fmt }} <span class="cell-meta">({{ client.since_contact_fmt }} {{ t('common.ago') }})</span></dd>
             </div>
             <div class="detail-row">
-                <dt>Next renewal</dt>
+                <dt>{{ t('activations.next_renewal') }}</dt>
                 <dd>{{ client.next_renewal_fmt }}</dd>
             </div>
             <div class="detail-row">
-                <dt>Horizon</dt>
-                <dd>{{ client.license_horizon_fmt }} <span class="cell-meta">(~{{ policy.licensing_validity_days }}d cycle)</span></dd>
+                <dt>{{ t('activations.horizon') }}</dt>
+                <dd>{{ client.license_horizon_fmt }} <span class="cell-meta">{{ t('activations.cycle_days').replace('{n}', policy.licensing_validity_days|string) }}</span></dd>
             </div>
             <div class="detail-row">
-                <dt>Requests</dt>
+                <dt>{{ t('clients.requests') }}</dt>
                 <dd>{{ client.requestCount }}</dd>
             </div>
         </dl>
-        <form method="post" class="inline-delete-form" onsubmit="return confirm('Remove this client from the database?');">
+        <form method="post" class="inline-delete-form" onsubmit="return confirm('{{ t('activations.delete_confirm') }}');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="action" value="delete_client">
             <input type="hidden" name="client_machine_id" value="{{ client.clientMachineId }}">
             <input type="hidden" name="application_id" value="{{ client.applicationId }}">
-            <button type="submit" class="btn btn-danger-sm">Remove client</button>
+            <button type="submit" class="btn btn-danger-sm">{{ t('activations.remove_client') }}</button>
         </form>
     </article>
     {% endfor %}
@@ -216,8 +216,8 @@
     <div class="empty-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     </div>
-    <h3 class="empty-title">No activation data yet</h3>
-    <p class="empty-text">When clients connect to KMS, their binding and renewal schedule appears here.</p>
+    <h3 class="empty-title">{{ t('activations.empty_title') }}</h3>
+    <p class="empty-text">{{ t('activations.empty_text') }}</p>
 </div>
 {% endif %}
 {% endblock %}

@@ -29,11 +29,11 @@
         <div class="stat-value" data-stat="count_clients">{{ stats.count_clients if stats else '—' }}</div>
     </div>
     <div class="stat-card glass-card">
-        <div class="stat-card-head"><span class="stat-label">Windows</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('common.windows') }}</span></div>
         <div class="stat-value" data-stat="count_clients_windows">{{ stats.count_clients_windows if stats else '—' }}</div>
     </div>
     <div class="stat-card glass-card">
-        <div class="stat-card-head"><span class="stat-label">Office</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('common.office') }}</span></div>
         <div class="stat-value" data-stat="count_clients_office">{{ stats.count_clients_office if stats else '—' }}</div>
     </div>
     <div class="stat-card glass-card">
@@ -46,16 +46,16 @@
     <div class="glass-card panel">
         <h2 class="panel-title">{{ t('dashboard.server_status') }}</h2>
         <dl class="info-list">
-            <div class="info-row"><dt>Uptime</dt><dd id="stat-uptime" class="mono">{{ stats.uptime_seconds if stats else 0 }}s</dd></div>
-            <div class="info-row"><dt>Version</dt><dd>{{ stats.version if stats and stats.version else 'N/A' }}</dd></div>
+            <div class="info-row"><dt>{{ t('dashboard.uptime') }}</dt><dd id="stat-uptime" class="mono">{{ stats.uptime_seconds if stats else 0 }}s</dd></div>
+            <div class="info-row"><dt>{{ t('dashboard.version') }}</dt><dd>{{ stats.version if stats and stats.version else t('common.na') }}</dd></div>
             {% if protocol_overview %}
-            <div class="info-row"><dt>KMS port</dt><dd class="mono">:{{ protocol_overview.transport.port }}</dd></div>
+            <div class="info-row"><dt>{{ t('dashboard.kms_port') }}</dt><dd class="mono">:{{ protocol_overview.transport.port }}</dd></div>
             <div class="info-row"><dt>{{ t('protocol.renewal') }}</dt><dd>{{ protocol_overview.policy.renewal_interval_fmt }}</dd></div>
             {% endif %}
         </dl>
         {% if total > 0 %}
         <div class="panel-divider"></div>
-        <canvas id="client-chart" width="320" height="160" aria-label="Client distribution chart"></canvas>
+        <canvas id="client-chart" width="320" height="160" aria-label="{{ t('dashboard.chart_label') }}"></canvas>
         <div class="dist-bar" id="dist-bar">
             <div class="dist-segment win" id="dist-win" style="width: {{ win_pct }}%"></div>
             <div class="dist-segment office" id="dist-office" style="width: {{ office_pct }}%"></div>

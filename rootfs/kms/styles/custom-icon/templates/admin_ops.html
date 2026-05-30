@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Operations · Admin · KMS-GUI{% endblock %}
+{% block title %}{{ t('admin.ops') }} · {{ t('admin.title') }} · KMS-GUI{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1 class="page-title">Administration</h1>
+            <h1 class="page-title">{{ t('admin.title') }}</h1>
             <p class="page-subtitle">{{ t('ops.subtitle') }}</p>
         </div>
     </div>
@@ -27,17 +27,17 @@
         <p class="panel-desc">{{ t('ops.kms_desc') }}</p>
         <dl class="info-list">
             <div class="info-row">
-                <dt>Docker ops</dt>
-                <dd>{% if ops_status.docker_enabled %}<span class="badge badge-ok">Enabled</span>{% else %}<span class="badge badge-warn">Disabled</span>{% endif %}</dd>
+                <dt>{{ t('ops.docker_ops') }}</dt>
+                <dd>{% if ops_status.docker_enabled %}<span class="badge badge-ok">{{ t('common.enabled') }}</span>{% else %}<span class="badge badge-warn">{{ t('common.disabled') }}</span>{% endif %}</dd>
             </div>
             {% if ops_status.kms_container %}
             <div class="info-row">
-                <dt>Container</dt>
+                <dt>{{ t('ops.container') }}</dt>
                 <dd class="mono">{{ ops_status.kms_container }}</dd>
             </div>
             <div class="info-row">
-                <dt>Status</dt>
-                <dd>{% if ops_status.kms_running %}<span class="badge badge-ok">Running</span>{% else %}<span class="badge badge-warn">Stopped</span>{% endif %}</dd>
+                <dt>{{ t('ops.status') }}</dt>
+                <dd>{% if ops_status.kms_running %}<span class="badge badge-ok">{{ t('ops.running') }}</span>{% else %}<span class="badge badge-warn">{{ t('ops.stopped') }}</span>{% endif %}</dd>
             </div>
             {% endif %}
         </dl>
@@ -57,7 +57,7 @@
         <p class="panel-desc">{{ t('ops.backup_desc') }}</p>
         <ul class="admin-list">
             {% for item in backup_files %}
-            <li><code>{{ item.name }}</code> — {% if item.exists %}{{ item.size }} bytes{% else %}<em>missing</em>{% endif %}</li>
+            <li><code>{{ item.name }}</code> — {% if item.exists %}{{ item.size }} {{ t('ops.bytes') }}{% else %}<em>{{ t('ops.missing') }}</em>{% endif %}</li>
             {% endfor %}
         </ul>
         <div class="quick-grid">
@@ -82,9 +82,9 @@
             <p class="panel-desc">{{ t('ops.webhook_desc') }}</p>
         </div>
         {% if ops_status.webhook_configured %}
-        <span class="badge badge-ok">Configured</span>
+        <span class="badge badge-ok">{{ t('ops.configured') }}</span>
         {% else %}
-        <span class="badge badge-neutral">Not set</span>
+        <span class="badge badge-neutral">{{ t('ops.not_set') }}</span>
         {% endif %}
     </div>
     <pre class="mono panel-code panel-code-sm">WEBHOOK_URL=https://example.com/hook
@@ -99,39 +99,39 @@ WEBHOOK_INTERVAL=60</pre>
             <h2 class="panel-title">{{ t('ops.diagnostics_title') }}</h2>
             <p class="panel-desc">{{ t('ops.diagnostics_desc') }}</p>
         </div>
-        <a href="/api/v1/diagnostics" class="btn btn-ghost btn-sm">API JSON</a>
+        <a href="/api/v1/diagnostics" class="btn btn-ghost btn-sm">{{ t('ops.api_json') }}</a>
     </div>
 
     {% if diagnostics %}
     <div class="diag-stat-grid">
         <div class="diag-stat">
-            <span class="diag-stat-label">Uptime</span>
+            <span class="diag-stat-label">{{ t('dashboard.uptime') }}</span>
             <span class="diag-stat-value mono">{{ diagnostics.uptime_seconds }}s</span>
         </div>
         {% if diagnostics.memory.available %}
         <div class="diag-stat">
-            <span class="diag-stat-label">RAM free</span>
+            <span class="diag-stat-label">{{ t('ops.ram_free') }}</span>
             <span class="diag-stat-value mono">{{ diagnostics.memory.available_mb }}<span class="diag-stat-unit"> MB</span></span>
         </div>
         {% endif %}
         <div class="diag-stat{% if diagnostics.restart_events > 0 %} diag-stat-warn{% endif %}">
-            <span class="diag-stat-label">Restarts</span>
+            <span class="diag-stat-label">{{ t('ops.restarts') }}</span>
             <span class="diag-stat-value mono">{{ diagnostics.restart_events }}</span>
         </div>
         <div class="diag-stat{% if diagnostics.worker_timeout_events > 0 %} diag-stat-warn{% endif %}">
-            <span class="diag-stat-label">Worker timeouts</span>
+            <span class="diag-stat-label">{{ t('ops.worker_timeouts') }}</span>
             <span class="diag-stat-value mono">{{ diagnostics.worker_timeout_events }}</span>
         </div>
     </div>
 
     <div class="diag-details">
-        <div class="diag-detail"><span class="diag-detail-label">Process RSS</span><span class="diag-detail-value mono">{{ diagnostics.process_rss_mb or 'n/a' }} MB</span></div>
-        <div class="diag-detail"><span class="diag-detail-label">Gunicorn workers</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.workers }}</span></div>
-        <div class="diag-detail"><span class="diag-detail-label">Threads</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.threads }}</span></div>
-        <div class="diag-detail"><span class="diag-detail-label">Timeout</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.timeout }}s</span></div>
-        <div class="diag-detail"><span class="diag-detail-label">Preload</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.preload }}</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">{{ t('ops.process_rss') }}</span><span class="diag-detail-value mono">{{ diagnostics.process_rss_mb or 'n/a' }} MB</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">{{ t('ops.gunicorn_workers') }}</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.workers }}</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">{{ t('ops.threads') }}</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.threads }}</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">{{ t('ops.timeout') }}</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.timeout }}s</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">{{ t('ops.preload') }}</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.preload }}</span></div>
         {% if diagnostics.memory.available %}
-        <div class="diag-detail"><span class="diag-detail-label">RAM total</span><span class="diag-detail-value mono">{{ diagnostics.memory.total_mb }} MB</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">{{ t('ops.ram_total') }}</span><span class="diag-detail-value mono">{{ diagnostics.memory.total_mb }} MB</span></div>
         {% endif %}
     </div>
 
@@ -153,7 +153,7 @@ WEBHOOK_INTERVAL=60</pre>
 
     {% if diagnostics.slow_log_tail %}
     <details class="diag-log">
-        <summary>Slow requests (&gt;2s)</summary>
+        <summary>{{ t('ops.slow_requests') }}</summary>
         <pre class="mono diag-log-body">{% for line in diagnostics.slow_log_tail %}{{ line }}
 {% endfor %}</pre>
     </details>

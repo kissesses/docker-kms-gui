@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Audit · Admin · KMS-GUI{% endblock %}
+{% block title %}{{ t('admin.audit') }} · {{ t('admin.title') }} · KMS-GUI{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1 class="page-title">Administration</h1>
-            <p class="page-subtitle">Audit log of admin actions</p>
+            <h1 class="page-title">{{ t('admin.title') }}</h1>
+            <p class="page-subtitle">{{ t('admin.subtitle_audit') }}</p>
         </div>
     </div>
 </div>
@@ -18,11 +18,11 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Time</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Detail</th>
-                <th>IP</th>
+                <th>{{ t('admin.audit_time') }}</th>
+                <th>{{ t('admin.audit_user') }}</th>
+                <th>{{ t('admin.audit_action') }}</th>
+                <th>{{ t('admin.audit_detail') }}</th>
+                <th>{{ t('admin.audit_ip') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -35,7 +35,7 @@
                 <td class="cell-meta">{{ row.ip or '—' }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="5" class="cell-meta">No audit entries yet.</td></tr>
+            <tr><td colspan="5" class="cell-meta">{{ t('admin.audit_empty') }}</td></tr>
             {% endfor %}
         </tbody>
     </table>

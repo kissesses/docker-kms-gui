@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Security · Admin · KMS-GUI{% endblock %}
+{% block title %}{{ t('admin.security') }} · {{ t('admin.title') }} · KMS-GUI{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1 class="page-title">Administration</h1>
-            <p class="page-subtitle">Security settings and deployment profile</p>
+            <h1 class="page-title">{{ t('admin.title') }}</h1>
+            <p class="page-subtitle">{{ t('admin.subtitle_security') }}</p>
         </div>
     </div>
 </div>
@@ -16,34 +16,34 @@
 
 <div class="panel-grid">
     <div class="panel">
-        <h2 class="panel-title">Authentication</h2>
+        <h2 class="panel-title">{{ t('admin.auth_title') }}</h2>
         <dl class="info-list">
             <div class="info-row">
-                <dt>App auth</dt>
-                <dd>{% if stats.auth_enabled %}<span class="badge badge-ok">Enabled</span>{% else %}<span class="badge badge-warn">Disabled</span>{% endif %}</dd>
+                <dt>{{ t('admin.app_auth') }}</dt>
+                <dd>{% if stats.auth_enabled %}<span class="badge badge-ok">{{ t('common.enabled') }}</span>{% else %}<span class="badge badge-warn">{{ t('common.disabled') }}</span>{% endif %}</dd>
             </div>
             <div class="info-row">
-                <dt>Admin without login</dt>
-                <dd>{% if config.ADMIN_PUBLIC %}<span class="badge badge-warn">Public</span>{% else %}<span class="badge badge-ok">Protected</span>{% endif %}</dd>
+                <dt>{{ t('admin.admin_public') }}</dt>
+                <dd>{% if config.ADMIN_PUBLIC %}<span class="badge badge-warn">{{ t('admin.public') }}</span>{% else %}<span class="badge badge-ok">{{ t('admin.protected') }}</span>{% endif %}</dd>
             </div>
             <div class="info-row">
-                <dt>TLS</dt>
-                <dd>{% if config.TLS_ENABLED %}<span class="badge badge-ok">Enabled</span>{% else %}<span class="badge badge-neutral">Off</span>{% endif %}</dd>
+                <dt>{{ t('admin.tls') }}</dt>
+                <dd>{% if config.TLS_ENABLED %}<span class="badge badge-ok">{{ t('common.enabled') }}</span>{% else %}<span class="badge badge-neutral">{{ t('admin.tls_off') }}</span>{% endif %}</dd>
             </div>
             <div class="info-row">
-                <dt>CSRF</dt>
-                <dd><span class="badge badge-ok">Forms protected</span></dd>
+                <dt>{{ t('admin.csrf') }}</dt>
+                <dd><span class="badge badge-ok">{{ t('admin.csrf_protected') }}</span></dd>
             </div>
         </dl>
     </div>
     <div class="panel">
-        <h2 class="panel-title">Recommendations</h2>
+        <h2 class="panel-title">{{ t('admin.recommendations') }}</h2>
         <ul class="admin-list">
-            <li>Enable <code>GUI_AUTH_ENABLED=true</code> before exposing the panel to a network.</li>
-            <li>Use TLS (<code>NGINX_TLS_ENABLED=true</code>) for internet deployments.</li>
-            <li>Keep <code>ADMIN_PUBLIC=false</code> unless you trust the local network only.</li>
-            <li>KMS port <strong>1688</strong> can be public; protect the web GUI separately.</li>
-            <li>Review the <a href="{{ url_for('admin.admin_audit_page') }}">audit log</a> regularly.</li>
+            <li>{{ t('admin.rec1') }}</li>
+            <li>{{ t('admin.rec2') }}</li>
+            <li>{{ t('admin.rec3') }}</li>
+            <li>{{ t('admin.rec4') }}</li>
+            <li>{{ t('admin.rec5_start') }}<a href="{{ url_for('admin.admin_audit_page') }}">{{ t('admin.audit_log_link') }}</a>{{ t('admin.rec5_end') }}</li>
         </ul>
     </div>
 </div>

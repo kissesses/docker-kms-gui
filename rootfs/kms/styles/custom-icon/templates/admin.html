@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Admin · KMS-GUI{% endblock %}
+{% block title %}{{ t('admin.title') }} · KMS-GUI{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1 class="page-title">Administration</h1>
-            <p class="page-subtitle">Account, security and system overview</p>
+            <h1 class="page-title">{{ t('admin.title') }}</h1>
+            <p class="page-subtitle">{{ t('admin.subtitle_account') }}</p>
         </div>
     </div>
 </div>
@@ -23,19 +23,19 @@
 
 <div class="panel-grid">
     <div class="panel">
-        <h2 class="panel-title">Account</h2>
+        <h2 class="panel-title">{{ t('admin.account') }}</h2>
         {% if profile %}
         <dl class="info-list">
             <div class="info-row">
-                <dt>Username</dt>
+                <dt>{{ t('admin.username') }}</dt>
                 <dd>{{ profile.username }}</dd>
             </div>
             <div class="info-row">
-                <dt>Created</dt>
+                <dt>{{ t('admin.created') }}</dt>
                 <dd>{{ profile.created_at_fmt }}</dd>
             </div>
             <div class="info-row">
-                <dt>Last login</dt>
+                <dt>{{ t('admin.last_login') }}</dt>
                 <dd>{{ profile.last_login_fmt }}</dd>
             </div>
         </dl>
@@ -44,69 +44,69 @@
         <form method="post" class="auth-form auth-form-inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="action" value="change_password">
-            <h3 class="panel-subtitle">Change password</h3>
-            <label class="form-label" for="current_password">Current password</label>
+            <h3 class="panel-subtitle">{{ t('admin.change_password') }}</h3>
+            <label class="form-label" for="current_password">{{ t('admin.current_password') }}</label>
             <input class="input form-input" type="password" id="current_password" name="current_password" required autocomplete="current-password">
-            <label class="form-label" for="new_password">New password</label>
+            <label class="form-label" for="new_password">{{ t('admin.new_password') }}</label>
             <input class="input form-input" type="password" id="new_password" name="new_password" required minlength="{{ min_password_len }}" autocomplete="new-password">
-            <p class="form-hint">Minimum {{ min_password_len }} characters</p>
-            <button type="submit" class="btn btn-primary">Update password</button>
+            <p class="form-hint">{{ t('admin.min_password').replace('{n}', min_password_len|string) }}</p>
+            <button type="submit" class="btn btn-primary">{{ t('admin.update_password') }}</button>
         </form>
     </div>
 
     <div class="panel">
-        <h2 class="panel-title">System</h2>
+        <h2 class="panel-title">{{ t('admin.system') }}</h2>
         {% if stats %}
         <dl class="info-list">
             <div class="info-row">
-                <dt>GUI version</dt>
-                <dd>{{ stats.version or 'N/A' }}</dd>
+                <dt>{{ t('admin.gui_version') }}</dt>
+                <dd>{{ stats.version or t('common.na') }}</dd>
             </div>
             <div class="info-row">
-                <dt>Uptime</dt>
+                <dt>{{ t('dashboard.uptime') }}</dt>
                 <dd>{{ stats.uptime_seconds }}s</dd>
             </div>
             <div class="info-row">
-                <dt>KMS database</dt>
+                <dt>{{ t('admin.kms_database') }}</dt>
                 <dd class="mono" title="{{ stats.db_path }}">{{ stats.db_path }}</dd>
             </div>
             <div class="info-row">
-                <dt>Auth database</dt>
-                <dd class="mono">{{ stats.auth_db_path or 'disabled' }}</dd>
+                <dt>{{ t('admin.auth_database') }}</dt>
+                <dd class="mono">{{ stats.auth_db_path or t('common.disabled') }}</dd>
             </div>
             <div class="info-row">
-                <dt>App auth</dt>
-                <dd>{% if stats.auth_enabled %}Enabled{% else %}Disabled{% endif %}</dd>
+                <dt>{{ t('admin.app_auth') }}</dt>
+                <dd>{% if stats.auth_enabled %}{{ t('common.enabled') }}{% else %}{{ t('common.disabled') }}{% endif %}</dd>
             </div>
             <div class="info-row">
-                <dt>Total clients</dt>
+                <dt>{{ t('admin.total_clients') }}</dt>
                 <dd>{{ stats.count_clients }}</dd>
             </div>
         </dl>
         {% endif %}
         <div class="panel-divider"></div>
         <div class="quick-grid">
-            <a href="{{ url_for('admin.admin_activations_page') }}" class="quick-link">Activations</a>
-            <a href="{{ url_for('admin.admin_ops_page') }}" class="quick-link">Operations</a>
-            <a href="/api/v1/clients/export" class="quick-link">Export CSV</a>
-            <a href="/api/v1/stats" class="quick-link">API Stats</a>
-            <a href="/clients" class="quick-link">View Clients</a>
-            <a href="/" class="quick-link">Dashboard</a>
+            <a href="{{ url_for('admin.admin_activations_page') }}" class="quick-link">{{ t('admin.activations') }}</a>
+            <a href="{{ url_for('admin.admin_ops_page') }}" class="quick-link">{{ t('admin.ops') }}</a>
+            <a href="/api/v1/clients/export" class="quick-link">{{ t('clients.export_csv') }}</a>
+            <a href="/api/v1/stats" class="quick-link">{{ t('admin.api_stats') }}</a>
+            <a href="/clients" class="quick-link">{{ t('admin.view_clients') }}</a>
+            <a href="/" class="quick-link">{{ t('nav.dashboard') }}</a>
         </div>
     </div>
 </div>
 
 <div class="panel">
-    <h2 class="panel-title">Security</h2>
+    <h2 class="panel-title">{{ t('admin.security_panel') }}</h2>
     <ul class="admin-list">
-        <li>Use TLS (HTTPS) when exposing the panel to the internet.</li>
-        <li>KMS port <strong>1688</strong> can be public; protect the web GUI with this login.</li>
-        <li>Session cookies are HttpOnly; enable TLS for Secure cookies.</li>
-        <li>Sign out when using shared computers.</li>
+        <li>{{ t('admin.security_tip1') }}</li>
+        <li>{{ t('admin.security_tip2') }}</li>
+        <li>{{ t('admin.security_tip3') }}</li>
+        <li>{{ t('admin.security_tip4') }}</li>
     </ul>
     <form method="post" action="{{ url_for('auth.logout_page') }}" class="admin-logout-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit" class="btn">Sign out</button>
+        <button type="submit" class="btn">{{ t('nav.sign_out') }}</button>
     </form>
 </div>
 {% endblock %}

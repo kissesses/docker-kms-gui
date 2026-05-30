@@ -12,7 +12,7 @@
     {% if overview %}
     <div class="hero-metrics">
         <div class="hero-metric">
-            <span class="hero-metric-label">Port</span>
+            <span class="hero-metric-label">{{ t('common.port') }}</span>
             <span class="hero-metric-value mono">{{ overview.transport.port }}</span>
         </div>
         <div class="hero-metric">
@@ -38,7 +38,7 @@
         <div class="flow-node flow-node-{{ step.from }}">
             <div class="flow-node-badge">{{ step.id }}</div>
             <div class="flow-node-body glass-card">
-                <div class="flow-node-from">{{ 'Client' if step.from == 'client' else 'KMS Server' }}</div>
+                <div class="flow-node-from">{{ t('common.client') if step.from == 'client' else t('common.kms_server') }}</div>
                 <h3 class="flow-node-title">{{ step.title }}</h3>
                 <p class="flow-node-detail">{{ step.detail }}</p>
             </div>
@@ -98,12 +98,12 @@
         <div class="info-row"><dt>{{ t('protocol.activation') }}</dt><dd>{{ overview.policy.activation_interval_fmt }} ({{ overview.policy.activation_interval_minutes }} min)</dd></div>
         <div class="info-row"><dt>{{ t('protocol.renewal') }}</dt><dd>{{ overview.policy.renewal_interval_fmt }} ({{ overview.policy.renewal_interval_minutes }} min)</dd></div>
         <div class="info-row"><dt>HWID</dt><dd class="mono">{{ overview.policy.hwid }}</dd></div>
-        <div class="info-row"><dt>{{ t('protocol.validity') }}</dt><dd>{{ overview.policy.licensing_validity_days }} days</dd></div>
-        <div class="info-row"><dt>Wire format</dt><dd class="mono">{{ overview.transport.wire_format }}</dd></div>
+        <div class="info-row"><dt>{{ t('protocol.validity') }}</dt><dd>{{ overview.policy.licensing_validity_days }} {{ t('protocol.days') }}</dd></div>
+        <div class="info-row"><dt>{{ t('protocol.wire_format') }}</dt><dd class="mono">{{ overview.transport.wire_format }}</dd></div>
     </dl>
     <div class="quick-grid">
         <a href="/clients" class="quick-link">{{ t('nav.clients') }}</a>
-        <a href="/api/v1/protocol" class="quick-link">API JSON</a>
+        <a href="/api/v1/protocol" class="quick-link">{{ t('ops.api_json') }}</a>
         <a href="{{ url_for('admin.admin_activations_page') }}" class="quick-link">{{ t('admin.activations') }}</a>
     </div>
 </section>

@@ -1,23 +1,23 @@
 {% extends 'base.html' %}
 
-{% block title %}Clients · KMS-GUI{% endblock %}
+{% block title %}{{ t('clients.title') }} · KMS-GUI{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1 class="page-title">KMS Clients</h1>
-            <p class="page-subtitle">Active connections and activation details</p>
+            <h1 class="page-title">{{ t('clients.title') }}</h1>
+            <p class="page-subtitle">{{ t('clients.subtitle') }}</p>
         </div>
         <div class="page-actions">
             <a href="/api/v1/clients/export" class="btn btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export CSV
+                {{ t('clients.export_csv') }}
             </a>
-            <select id="auto-refresh" class="select" aria-label="Auto refresh">
-                <option value="0">Auto-refresh: Off</option>
-                <option value="30">Every 30s</option>
-                <option value="60">Every 60s</option>
+            <select id="auto-refresh" class="select" aria-label="{{ t('clients.auto_refresh_label') }}">
+                <option value="0">{{ t('clients.auto_refresh_off') }}</option>
+                <option value="30">{{ t('clients.auto_refresh_30') }}</option>
+                <option value="60">{{ t('clients.auto_refresh_60') }}</option>
             </select>
         </div>
     </div>
@@ -29,48 +29,48 @@
 
 <div class="stat-grid">
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Total</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('common.total') }}</span></div>
         <div class="stat-value">{{ count_clients }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Windows</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('common.windows') }}</span></div>
         <div class="stat-value">{{ count_clients_windows }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Office</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('common.office') }}</span></div>
         <div class="stat-value">{{ count_clients_office }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-card-head"><span class="stat-label">Products</span></div>
+        <div class="stat-card-head"><span class="stat-label">{{ t('common.products') }}</span></div>
         <div class="stat-value accent"><a href="/keys">{{ count_projects }}</a></div>
     </div>
 </div>
 
 <div class="toolbar-row">
-    <input id="client-search" type="search" placeholder="Search name, IP, app, status…" class="input input-search" aria-label="Search clients">
-    <select id="client-filter-app" class="select" aria-label="Filter by application">
-        <option value="">All applications</option>
-        <option value="Windows">Windows</option>
-        <option value="Office">Office</option>
+    <input id="client-search" type="search" placeholder="{{ t('clients.search_placeholder') }}" class="input input-search" aria-label="{{ t('clients.search_placeholder') }}">
+    <select id="client-filter-app" class="select" aria-label="{{ t('clients.filter_app') }}">
+        <option value="">{{ t('clients.filter_all_apps') }}</option>
+        <option value="Windows">{{ t('common.windows') }}</option>
+        <option value="Office">{{ t('common.office') }}</option>
     </select>
-    <select id="client-filter-status" class="select" aria-label="Filter by license status">
-        <option value="">All statuses</option>
-        <option value="activated">Activated</option>
-        <option value="notify">Notifications Mode</option>
+    <select id="client-filter-status" class="select" aria-label="{{ t('clients.filter_status') }}">
+        <option value="">{{ t('clients.filter_all_statuses') }}</option>
+        <option value="activated">{{ t('clients.status_activated') }}</option>
+        <option value="notify">{{ t('clients.status_notify') }}</option>
     </select>
-    <select id="client-filter-health" class="select" aria-label="Filter by health">
-        <option value="">All health</option>
-        <option value="healthy">Healthy</option>
-        <option value="due_soon">Due soon</option>
-        <option value="overdue">Overdue</option>
-        <option value="grace">Grace</option>
-        <option value="at_risk">At risk</option>
+    <select id="client-filter-health" class="select" aria-label="{{ t('clients.filter_health') }}">
+        <option value="">{{ t('clients.filter_all_health') }}</option>
+        <option value="healthy">{{ t('clients.health_healthy') }}</option>
+        <option value="due_soon">{{ t('clients.health_due_soon') }}</option>
+        <option value="overdue">{{ t('clients.health_overdue') }}</option>
+        <option value="grace">{{ t('clients.health_grace') }}</option>
+        <option value="at_risk">{{ t('clients.health_at_risk') }}</option>
     </select>
-    <select id="client-sort" class="select" aria-label="Sort clients">
-        <option value="machineName">Sort: Machine name</option>
-        <option value="lastRequestTime">Sort: Last seen</option>
-        <option value="requestCount">Sort: Requests</option>
-        <option value="licenseStatus">Sort: Status</option>
+    <select id="client-sort" class="select" aria-label="{{ t('clients.sort_status') }}">
+        <option value="machineName">{{ t('clients.sort_machine') }}</option>
+        <option value="lastRequestTime">{{ t('clients.sort_last_seen') }}</option>
+        <option value="requestCount">{{ t('clients.sort_requests') }}</option>
+        <option value="licenseStatus">{{ t('clients.sort_status') }}</option>
     </select>
 </div>
 
@@ -97,35 +97,35 @@
             </div>
             <div class="entity-card-heading">
                 <h2 class="entity-card-title">{{ client.machineName }}</h2>
-                <p class="entity-card-subtitle">{{ client.machineIp or 'Unknown IP' }}</p>
+                <p class="entity-card-subtitle">{{ client.machineIp or t('common.unknown_ip') }}</p>
             </div>
             <div class="entity-card-badges">
                 <span class="badge badge-neutral">{{ client.applicationId }}</span>
                 <span class="badge health-{{ client.health | default('unknown') }}">{{ client.health_note | default(client.health) }}</span>
                 <span class="badge {% if client.licenseStatus == 'Activated' %}badge-ok{% else %}badge-warn{% endif %}">
-                    {% if client.licenseStatus == 'Notifications Mode' %}Notify{% else %}{{ client.licenseStatus }}{% endif %}
+                    {% if client.licenseStatus == 'Activated' %}{{ t('clients.status_activated') }}{% elif client.licenseStatus == 'Notifications Mode' %}{{ t('clients.status_notify') }}{% else %}{{ client.licenseStatus }}{% endif %}
                 </span>
             </div>
         </header>
         <dl class="detail-list">
             <div class="detail-row">
-                <dt>Client ID</dt>
+                <dt>{{ t('clients.client_id') }}</dt>
                 <dd><code class="detail-mono" title="{{ client.clientMachineId }}">{{ client.clientMachineId }}</code></dd>
             </div>
             <div class="detail-row">
-                <dt>SKU ID</dt>
+                <dt>{{ t('clients.sku_id') }}</dt>
                 <dd><code class="detail-mono">{{ client.skuId }}</code></dd>
             </div>
             <div class="detail-row">
-                <dt>KMS EPID</dt>
-                <dd><code class="detail-mono">{{ client.kmsEpid | default('N/A', true) }}</code></dd>
+                <dt>{{ t('clients.kms_epid') }}</dt>
+                <dd><code class="detail-mono">{{ client.kmsEpid | default(t('common.na'), true) }}</code></dd>
             </div>
             <div class="detail-row">
-                <dt>Requests</dt>
+                <dt>{{ t('clients.requests') }}</dt>
                 <dd class="detail-highlight">{{ client.requestCount }}</dd>
             </div>
             <div class="detail-row">
-                <dt>Last seen</dt>
+                <dt>{{ t('clients.last_seen') }}</dt>
                 <dd><span class="convert_timestamp">{{ client.lastRequestTime }}</span></dd>
             </div>
         </dl>
@@ -144,8 +144,8 @@
     <div class="empty-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
     </div>
-    <h3 class="empty-title">No active connections</h3>
-    <p class="empty-text">Point KMS clients to this server — data will appear here automatically.</p>
+    <h3 class="empty-title">{{ t('clients.empty_title') }}</h3>
+    <p class="empty-text">{{ t('clients.empty_text') }}</p>
 </div>
 {% endif %}
 {% endif %}

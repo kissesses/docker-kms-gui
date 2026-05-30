@@ -1,11 +1,11 @@
 {% extends 'auth_base.html' %}
 
-{% block title %}Setup · KMS-GUI{% endblock %}
-{% block auth_subtitle %}Create administrator{% endblock %}
+{% block title %}{{ t('setup.title') }} · KMS-GUI{% endblock %}
+{% block auth_subtitle %}{{ t('setup.subtitle') }}{% endblock %}
 
 {% block content %}
-<h1 class="auth-title">Initial setup</h1>
-<p class="auth-desc">Create the administrator account to protect your KMS panel.</p>
+<h1 class="auth-title">{{ t('setup.title') }}</h1>
+<p class="auth-desc">{{ t('setup.desc') }}</p>
 
 {% if error %}
 <div class="alert alert-error">{{ error }}</div>
@@ -13,17 +13,17 @@
 
 <form method="post" class="auth-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <label class="form-label" for="username">Username</label>
+    <label class="form-label" for="username">{{ t('admin.username') }}</label>
     <input class="input form-input" type="text" id="username" name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_-]+" autocomplete="username" autofocus>
 
-    <label class="form-label" for="password">Password</label>
+    <label class="form-label" for="password">{{ t('login.password') }}</label>
     <input class="input form-input" type="password" id="password" name="password" required minlength="12" autocomplete="new-password">
 
-    <label class="form-label" for="confirm">Confirm password</label>
+    <label class="form-label" for="confirm">{{ t('setup.confirm_password') }}</label>
     <input class="input form-input" type="password" id="confirm" name="confirm" required minlength="12" autocomplete="new-password">
 
-    <p class="form-hint">Minimum 12 characters. This account controls access to all client data.</p>
+    <p class="form-hint">{{ t('setup.hint') }}</p>
 
-    <button type="submit" class="btn btn-primary auth-submit">Create administrator</button>
+    <button type="submit" class="btn btn-primary auth-submit">{{ t('setup.submit') }}</button>
 </form>
 {% endblock %}

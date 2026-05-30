@@ -6,6 +6,11 @@ import time
 
 from pykms_time import format_ts, parse_ts
 
+try:
+    import pykms_i18n as i18n
+except ImportError:
+    i18n = None
+
 POLICY_FILE = os.environ.get('KMS_POLICY_FILE', '/kms/var/kms-policy.json')
 LICENSING_VALIDITY_DAYS = 180
 
@@ -127,7 +132,7 @@ def _health_status(client, policy, now):
     status = (client.get('licenseStatus') or '').strip()
     last = parse_ts(client.get('lastRequestTime'))
     if last is None:
-        return 'unknown', 'No contact recorded'
+        return 'unknown', 'health.no_contact'
 
     age_min = max(0, (now - last) / 60)
     renewal_min = policy['renewal_interval_minutes']
@@ -135,17 +140,27 @@ def _health_status(client, policy, now):
 
     if status == 'Activated':
         if age_min <= renewal_min * 0.85:
-            return 'healthy', 'Within renewal window'
+            return 'healthy', 'health.healthy'
         if age_min <= renewal_min * 1.1:
-            return 'due_soon', 'Renewal check expected soon'
-        return 'overdue', 'Past expected renewal interval'
+            return 'due_soon', 'health.due_soon'
+        return 'overdue', 'health.overdue'
 
     if status == 'Notifications Mode':
         if age_min <= activation_min * 2:
-            return 'grace', 'Grace period — activation pending'
-        return 'at_risk', 'Extended grace — client may deactivate'
+            return 'grace', 'health.grace'
+        return 'at_risk', 'health.at_risk'
 
-    return 'unknown', status or 'Unknown status'
+    return 'unknown', 'health.unknown'
+
+
+def _translate_note(note_key):
+    if i18n and note_key.startswith('health.'):
+        return i18n.translate(note_key)
+    return note_key
+
+
+def _t(key):
+    return i18n.translate(key) if i18n else key
 
 
 def enrich_client(client, policy, now=None):
@@ -159,7 +174,7 @@ def enrich_client(client, policy, now=None):
     license_horizon = last + policy['licensing_validity_days'] * 86400 if last is not None else None
 
     age_min = max(0, (now - last) / 60) if last is not None else None
-    health, health_note = _health_status(client, policy, now)
+    health, health_note_key = _health_status(client, policy, now)
 
     app_id = client.get('applicationId', '')
     if app_id == 'Windows':
@@ -177,8 +192,8 @@ def enrich_client(client, policy, now=None):
         'minutes_since_contact': int(age_min) if age_min is not None else None,
         'since_contact_fmt': format_duration(age_min),
         'health': health,
-        'health_note': health_note,
-        'binding_label': client.get('machineName') or 'Unknown host',
+        'health_note': _translate_note(health_note_key),
+        'binding_label': client.get('machineName') or _t('common.unknown_host'),
         'binding_target': f"KMS :{policy['port']}",
         'binding_epid': client.get('kmsEpid') or 'N/A',
         'min_client_threshold': min_clients,
