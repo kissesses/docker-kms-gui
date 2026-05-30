@@ -32,7 +32,10 @@ const PyKmsApp = (function() {
     document.querySelectorAll('.convert_timestamp').forEach(function(el) {
       const raw = el.textContent.trim();
       if (!raw) return;
-      const date = new Date(raw);
+      const unix = parseInt(raw, 10);
+      const date = !isNaN(unix) && String(unix) === raw
+        ? new Date(unix * 1000)
+        : new Date(raw);
       if (!isNaN(date.getTime())) {
         el.textContent = date.toLocaleString();
       }
@@ -154,24 +157,33 @@ const PyKmsApp = (function() {
     }
   }
 
-  function sortClients(column, direction) {
-    const tbody = document.querySelector('#clients-table tbody');
-    if (!tbody) return;
-    const rows = Array.from(tbody.querySelectorAll('.client-row'));
-    const colIndex = Array.from(document.querySelectorAll('#clients-table th')).findIndex(function(th) {
-      return th.dataset.sort === column;
-    });
-    if (colIndex < 0) return;
+  function sortClients(column) {
+    const grid = document.getElementById('clients-grid');
+    if (!grid) return;
+    const cards = Array.from(grid.querySelectorAll('.client-row'));
 
-    rows.sort(function(a, b) {
-      const aText = a.children[colIndex]?.textContent.trim() || '';
-      const bText = b.children[colIndex]?.textContent.trim() || '';
-      const aNum = parseFloat(aText);
-      const bNum = parseFloat(bText);
-      let cmp = (!isNaN(aNum) && !isNaN(bNum)) ? aNum - bNum : aText.localeCompare(bText);
-      return direction === 'asc' ? cmp : -cmp;
+    cards.sort(function(a, b) {
+      let aVal;
+      let bVal;
+      if (column === 'requestCount' || column === 'lastRequestTime') {
+        aVal = parseInt(a.dataset[column === 'requestCount' ? 'requestCount' : 'lastRequest'], 10) || 0;
+        bVal = parseInt(b.dataset[column === 'requestCount' ? 'requestCount' : 'lastRequest'], 10) || 0;
+        return bVal - aVal;
+      }
+      if (column === 'machineName') {
+        aVal = a.dataset.machineName || '';
+        bVal = b.dataset.machineName || '';
+      } else if (column === 'licenseStatus') {
+        aVal = a.dataset.licenseStatus || '';
+        bVal = b.dataset.licenseStatus || '';
+      } else {
+        aVal = a.textContent.trim();
+        bVal = b.textContent.trim();
+      }
+      return aVal.localeCompare(bVal);
     });
-    rows.forEach(function(row) { tbody.appendChild(row); });
+
+    cards.forEach(function(card) { grid.appendChild(card); });
   }
 
   function initClientsTable() {
@@ -179,22 +191,14 @@ const PyKmsApp = (function() {
 
     const search = document.getElementById('client-search');
     const filter = document.getElementById('client-filter-app');
+    const sort = document.getElementById('client-sort');
     if (search) search.addEventListener('input', filterClients);
     if (filter) filter.addEventListener('change', filterClients);
+    if (sort) {
+      sort.addEventListener('change', function() { sortClients(sort.value); });
+      sortClients(sort.value);
+    }
     filterClients();
-
-    document.querySelectorAll('#clients-table th.sortable').forEach(function(th) {
-      th.addEventListener('click', function() {
-        const col = th.dataset.sort;
-        const isAsc = th.classList.contains('sort-asc');
-        document.querySelectorAll('#clients-table th.sortable').forEach(function(h) {
-          h.classList.remove('sort-asc', 'sort-desc');
-        });
-        const dir = isAsc ? 'desc' : 'asc';
-        th.classList.add('sort-' + dir);
-        sortClients(col, dir);
-      });
-    });
 
     const refreshSelect = document.getElementById('auto-refresh');
     if (refreshSelect) {
@@ -217,30 +221,36 @@ const PyKmsApp = (function() {
     }).catch(function() { showToast('Copy failed', 'error'); });
   }
 
-  function toggleCategory(header) {
-    const body = header.nextElementSibling;
-    const isOpen = header.classList.toggle('open');
-    if (body) body.classList.toggle('open', isOpen);
-    header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  function toggleCategorySection(toggle) {
+    const section = toggle.closest('.category-section');
+    const body = section?.querySelector('.category-section-body');
+    if (!body) return;
+    const isOpen = toggle.getAttribute('aria-expanded') !== 'false';
+    toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    body.classList.toggle('open', !isOpen);
   }
 
   function filterProducts() {
     const query = (document.getElementById('product-search')?.value || '').toLowerCase();
+    const typeFilter = (document.getElementById('product-filter-type')?.value || '').toLowerCase();
+
     document.querySelectorAll('.product-row').forEach(function(row) {
       const text = row.dataset.search || row.textContent.toLowerCase();
-      row.classList.toggle('hidden', query && !text.includes(query));
+      const type = row.dataset.type || '';
+      const matchesSearch = !query || text.includes(query);
+      const matchesType = !typeFilter || type === typeFilter;
+      row.classList.toggle('hidden', !(matchesSearch && matchesType));
     });
+
     document.querySelectorAll('.product-category').forEach(function(cat) {
       const visible = cat.querySelectorAll('.product-row:not(.hidden)').length;
-      cat.style.display = visible === 0 && query ? 'none' : '';
+      const matchesType = !typeFilter || (cat.dataset.type || '') === typeFilter;
+      cat.classList.toggle('hidden', !matchesType || (visible === 0 && (query || typeFilter)));
       if (query && visible > 0) {
-        const header = cat.querySelector('.category-header');
-        const body = cat.querySelector('.category-body');
-        if (header && body) {
-          header.classList.add('open');
-          body.classList.add('open');
-          header.setAttribute('aria-expanded', 'true');
-        }
+        const body = cat.querySelector('.category-section-body');
+        const toggle = cat.querySelector('.category-toggle');
+        if (body) body.classList.add('open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
       }
     });
   }
@@ -248,11 +258,8 @@ const PyKmsApp = (function() {
   function initProducts() {
     initCommon();
 
-    document.querySelectorAll('.category-header').forEach(function(header) {
-      header.addEventListener('click', function() { toggleCategory(header); });
-      header.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCategory(header); }
-      });
+    document.querySelectorAll('.category-toggle').forEach(function(toggle) {
+      toggle.addEventListener('click', function() { toggleCategorySection(toggle); });
     });
 
     document.querySelectorAll('.gvlk-key').forEach(function(el) {
@@ -263,7 +270,9 @@ const PyKmsApp = (function() {
     });
 
     const search = document.getElementById('product-search');
+    const typeFilter = document.getElementById('product-filter-type');
     if (search) search.addEventListener('input', filterProducts);
+    if (typeFilter) typeFilter.addEventListener('change', filterProducts);
   }
 
   return {

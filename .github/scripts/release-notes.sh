@@ -50,6 +50,8 @@ if os.environ.get("INCLUDE_SCREENSHOTS") == "1":
         ("dashboard-light.png", "Dashboard — light theme"),
         ("clients.png", "Clients"),
         ("products.png", "Products"),
+        ("setup.png", "Initial setup — create administrator"),
+        ("admin-activations.png", "KMS activation policy & client bindings"),
     ]
     for fname, title in shots:
         print(f"<details open>\n<summary><strong>{title}</strong></summary>\n\n")

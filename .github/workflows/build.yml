@@ -151,6 +151,8 @@ jobs:
         run: |
           test -f screenshots/dashboard.png
           test -f screenshots/clients.png
+          test -f screenshots/setup.png
+          test -f screenshots/admin-activations.png
           ls -la screenshots/
 
       - name: Generate release notes
@@ -176,3 +178,5 @@ jobs:
             screenshots/dashboard-light.png
             screenshots/clients.png
             screenshots/products.png
+            screenshots/setup.png
+            screenshots/admin-activations.png

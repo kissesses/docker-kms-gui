@@ -47,6 +47,13 @@ FROM alpine:3.22
   ENV GUI_AUTH_DB_PATH=/kms/var/gui_auth.db
   ENV GUI_SECRET_FILE=/kms/var/.gui_secret
 
+  ENV KMS_POLICY_FILE=/kms/var/kms-policy.json
+  ENV KMS_CLIENT_COUNT=26
+  ENV KMS_ACTIVATION_INTERVAL=120
+  ENV KMS_RENEWAL_INTERVAL=10080
+  ENV KMS_HWID=RANDOM
+  ENV KMS_PORT=1688
+
   RUN apk add --no-cache \
       bash \
       python3 \

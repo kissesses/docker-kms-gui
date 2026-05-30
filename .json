@@ -5,7 +5,7 @@
     "kms": "kissesses/kms",
     "gui": "kissesses/kms-gui"
   },
-  "version": "1.7.1",
+  "version": "1.7.2",
   "upstream": {
     "py-kms": "https://github.com/Py-KMS-Organization/py-kms",
     "original_gui": "https://github.com/11notes/docker-KMS-GUI"

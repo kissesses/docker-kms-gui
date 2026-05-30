@@ -5,6 +5,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.7.2] — 2026-05-30
+
+### Changed
+
+- **Admin → Activations** tab — KMS policy, client↔server binding, renewal schedule and health
+- **Clients** page — card grid with machine, SKU, EPID, requests, last seen
+- **Products** page — GVLK cards grouped by category with copy-to-clipboard
+- Release screenshots: `setup.png`, `admin-activations.png`
+- **Products** page — GVLK cards grouped by category with copy-to-clipboard
+- Unix timestamps display correctly in client cards
+
+---
+
 ## [1.7.1] — 2026-05-30
 
 ### Removed

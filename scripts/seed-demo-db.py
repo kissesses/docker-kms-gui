@@ -1,10 +1,28 @@
 #!/usr/bin/env python3
-"""Create a demo kms.db with sample clients for release screenshots."""
+"""Create demo kms.db, kms-policy.json and optional data for release screenshots."""
 
+import json
 import os
 import sqlite3
 import sys
 import time
+
+
+def seed_policy(var_dir: str) -> None:
+    policy = {
+        "client_count": 26,
+        "activation_interval_minutes": 120,
+        "renewal_interval_minutes": 10080,
+        "hwid": "RANDOM",
+        "port": 1688,
+        "host": "kms",
+        "licensing_validity_days": 180,
+        "updated_at": int(time.time()),
+    }
+    path = os.path.join(var_dir, "kms-policy.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(policy, f, indent=2)
+        f.write("\n")
 
 
 def seed(db_path: str) -> None:
@@ -83,5 +101,8 @@ def seed(db_path: str) -> None:
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else "/tmp/kms-screenshot/kms.db"
+    var_dir = os.path.dirname(path) or "."
     seed(path)
+    seed_policy(var_dir)
     print(f"Demo database written to {path}")
+    print(f"KMS policy written to {os.path.join(var_dir, 'kms-policy.json')}")

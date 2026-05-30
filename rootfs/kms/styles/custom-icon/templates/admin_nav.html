@@ -1,0 +1,4 @@
+<nav class="admin-tabs" aria-label="Administration sections">
+    <a href="{{ url_for('admin_page') }}" class="admin-tab{% if admin_tab == 'account' %} active{% endif %}">Account</a>
+    <a href="{{ url_for('admin_activations_page') }}" class="admin-tab{% if admin_tab == 'activations' %} active{% endif %}">Activations</a>
+</nav>

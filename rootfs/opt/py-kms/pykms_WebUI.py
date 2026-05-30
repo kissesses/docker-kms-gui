@@ -10,6 +10,7 @@ from flask import (
 )
 
 import pykms_auth as auth
+import pykms_activation as activation
 from pykms_Sql import sql_get_all
 from pykms_DB2Dict import kmsDB2Dict
 
@@ -313,12 +314,45 @@ def admin_page():
     return render_template(
         'admin.html',
         path='/admin/',
+        admin_tab='account',
         profile=profile,
         stats=stats,
         error=error,
         success=success,
         min_password_len=auth.MIN_PASSWORD_LEN,
     )
+
+
+@app.route('/admin/activations')
+def admin_activations_page():
+    _increase_serve_count()
+    error = None
+    overview = None
+    try:
+        clients = _load_clients()
+        overview = activation.build_activation_overview(clients)
+    except Exception as e:
+        error = str(e)
+        overview = activation.build_activation_overview([])
+
+    return render_template(
+        'admin_activations.html',
+        path='/admin/activations/',
+        admin_tab='activations',
+        overview=overview,
+        error=error,
+    )
+
+
+@app.route('/api/v1/activations')
+def api_activations():
+    _increase_serve_count()
+    try:
+        _env_check()
+        clients = _load_clients()
+        return jsonify(activation.build_activation_overview(clients))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ── App routes ──

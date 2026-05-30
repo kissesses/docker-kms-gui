@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Activations · Admin · KMS-GUI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <h1 class="page-title">Administration</h1>
+            <p class="page-subtitle">Activation policy, renewal windows and client ↔ server binding</p>
+        </div>
+    </div>
+</div>
+
+{% include 'admin_nav.html' %}
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+{% set policy = overview.policy %}
+{% set summary = overview.summary %}
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Active clients</span></div>
+        <div class="stat-value">{{ summary.total }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Activated</span></div>
+        <div class="stat-value">{{ summary.activated }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Healthy</span></div>
+        <div class="stat-value">{{ summary.healthy }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Need attention</span></div>
+        <div class="stat-value">{{ summary.due_soon + summary.overdue + summary.at_risk }}</div>
+    </div>
+</div>
+
+<div class="panel-grid">
+    <div class="panel">
+        <h2 class="panel-title">KMS server policy</h2>
+        <p class="panel-desc">Intervals sent to clients when they contact this KMS host (port {{ policy.port }}).</p>
+        <dl class="info-list">
+            <div class="info-row">
+                <dt>Renewal interval</dt>
+                <dd>{{ policy.renewal_interval_fmt }} <span class="cell-meta">({{ policy.renewal_interval_minutes }} min)</span></dd>
+            </div>
+            <div class="info-row">
+                <dt>Activation retry</dt>
+                <dd>{{ policy.activation_interval_fmt }} <span class="cell-meta">({{ policy.activation_interval_minutes }} min)</span></dd>
+            </div>
+            <div class="info-row">
+                <dt>Reported client count</dt>
+                <dd>{{ policy.client_count }}</dd>
+            </div>
+            <div class="info-row">
+                <dt>Windows threshold</dt>
+                <dd>
+                    {% if policy.threshold_windows_met %}
+                    <span class="badge badge-ok">≥25 met</span>
+                    {% else %}
+                    <span class="badge badge-warn">&lt;25 — client OS may not activate</span>
+                    {% endif %}
+                </dd>
+            </div>
+            <div class="info-row">
+                <dt>Office / Server threshold</dt>
+                <dd>
+                    {% if policy.threshold_office_met %}
+                    <span class="badge badge-ok">≥5 met</span>
+                    {% else %}
+                    <span class="badge badge-warn">&lt;5</span>
+                    {% endif %}
+                </dd>
+            </div>
+            <div class="info-row">
+                <dt>HWID mode</dt>
+                <dd class="mono">{{ policy.hwid }}</dd>
+            </div>
+            <div class="info-row">
+                <dt>KMS validity</dt>
+                <dd>{{ policy.licensing_validity_days }} days per activation cycle</dd>
+            </div>
+            <div class="info-row">
+                <dt>Policy source</dt>
+                <dd>{{ policy.updated_at_fmt }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <div class="panel">
+        <h2 class="panel-title">How it works</h2>
+        <ul class="admin-list">
+            <li><strong>Client ↔ Server</strong> — each machine binds to this KMS via EPID and machine ID stored in the database.</li>
+            <li><strong>Renewal</strong> — activated clients re-contact the server about every {{ policy.renewal_interval_fmt }}.</li>
+            <li><strong>Activation retry</strong> — if activation fails, clients retry every {{ policy.activation_interval_fmt }}.</li>
+            <li><strong>Grace</strong> — “Notifications Mode” means activation is pending; Windows runs in notification grace.</li>
+            <li>Changing intervals requires updating KMS container env and restarting the <code>kms</code> service.</li>
+        </ul>
+        <div class="quick-grid">
+            <a href="/clients" class="quick-link">All clients</a>
+            <a href="/api/v1/activations" class="quick-link">API JSON</a>
+            <a href="/admin" class="quick-link">Account</a>
+        </div>
+    </div>
+</div>
+
+<h2 class="section-title">Client activation bindings</h2>
+<p class="section-desc">Per-machine status, last contact, next expected renewal and license horizon.</p>
+
+{% if overview.clients %}
+<div class="card-grid activation-grid">
+    {% for client in overview.clients %}
+    <article class="entity-card activation-card">
+        <header class="entity-card-header">
+            <div class="entity-card-icon {% if client.applicationId == 'Windows' %}entity-icon-windows{% else %}entity-icon-office{% endif %}">
+                {% if client.applicationId == 'Windows' %}
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 4.5V11.5H3V5.5ZM10.5 12.5V19.5L3 18.5V12.5H10.5ZM11.5 4.3L21 2.5V11.5H11.5V4.3ZM21 12.5V21.5L11.5 19.7V12.5H21Z"/></svg>
+                {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                {% endif %}
+            </div>
+            <div class="entity-card-heading">
+                <h3 class="entity-card-title">{{ client.binding_label }}</h3>
+                <p class="entity-card-subtitle">{{ client.machineIp or 'Unknown IP' }}</p>
+            </div>
+            <span class="badge health-{{ client.health }}">{{ client.health_note }}</span>
+        </header>
+
+        <div class="binding-flow" aria-label="Client to KMS binding">
+            <div class="binding-node">
+                <span class="binding-node-label">Client</span>
+                <code class="detail-mono">{% if client.clientMachineId|length > 20 %}{{ client.clientMachineId[:20] }}…{% else %}{{ client.clientMachineId }}{% endif %}</code>
+            </div>
+            <div class="binding-arrow" aria-hidden="true">↔</div>
+            <div class="binding-node">
+                <span class="binding-node-label">KMS</span>
+                <code class="detail-mono">{{ client.binding_target }}</code>
+            </div>
+        </div>
+
+        <dl class="detail-list">
+            <div class="detail-row">
+                <dt>License</dt>
+                <dd>
+                    <span class="badge {% if client.licenseStatus == 'Activated' %}badge-ok{% else %}badge-warn{% endif %}">
+                        {{ client.licenseStatus }}
+                    </span>
+                </dd>
+            </div>
+            <div class="detail-row">
+                <dt>EPID</dt>
+                <dd><code class="detail-mono">{{ client.binding_epid }}</code></dd>
+            </div>
+            <div class="detail-row">
+                <dt>Last contact</dt>
+                <dd>{{ client.last_seen_fmt }} <span class="cell-meta">({{ client.since_contact_fmt }} ago)</span></dd>
+            </div>
+            <div class="detail-row">
+                <dt>Next renewal</dt>
+                <dd>{{ client.next_renewal_fmt }}</dd>
+            </div>
+            <div class="detail-row">
+                <dt>Horizon</dt>
+                <dd>{{ client.license_horizon_fmt }} <span class="cell-meta">(~{{ policy.licensing_validity_days }}d cycle)</span></dd>
+            </div>
+            <div class="detail-row">
+                <dt>Requests</dt>
+                <dd>{{ client.requestCount }}</dd>
+            </div>
+        </dl>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="panel empty-state">
+    <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h3 class="empty-title">No activation data yet</h3>
+    <p class="empty-text">When clients connect to KMS, their binding and renewal schedule appears here.</p>
+</div>
+{% endif %}
+{% endblock %}

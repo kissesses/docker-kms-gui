@@ -7,7 +7,7 @@
     <div class="page-header-row">
         <div>
             <h1 class="page-title">Product Keys</h1>
-            <p class="page-subtitle">Volume License Keys (GVLK) — click to copy</p>
+            <p class="page-subtitle">Volume License Keys (GVLK) — click a key to copy</p>
         </div>
     </div>
 </div>
@@ -31,45 +31,81 @@
     </div>
 </div>
 
-<div class="product-search-wrap">
+<div class="toolbar-row">
     <input id="product-search" type="search" placeholder="Search products or GVLK keys…" class="input input-search" aria-label="Search products">
+    <select id="product-filter-type" class="select" aria-label="Filter by type">
+        <option value="">All types</option>
+        <option value="windows">Windows</option>
+        <option value="office">Office</option>
+    </select>
 </div>
 
-<div class="table-wrap" id="products-list">
+<div id="products-list">
     {% for name, gvlk in products | dictsort %}
         {% if gvlk is not none %}
             {% if gvlk is mapping %}
-            <div class="product-category" data-category>
-                <div class="category-header" role="button" tabindex="0" aria-expanded="false">
-                    <span class="category-name">{{ name }}</span>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clip-rule="evenodd"/></svg>
+            {% set cat_type = 'windows' if 'windows' in name|lower else ('office' if 'office' in name|lower else 'other') %}
+            <section class="category-section product-category" data-category data-type="{{ cat_type }}">
+                <div class="category-section-head">
+                    <div>
+                        <h2 class="category-section-title">{{ name }}</h2>
+                        <p class="category-section-meta">{{ gvlk | length }} edition{{ 's' if gvlk | length != 1 else '' }}</p>
+                    </div>
+                    <button type="button" class="btn btn-icon category-toggle" aria-expanded="true" aria-label="Toggle category">
+                        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clip-rule="evenodd"/></svg>
+                    </button>
                 </div>
-                <div class="category-body">
-                    {% for sub_name, sub_gvlk in gvlk.items() %}
-                    <div class="product-row" data-search="{{ sub_name | lower }} {{ (sub_gvlk or '') | lower }}">
-                        <div class="product-name">{{ sub_name }}</div>
-                        <div>
-                            {% if sub_gvlk %}
-                            <code class="gvlk-key" tabindex="0" title="Click to copy">{{ sub_gvlk }}</code>
+                <div class="category-section-body open">
+                    <div class="card-grid product-grid">
+                        {% for sub_name, sub_gvlk in gvlk.items() %}
+                        <article class="entity-card product-card product-row"
+                            data-search="{{ sub_name | lower }} {{ (sub_gvlk or '') | lower }} {{ name | lower }}"
+                            data-type="{{ cat_type }}">
+                            <header class="entity-card-header entity-card-header-compact">
+                                <div class="entity-card-heading">
+                                    <h3 class="entity-card-title">{{ sub_name }}</h3>
+                                    <p class="entity-card-subtitle">{{ name }}</p>
+                                </div>
+                                <span class="badge badge-neutral">{{ cat_type | capitalize }}</span>
+                            </header>
+                            <div class="product-key-block">
+                                <span class="detail-label">GVLK</span>
+                                {% if sub_gvlk %}
+                                <code class="gvlk-key" tabindex="0" title="Click to copy">{{ sub_gvlk }}</code>
+                                {% else %}
+                                <span class="gvlk-na">No key available</span>
+                                {% endif %}
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+            {% else %}
+            {% set cat_type = 'windows' if 'windows' in name|lower else ('office' if 'office' in name|lower else 'other') %}
+            <section class="category-section product-category product-category-flat" data-category data-type="{{ cat_type }}">
+                <div class="card-grid product-grid">
+                    <article class="entity-card product-card product-row"
+                        data-search="{{ name | lower }} {{ (gvlk or '') | lower }}"
+                        data-type="{{ cat_type }}">
+                        <header class="entity-card-header entity-card-header-compact">
+                            <div class="entity-card-heading">
+                                <h3 class="entity-card-title">{{ name }}</h3>
+                                <p class="entity-card-subtitle">Standalone product</p>
+                            </div>
+                            <span class="badge badge-neutral">{{ cat_type | capitalize }}</span>
+                        </header>
+                        <div class="product-key-block">
+                            <span class="detail-label">GVLK</span>
+                            {% if gvlk %}
+                            <code class="gvlk-key" tabindex="0" title="Click to copy">{{ gvlk }}</code>
                             {% else %}
-                            <span class="gvlk-na">N/A</span>
+                            <span class="gvlk-na">No key available</span>
                             {% endif %}
                         </div>
-                    </div>
-                    {% endfor %}
+                    </article>
                 </div>
-            </div>
-            {% else %}
-            <div class="product-row" data-search="{{ name | lower }} {{ (gvlk or '') | lower }}">
-                <div class="product-name">{{ name }}</div>
-                <div>
-                    {% if gvlk %}
-                    <code class="gvlk-key" tabindex="0" title="Click to copy">{{ gvlk }}</code>
-                    {% else %}
-                    <span class="gvlk-na">N/A</span>
-                    {% endif %}
-                </div>
-            </div>
+            </section>
             {% endif %}
         {% endif %}
     {% endfor %}
