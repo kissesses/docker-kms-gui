@@ -66,6 +66,47 @@
                 <code id="keys-picker-key" class="gvlk-key gvlk-key-compact" tabindex="0" title="{{ t('keys.copy_hint') }}"></code>
                 <button type="button" id="keys-picker-copy" class="btn btn-primary btn-block keys-picker-copy">{{ t('keys.copy') }}</button>
             </div>
+
+            <details class="keys-picker-guide" id="keys-picker-guide">
+                <summary class="keys-picker-guide-summary">{{ t('login.guide_title') }}</summary>
+                <div class="keys-picker-guide-tabs" role="tablist">
+                    <button type="button" class="keys-guide-tab active" data-guide="windows" role="tab" aria-selected="true">{{ t('login.guide_tab_windows') }}</button>
+                    <button type="button" class="keys-guide-tab" data-guide="office" role="tab" aria-selected="false">{{ t('login.guide_tab_office') }}</button>
+                </div>
+                <p class="keys-picker-guide-host" id="keys-picker-guide-host">{{ t('login.guide_host').replace('{host}', kms_host) }}</p>
+                <p class="keys-picker-guide-hint">{{ t('login.guide_key_hint') }}</p>
+
+                <ol class="keys-picker-steps" id="keys-guide-windows" data-guide-panel="windows">
+                    <li>{{ t('login.guide_win_1') }}</li>
+                    <li>
+                        <span>{{ t('login.guide_win_2') }}</span>
+                        <code class="guide-cmd guide-cmd-key" tabindex="0" title="{{ t('keys.copy_hint') }}">slmgr /ipk XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_win_3') }}</span>
+                        <code class="guide-cmd guide-cmd-host" tabindex="0" title="{{ t('keys.copy_hint') }}">slmgr /skms {{ kms_host }}:1688</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_win_4') }}</span>
+                        <code class="guide-cmd" tabindex="0" title="{{ t('keys.copy_hint') }}">slmgr /ato</code>
+                    </li>
+                </ol>
+                <ol class="keys-picker-steps hidden" id="keys-guide-office" data-guide-panel="office">
+                    <li>{{ t('login.guide_off_1') }}</li>
+                    <li>
+                        <span>{{ t('login.guide_off_2') }}</span>
+                        <code class="guide-cmd guide-cmd-key" tabindex="0" title="{{ t('keys.copy_hint') }}">cscript ospp.vbs /inpkey:XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_off_3') }}</span>
+                        <code class="guide-cmd guide-cmd-host" tabindex="0" title="{{ t('keys.copy_hint') }}">cscript ospp.vbs /sethst:{{ kms_host }}</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_off_4') }}</span>
+                        <code class="guide-cmd" tabindex="0" title="{{ t('keys.copy_hint') }}">cscript ospp.vbs /act</code>
+                    </li>
+                </ol>
+            </details>
         </div>
     </div>
 </div>
@@ -76,6 +117,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   PyKmsApp.initLoginKeysPicker({
     keys: {{ keys_data | tojson }},
+    kmsHost: {{ kms_host | tojson }},
     loading: {{ t('login.keys_loading') | tojson }},
     empty: {{ t('login.keys_empty') | tojson }},
     error: {{ t('login.keys_error') | tojson }},

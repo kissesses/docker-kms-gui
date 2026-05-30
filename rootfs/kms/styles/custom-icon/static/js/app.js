@@ -545,10 +545,44 @@ const PyKmsApp = (function() {
     const metaEl = document.getElementById('keys-picker-meta');
     const keyEl = document.getElementById('keys-picker-key');
     const copyBtn = document.getElementById('keys-picker-copy');
+    const guideTabs = modal.querySelectorAll('.keys-guide-tab');
+    const guideWindows = document.getElementById('keys-guide-windows');
+    const guideOffice = document.getElementById('keys-guide-office');
+    const kmsHost = labels.kmsHost || window.location.hostname || 'localhost';
 
     let keysCache = Array.isArray(labels.keys) ? labels.keys : null;
     let loading = false;
     let selectedIndex = -1;
+
+    function guideTypeForRow(row) {
+      if (!row) return 'windows';
+      return row.type === 'office' ? 'office' : 'windows';
+    }
+
+    function setGuideTab(type) {
+      guideTabs.forEach(function(tab) {
+        const active = tab.dataset.guide === type;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      if (guideWindows) guideWindows.classList.toggle('hidden', type !== 'windows');
+      if (guideOffice) guideOffice.classList.toggle('hidden', type !== 'office');
+    }
+
+    function updateGuideCommands(gvlk) {
+      modal.querySelectorAll('.guide-cmd-key').forEach(function(el) {
+        const isOffice = el.textContent.indexOf('ospp') >= 0;
+        el.textContent = isOffice
+          ? 'cscript ospp.vbs /inpkey:' + (gvlk || 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX')
+          : 'slmgr /ipk ' + (gvlk || 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX');
+      });
+      modal.querySelectorAll('.guide-cmd-host').forEach(function(el) {
+        const isOffice = el.textContent.indexOf('ospp') >= 0;
+        el.textContent = isOffice
+          ? 'cscript ospp.vbs /sethst:' + kmsHost
+          : 'slmgr /skms ' + kmsHost + ':1688';
+      });
+    }
 
     function closeModal() {
       modal.hidden = true;
@@ -622,6 +656,8 @@ const PyKmsApp = (function() {
       keyEl.textContent = row.gvlk;
       keyEl.classList.remove('copied');
       result.hidden = false;
+      setGuideTab(guideTypeForRow(row));
+      updateGuideCommands(row.gvlk);
     }
 
     function renderList() {
@@ -669,7 +705,13 @@ const PyKmsApp = (function() {
     });
 
     if (search) search.addEventListener('input', renderList);
-    if (typeFilter) typeFilter.addEventListener('change', renderList);
+    if (typeFilter) {
+      typeFilter.addEventListener('change', function() {
+        const t = typeFilter.value;
+        if (t === 'windows' || t === 'office') setGuideTab(t);
+        renderList();
+      });
+    }
     if (keyEl) {
       keyEl.addEventListener('click', function() { copyGvlk(keyEl); });
       keyEl.addEventListener('keydown', function(e) {
@@ -679,6 +721,21 @@ const PyKmsApp = (function() {
     if (copyBtn && keyEl) {
       copyBtn.addEventListener('click', function() { copyGvlk(keyEl); });
     }
+
+    guideTabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        setGuideTab(tab.dataset.guide || 'windows');
+      });
+    });
+    modal.querySelectorAll('.guide-cmd').forEach(function(el) {
+      el.addEventListener('click', function() { copyGvlk(el); });
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); copyGvlk(el); }
+      });
+    });
+
+    setGuideTab('windows');
+    updateGuideCommands('');
   }
 
   return {

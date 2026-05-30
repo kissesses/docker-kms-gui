@@ -1438,8 +1438,8 @@ html.light .app-header {
 }
 
 .keys-picker-panel {
-  width: min(22rem, 100%);
-  max-height: min(85vh, 34rem);
+  width: min(24rem, 100%);
+  max-height: min(90vh, 40rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1463,7 +1463,8 @@ html.light .app-header {
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem 1.125rem 1.125rem;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .keys-picker-toolbar {
@@ -1487,7 +1488,7 @@ html.light .app-header {
   list-style: none;
   margin: 0;
   padding: 0.25rem;
-  max-height: 11rem;
+  max-height: 9rem;
   overflow: auto;
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
@@ -1547,6 +1548,122 @@ html.light .app-header {
 
 .keys-picker-copy {
   margin-top: 0.125rem;
+}
+
+.keys-picker-guide {
+  border-top: 1px solid var(--glass-border-subtle);
+  padding-top: 0.625rem;
+}
+
+.keys-picker-guide-summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
+  list-style: none;
+  user-select: none;
+}
+
+.keys-picker-guide-summary::-webkit-details-marker {
+  display: none;
+}
+
+.keys-picker-guide-summary::before {
+  content: "▸ ";
+  color: var(--text-muted);
+}
+
+.keys-picker-guide[open] .keys-picker-guide-summary::before {
+  content: "▾ ";
+}
+
+.keys-picker-guide-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0.625rem 0 0.5rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border-subtle);
+}
+
+.keys-guide-tab {
+  flex: 1;
+  padding: 0.375rem 0.5rem;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 0.125rem);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.keys-guide-tab:hover {
+  color: var(--text);
+}
+
+.keys-guide-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+.keys-picker-guide-host,
+.keys-picker-guide-hint {
+  margin: 0 0 0.375rem;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.keys-picker-steps {
+  margin: 0.375rem 0 0;
+  padding-left: 1.125rem;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.keys-picker-steps.hidden {
+  display: none;
+}
+
+.keys-picker-steps li {
+  margin-bottom: 0.5rem;
+}
+
+.keys-picker-steps li span {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.guide-cmd {
+  display: block;
+  margin-top: 0.125rem;
+  padding: 0.3125rem 0.4375rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text);
+  word-break: break-all;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.guide-cmd:hover,
+.guide-cmd:focus {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  outline: none;
+}
+
+.guide-cmd.copied {
+  border-color: var(--success);
+  background: var(--success-bg);
 }
 
 @media (max-width: 480px) {

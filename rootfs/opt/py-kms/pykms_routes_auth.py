@@ -96,6 +96,7 @@ def login_page():
         next_url=nxt,
         keys_public=config.KEYS_PUBLIC,
         keys_data=keys_data,
+        kms_host=(request.host or 'localhost').split(':')[0],
     )
 
 
