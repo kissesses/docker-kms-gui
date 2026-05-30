@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}products{% endblock %}
+
+{% block style %}
+td.glvk { width: 24rem; }
+pre.glvk { width: min-content; }
+{% endblock %}
+
+{% block content %}
+<h1 class="title">Products</h1>
+
+<nav class="level">
+    <div class="level-item has-text-centered">
+        <div>
+            <p class="heading">Products</p>
+            <p class="title">{{ count_products + filtered }}</p>
+        </div>
+    </div>
+    <div class="level-item has-text-centered">
+        <div>
+            <p class="heading">Windows</p>
+            <p class="title">{{ count_products_windows }}</p>
+        </div>
+    </div>
+    <div class="level-item has-text-centered">
+        <div>
+            <p class="heading">Office</p>
+            <p class="title">{{ count_products_office }}</p>
+        </div>
+    </div>
+</nav>
+
+{% for group_name, group_products in products | dictsort %}
+<h2 class="subtitle">{{ group_name }}</h2>
+<table class="table is-striped is-fullwidth">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>GVLK</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for name, gvlk in group_products | dictsort %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>{% if gvlk %}<pre class="glvk">{{ gvlk }}</pre>{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+{% endblock %}

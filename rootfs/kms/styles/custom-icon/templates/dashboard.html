@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard · py-kms{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white">Dashboard</h1>
+        <p class="mt-2 text-gray-400">KMS server overview and statistics</p>
+    </div>
+
+    {% if error %}
+    <div class="mb-6 p-4 rounded-lg bg-red-900/30 border border-red-700 text-red-200">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div id="dashboard-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card">
+            <dt class="stat-label">Total Clients</dt>
+            <dd class="stat-value" data-stat="count_clients">{{ stats.count_clients if stats else '—' }}</dd>
+        </div>
+        <div class="stat-card">
+            <dt class="stat-label">Windows</dt>
+            <dd class="stat-value" data-stat="count_clients_windows">{{ stats.count_clients_windows if stats else '—' }}</dd>
+        </div>
+        <div class="stat-card">
+            <dt class="stat-label">Office</dt>
+            <dd class="stat-value" data-stat="count_clients_office">{{ stats.count_clients_office if stats else '—' }}</dd>
+        </div>
+        <div class="stat-card">
+            <dt class="stat-label">Products</dt>
+            <dd class="stat-value text-blue-400" data-stat="count_products">{{ stats.count_products if stats else '—' }}</dd>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="panel">
+            <h2 class="panel-title">Server</h2>
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <dt class="text-gray-400">Uptime</dt>
+                    <dd id="stat-uptime" class="font-mono">{{ stats.uptime_seconds if stats else 0 }}s</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-gray-400">Requests served</dt>
+                    <dd data-stat="serve_count">{{ stats.serve_count if stats else 0 }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-gray-400">Version</dt>
+                    <dd>{{ stats.version if stats and stats.version else 'N/A' }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-gray-400">Database</dt>
+                    <dd class="font-mono text-xs truncate max-w-xs">{{ stats.db_path if stats else 'N/A' }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="panel">
+            <h2 class="panel-title">Quick Links</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="/clients" class="quick-link">View Clients</a>
+                <a href="/products" class="quick-link">Product Keys</a>
+                <a href="/api/v1/clients/export" class="quick-link">Export CSV</a>
+                <a href="/api/v1/stats" class="quick-link">API Stats</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    PyKmsApp.initDashboard();
+});
+</script>
+{% endblock %}

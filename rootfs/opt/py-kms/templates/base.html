@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>py-kms {% block title %}{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bulma.min.css') }}">
+    <style>
+        #content { margin: 1em; overflow-x: auto; }
+        pre { overflow-x: auto; padding: 0.5em; }
+        .nav-bar { margin-bottom: 1.5em; }
+        .nav-bar .button { margin-right: 0.5em; margin-bottom: 0.5em; }
+        {% if path != '/' %}
+        div.backtohome { display: flex; justify-content: center; }
+        {% endif %}
+        {% block style %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div id="content">
+        <nav class="nav-bar">
+            <a class="button is-small{% if path == '/' %} is-link{% else %} is-light{% endif %}" href="/">Dashboard</a>
+            <a class="button is-small{% if path == '/clients/' %} is-link{% else %} is-light{% endif %}" href="/clients">Clients</a>
+            <a class="button is-small{% if path == '/products/' %} is-link{% else %} is-light{% endif %}" href="/products">Products</a>
+            <a class="button is-small{% if path == '/license/' %} is-link{% else %} is-light{% endif %}" href="/license">License</a>
+            <a class="button is-small is-info is-light" href="/api/v1/clients/export">Export CSV</a>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        for (let element of document.getElementsByClassName('convert_timestamp')) {
+            element.innerText = new Date(element.innerText).toLocaleString();
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

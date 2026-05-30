@@ -1,0 +1,13 @@
+{
+  "maintainer": "kissesses",
+  "repository": "https://github.com/kissesses/docker-kms-gui",
+  "images": {
+    "kms": "kissesses/kms",
+    "gui": "kissesses/kms-gui"
+  },
+  "version": "1.5.0",
+  "upstream": {
+    "py-kms": "https://github.com/Py-KMS-Organization/py-kms",
+    "original_gui": "https://github.com/11notes/docker-KMS-GUI"
+  }
+}

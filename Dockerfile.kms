@@ -1,0 +1,64 @@
+# KMS server — standalone, no 11notes dependency
+# https://github.com/Py-KMS-Organization/py-kms
+
+ARG PYKMS_REPO=https://github.com/Py-KMS-Organization/py-kms.git
+ARG PYKMS_REF=main
+
+FROM alpine:3.22 AS pykms-src
+  ARG PYKMS_REPO
+  ARG PYKMS_REF
+  RUN apk add --no-cache git \
+    && git clone --depth 1 --branch "${PYKMS_REF}" "${PYKMS_REPO}" /src
+
+FROM alpine:3.22
+
+  ARG BUILD_VERSION=dev
+  ARG APP_UID=1000
+  ARG APP_GID=1000
+
+  ENV IP=0.0.0.0
+  ENV PORT=1688
+  ENV LCID=1033
+  ENV CLIENT_COUNT=26
+  ENV ACTIVATION_INTERVAL=120
+  ENV RENEWAL_INTERVAL=10080
+  ENV HWID=RANDOM
+  ENV LOGLEVEL=INFO
+  ENV LOGFILE=STDOUT
+  ENV TZ=UTC
+  ENV KMS_DB_PATH=/kms/var/kms.db
+
+  RUN apk add --no-cache \
+      bash \
+      python3 \
+      py3-pip \
+      sqlite-libs \
+      ca-certificates \
+      tzdata \
+      curl \
+    && pip3 install --break-system-packages --no-cache-dir \
+      dnspython==2.8.0 \
+      tzlocal==5.3.1
+
+  COPY --from=pykms-src /src/py-kms /opt/py-kms
+  COPY --from=pykms-src /src/LICENSE /LICENSE
+
+  RUN echo "${BUILD_VERSION}" > /VERSION \
+    && echo "Py-KMS-Organization/py-kms" >> /VERSION \
+    && addgroup -g "${APP_GID}" kms 2>/dev/null || true \
+    && adduser -S -u "${APP_UID}" -G kms kms 2>/dev/null || adduser -S -u "${APP_UID}" kms \
+    && mkdir -p /kms/var \
+    && chown -R "${APP_UID}:${APP_GID}" /kms/var /opt/py-kms
+
+  COPY docker/kms/entrypoint.sh /usr/local/bin/entrypoint.sh
+  RUN chmod +x /usr/local/bin/entrypoint.sh
+
+  WORKDIR /opt/py-kms
+  VOLUME ["/kms/var"]
+  EXPOSE 1688/tcp
+
+  HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD pgrep -f pykms_Server.py >/dev/null || exit 1
+
+  USER ${APP_UID}:${APP_GID}
+  ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

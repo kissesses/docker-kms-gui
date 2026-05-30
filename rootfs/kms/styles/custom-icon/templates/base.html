@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>py-kms {% block title %}{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pykms-frontend.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full bg-gray-900 text-gray-100">
+    <div class="min-h-full flex">
+        <aside class="sidebar w-64 shrink-0 border-r border-gray-700 bg-gray-900 hidden md:flex md:flex-col">
+            <div class="p-6 border-b border-gray-700">
+                <a href="/" class="text-xl font-bold text-white">py-kms</a>
+                <p class="text-xs text-gray-400 mt-1">KMS Web GUI</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-1">
+                <a href="/" class="nav-link{% if path == '/' %} active{% endif %}">Dashboard</a>
+                <a href="/clients" class="nav-link{% if path == '/clients/' %} active{% endif %}">Clients</a>
+                <a href="/products" class="nav-link{% if path == '/products/' %} active{% endif %}">Products</a>
+                <a href="/license" class="nav-link{% if path == '/license/' %} active{% endif %}">License</a>
+            </nav>
+            <div class="p-4 border-t border-gray-700 text-xs text-gray-500">
+                {% if version_info %}
+                <div>v{{ version_info.hash }}</div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0">
+            <header class="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-900 md:hidden">
+                <a href="/" class="text-lg font-bold text-white">py-kms</a>
+                <button id="mobile-menu-toggle" type="button" class="px-3 py-1 rounded bg-gray-800 text-gray-300">Menu</button>
+            </header>
+            <nav id="mobile-nav" class="hidden md:hidden border-b border-gray-700 bg-gray-900 px-4 py-2 space-y-1">
+                <a href="/" class="nav-link block{% if path == '/' %} active{% endif %}">Dashboard</a>
+                <a href="/clients" class="nav-link block{% if path == '/clients/' %} active{% endif %}">Clients</a>
+                <a href="/products" class="nav-link block{% if path == '/products/' %} active{% endif %}">Products</a>
+                <a href="/license" class="nav-link block{% if path == '/license/' %} active{% endif %}">License</a>
+            </nav>
+
+            <div class="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-800">
+                <button id="theme-toggle" type="button" class="toolbar-btn" title="Toggle theme">Theme</button>
+            </div>
+
+            <main class="flex-1 py-6 px-4 sm:px-6 lg:px-8 overflow-x-auto">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
