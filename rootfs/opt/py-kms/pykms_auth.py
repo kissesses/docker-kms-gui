@@ -16,7 +16,11 @@ def is_enabled():
 
 def api_protection_enabled():
     """Whether /api/* requires authentication."""
+    if os.environ.get('API_PUBLIC', 'false').lower() in ('1', 'true', 'yes'):
+        return False
     if os.environ.get('INTERNET_MODE', 'false').lower() in ('1', 'true', 'yes'):
+        return True
+    if os.environ.get('NGINX_TLS_ENABLED', 'false').lower() in ('1', 'true', 'yes'):
         return True
     raw = os.environ.get('API_AUTH_REQUIRED')
     if raw is not None and str(raw).strip() != '':

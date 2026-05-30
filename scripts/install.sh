@@ -588,6 +588,7 @@ setup_env_file() {
       set_env_var "GUI_PORT" "80"
       set_env_var "NGINX_TLS_ENABLED" "false"
       set_env_var "GUI_AUTH_ENABLED" "true"
+      set_env_var "API_AUTH_REQUIRED" "true"
       set_env_var "ADMIN_PUBLIC" "false"
       info "LAN: клиенты подключаются к <IP-хоста>:1688, GUI — http://127.0.0.1/"
       ;;
@@ -597,6 +598,7 @@ setup_env_file() {
       set_env_var "GUI_BIND" "0.0.0.0"
       set_env_var "GUI_PORT" "443"
       set_env_var "GUI_AUTH_ENABLED" "true"
+      set_env_var "API_AUTH_REQUIRED" "true"
       set_env_var "NGINX_TLS_ENABLED" "true"
       set_env_var "TLS_CERT_DIR" "./certs"
       ;;

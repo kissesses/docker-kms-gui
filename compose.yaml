@@ -47,6 +47,7 @@ services:
       NGINX_BASIC_AUTH_PASS: ${NGINX_BASIC_AUTH_PASS:-}
       NGINX_TLS_ENABLED: ${NGINX_TLS_ENABLED:-false}
       GUI_AUTH_ENABLED: ${GUI_AUTH_ENABLED:-false}
+      API_AUTH_REQUIRED: ${API_AUTH_REQUIRED:-false}
       ADMIN_PUBLIC: ${ADMIN_PUBLIC:-false}
       DEBUG: ${DEBUG:-}
     volumes:

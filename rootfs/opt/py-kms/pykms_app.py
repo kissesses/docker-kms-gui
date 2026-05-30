@@ -75,13 +75,17 @@ def create_app():
 
     @app.before_request
     def guard():
-        from flask import request, redirect, url_for, session
+        from flask import jsonify, request, redirect, url_for, session
+        from pykms_routes_auth import current_user
         path = request.path
 
         if path.startswith('/admin') and not auth.is_enabled() and not config.ADMIN_PUBLIC:
             return redirect(url_for('pages.dashboard'))
 
         if path.startswith('/api/'):
+            if auth.api_protection_enabled():
+                if not auth.verify_api_bearer() and not current_user():
+                    return jsonify({'error': 'Unauthorized'}), 401
             return None
 
         if not auth.is_enabled():

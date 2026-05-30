@@ -47,6 +47,7 @@ services:
       TZ: ${TZ:-UTC}
       INTERNET_MODE: "true"
       GUI_AUTH_ENABLED: ${GUI_AUTH_ENABLED:-true}
+      API_AUTH_REQUIRED: "true"
       NGINX_ENABLED: "true"
       NGINX_PORT: "80"
       NGINX_TLS_ENABLED: ${NGINX_TLS_ENABLED:-true}
