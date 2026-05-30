@@ -121,8 +121,6 @@ Options:
 Environment:
   KMS_GUI_DIR         same as --dir
   KMS_VERSION         same as --version (also sets GUI_VERSION)
-
-Environment:
   KMS_GUI_GIT_REF     git branch for clone (default: main)
 
 Requirements (minimum):
