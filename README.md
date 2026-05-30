@@ -95,14 +95,17 @@ git push origin v1.5.0
 
 GitHub Actions builds and pushes both images to Docker Hub.
 
-## CI secrets
+## CI secrets (required for release tags only)
 
-Add to **GitHub → Settings → Secrets**:
+Add to **GitHub → Settings → Secrets and variables → Actions**:
 
 | Secret | Description |
 |---|---|
 | `DOCKERHUB_USERNAME` | Docker Hub login (`kissesses`) |
-| `DOCKERHUB_TOKEN` | Docker Hub access token |
+| `DOCKERHUB_TOKEN` | Access token from [hub.docker.com/settings/security](https://hub.docker.com/settings/security) |
+
+> Push to `main` runs a **build-only** check (no Docker Hub login needed).  
+> Push tag `v*` or manual **workflow_dispatch** builds and publishes images.
 
 ## Project structure
 
