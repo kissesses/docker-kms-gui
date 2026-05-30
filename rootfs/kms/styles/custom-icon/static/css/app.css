@@ -111,15 +111,21 @@ a { color: inherit; }
 .app-header-inner {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  height: var(--header-h);
+  gap: 0.75rem;
+  min-height: var(--header-h);
   max-width: 80rem;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
 }
 
 @media (min-width: 768px) {
-  .app-header-inner { padding: 0 1.5rem; }
+  .app-header-inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    padding: 0.5rem 1.5rem;
+  }
 }
 
 .app-brand {
@@ -128,6 +134,11 @@ a { color: inherit; }
   gap: 0.75rem;
   text-decoration: none;
   flex-shrink: 0;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+  padding-right: 0.25rem;
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
 }
 
 .app-brand-icon {
@@ -167,10 +178,19 @@ a { color: inherit; }
 .app-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.125rem;
-  flex: 1;
   min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.125rem 0;
+}
+
+.app-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-link {
@@ -217,7 +237,11 @@ a { color: inherit; }
   align-items: center;
   gap: 0.375rem;
   flex-shrink: 0;
-  margin-left: auto;
+  justify-self: end;
+  position: relative;
+  z-index: 2;
+  padding-left: 0.25rem;
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
 }
 
 .btn-lang {
@@ -226,6 +250,10 @@ a { color: inherit; }
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+.btn-sign-out .btn-label {
+  white-space: nowrap;
 }
 
 .app-version {
@@ -300,19 +328,55 @@ a { color: inherit; }
 }
 
 @media (min-width: 900px) {
-  .app-nav .nav-link { padding: 0.5rem 1rem; font-size: 0.875rem; }
+  .app-nav .nav-link { padding: 0.5rem 0.875rem; font-size: 0.875rem; }
+}
+
+/* Compact header: icon-only nav + fewer action chips */
+@media (min-width: 768px) and (max-width: 1320px) {
+  .app-nav .nav-link {
+    font-size: 0;
+    gap: 0;
+    padding: 0.5rem 0.625rem;
+  }
+
+  .app-nav .nav-link svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    opacity: 1;
+  }
+
+  .app-version {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+  .app-header-actions .status-pill {
+    display: none !important;
+  }
+
+  .app-header-actions .user-pill {
+    display: none !important;
+  }
+
+  .btn-sign-out .btn-label {
+    display: none;
+  }
+
+  .btn-sign-out {
+    padding: 0.5rem;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 960px) {
-  .app-header-inner { gap: 0.625rem; padding: 0 0.875rem; }
-  .app-nav {
-    overflow-x: auto;
-    justify-content: flex-start;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+  .app-header-inner {
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 0.875rem;
   }
-  .app-nav::-webkit-scrollbar { display: none; }
-  .nav-link { padding: 0.5rem 0.625rem; font-size: 0.75rem; }
+
+  .nav-link { padding: 0.5rem 0.625rem; }
   .app-brand-sub { display: none; }
 }
 
