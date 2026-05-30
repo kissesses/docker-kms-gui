@@ -81,7 +81,7 @@ server {
         limit_req zone=api_limit burst=10 nodelay;
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
-        proxy_connect_timeout 10s;
+        proxy_connect_timeout 60s;
         proxy_send_timeout 120s;
         proxy_read_timeout 120s;
         proxy_set_header Host \$host;
@@ -93,6 +93,9 @@ server {
         limit_req zone=auth_limit burst=3 nodelay;
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -102,7 +105,7 @@ server {
         limit_req zone=general_limit burst=30 nodelay;
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
-        proxy_connect_timeout 10s;
+        proxy_connect_timeout 60s;
         proxy_send_timeout 120s;
         proxy_read_timeout 120s;
         proxy_set_header Host \$host;
@@ -139,6 +142,8 @@ if [ -z "${1}" ]; then
   GUNICORN_THREADS="${GUNICORN_THREADS:-4}"
   GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-120}"
   GUNICORN_MAX_REQUESTS="${GUNICORN_MAX_REQUESTS:-1000}"
+  GUNICORN_PRELOAD="${GUNICORN_PRELOAD:-true}"
+  GUNICORN_STARTUP_TIMEOUT="${GUNICORN_STARTUP_TIMEOUT:-120}"
 
   if [ "${NGINX_ENABLED}" = "true" ]; then
     GUNICORN_BIND_ADDR="${GUNICORN_BIND:-127.0.0.1:8080}"
@@ -147,7 +152,30 @@ if [ -z "${1}" ]; then
     _log "nginx disabled, gunicorn on ${GUNICORN_BIND_ADDR}"
   fi
 
+  _wait_for_gunicorn() {
+    backend_url="http://127.0.0.1:8080"
+    case "${GUNICORN_BIND_ADDR}" in
+      *:*) backend_url="http://${GUNICORN_BIND_ADDR}" ;;
+    esac
+    _log "waiting for gunicorn at ${backend_url}/livez (timeout ${GUNICORN_STARTUP_TIMEOUT}s)..."
+    elapsed=0
+    while [ "${elapsed}" -lt "${GUNICORN_STARTUP_TIMEOUT}" ]; do
+      if curl -fsS --connect-timeout 2 --max-time 5 "${backend_url}/livez" >/dev/null 2>&1; then
+        _log "gunicorn ready after ${elapsed}s"
+        return 0
+      fi
+      sleep 1
+      elapsed=$((elapsed + 1))
+    done
+    _log "ERROR: gunicorn did not become ready within ${GUNICORN_STARTUP_TIMEOUT}s"
+    return 1
+  }
+
   _start_gunicorn() {
+    preload_flag=""
+    if [ "${GUNICORN_PRELOAD}" = "true" ]; then
+      preload_flag="--preload"
+    fi
     gunicorn \
       --log-level "${LOG_LEVEL}" \
       --bind "${GUNICORN_BIND_ADDR}" \
@@ -160,12 +188,13 @@ if [ -z "${1}" ]; then
       --graceful-timeout 30 \
       --max-requests "${GUNICORN_MAX_REQUESTS}" \
       --max-requests-jitter 100 \
-      --preload \
+      ${preload_flag} \
       pykms_WebUI:app &
     GUNICORN_PID=$!
   }
 
   _start_gunicorn
+  _wait_for_gunicorn || exit 1
 
   if [ "${NGINX_ENABLED}" = "true" ]; then
     _validate_security
