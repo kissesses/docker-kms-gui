@@ -12,6 +12,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Documentation moved to `docs/` (`SECURITY.md`, `CHANGELOG.md`)
 - Root **README** trimmed to install and daily use; API, Docker images, troubleshooting in `docs/README.md`
 - **Dockerfiles** simplified (grouped ENV, removed redundant defaults)
+- **Single `Dockerfile`** with `--target kms` / `--target gui`; removed `Dockerfile.kms`
+- **Single `.env.example`** for all modes; removed `.env.internet.example` (install.sh applies mode settings)
+- **`pytest.ini`** — only `testpaths = tests`
 
 ### Removed
 
@@ -20,6 +23,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Stale metadata (`.json`), unused `img/`, duplicate `favicon.ico`, `RELEASE.md` (merged into README)
 - Legacy **`products.html`** and dead `/products` UI code (`/products` still redirects to `/keys`)
 - Root **`install.sh`** — use **`scripts/install.sh`** only (curl one-liner and `./scripts/install.sh`)
+- **`Dockerfile.kms`**, **`.env.internet.example`**
 
 ---
 

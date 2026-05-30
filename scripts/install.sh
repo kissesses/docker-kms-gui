@@ -50,7 +50,7 @@ set -euo pipefail
 
 # --- Константы ----------------------------------------------------------------
 readonly REPO_URL="https://github.com/kissesses/docker-kms-gui.git"
-readonly DEFAULT_TZ="UTC"
+readonly DEFAULT_TZ="Europe/Moscow"
 readonly DEFAULT_INSTALL_DIR="${KMS_GUI_DIR:-${HOME}/kms-gui}"
 readonly DEFAULT_REPO_REF="${KMS_GUI_GIT_REF:-main}"
 
@@ -115,7 +115,7 @@ Options:
   -y, --yes           skip confirmations
   --skip-docker-install
                       do not auto-install Docker (fail if missing)
-  --tz TZ             timezone (default: UTC)
+  --tz TZ             timezone (default: Europe/Moscow)
   -h, --help          show this help
 
 Environment:
@@ -543,24 +543,21 @@ fix_env_binds() {
 
 # --- Создание .env для выбранного режима --------------------------------------
 setup_env_file() {
-  local env_src=".env.example"
-
   if [[ "${MODE}" == "internet" ]]; then
-    env_src=".env.internet.example"
     COMPOSE_FILE="compose.internet.yaml"
   fi
 
   if [[ -f "${REPO_ROOT}/.env" ]]; then
     warn "Файл .env уже существует."
-    if confirm "Перезаписать .env из ${env_src}?"; then
-      cp "${env_src}" "${REPO_ROOT}/.env"
-      ok "Скопирован ${env_src} → .env"
+    if confirm "Перезаписать .env из .env.example?"; then
+      cp ".env.example" "${REPO_ROOT}/.env"
+      ok "Скопирован .env.example → .env"
     else
       info "Сохраняем существующий .env, применяем только ключевые настройки режима…"
     fi
   else
-    cp "${env_src}" "${REPO_ROOT}/.env"
-    ok "Создан .env из ${env_src}"
+    cp ".env.example" "${REPO_ROOT}/.env"
+    ok "Создан .env из .env.example"
   fi
 
   # Общие настройки
@@ -599,8 +596,15 @@ setup_env_file() {
       set_env_var "GUI_PORT" "443"
       set_env_var "GUI_AUTH_ENABLED" "true"
       set_env_var "API_AUTH_REQUIRED" "true"
+      set_env_var "OPS_DOCKER_ENABLED" "true"
       set_env_var "NGINX_TLS_ENABLED" "true"
       set_env_var "TLS_CERT_DIR" "./certs"
+      set_env_var "GUNICORN_PRELOAD" "false"
+      set_env_var "GUNICORN_WORKERS" "2"
+      set_env_var "GUNICORN_THREADS" "2"
+      set_env_var "GUNICORN_TIMEOUT" "300"
+      set_env_var "GUNICORN_MAX_REQUESTS" "0"
+      set_env_var "KEYS_PUBLIC" "true"
       ;;
   esac
 

@@ -101,7 +101,7 @@ curl -s http://127.0.0.1/livez    # → OK
 <summary><b>🌍 Internet — пошагово</b></summary>
 
 ```bash
-cp .env.internet.example .env
+cp .env.example .env
 mkdir -p certs    # положите cert.pem и key.pem (Let's Encrypt, Cloudflare Origin…)
 docker compose -f compose.internet.yaml pull
 docker compose -f compose.internet.yaml up -d
@@ -254,7 +254,7 @@ curl -s http://127.0.0.1/livez    # → OK
 | **LAN** | `compose.yaml` | `KMS_BIND=0.0.0.0` for network clients |
 | **Internet** | `compose.internet.yaml` | Public HTTPS + **required** app login |
 
-Internet: `cp .env.internet.example .env` → TLS certs in `./certs/` → `docker compose -f compose.internet.yaml up -d` → first visit **`/setup`**.
+Internet: `cp .env.example .env` (or `./scripts/install.sh --mode internet`) → TLS certs in `./certs/` → `docker compose -f compose.internet.yaml up -d` → first visit **`/setup`**.
 
 ### 🖥️ Localization
 

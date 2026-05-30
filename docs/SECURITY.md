@@ -61,7 +61,8 @@ docker compose up -d
 KMS and GUI can both be public when **application auth** is enabled:
 
 ```bash
-cp .env.internet.example .env
+cp .env.example .env
+# Or: ./scripts/install.sh --mode internet
 # Place cert.pem + key.pem in ./certs/
 docker compose -f compose.internet.yaml up -d
 ```

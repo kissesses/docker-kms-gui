@@ -4,7 +4,8 @@ services:
   kms:
     build:
       context: .
-      dockerfile: Dockerfile.kms
+      dockerfile: Dockerfile
+      target: kms
       args:
         BUILD_VERSION: ${KMS_VERSION:-1.10.0}
     image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.10.0}
@@ -33,6 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: gui
       args:
         BUILD_VERSION: ${GUI_VERSION:-1.10.0}
     image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.10.0}

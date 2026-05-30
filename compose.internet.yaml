@@ -1,10 +1,7 @@
-# Internet deployment — KMS + GUI public with application login
-#
-# Usage:
-#   cp .env.internet.example .env
-#   # mount TLS certs to ./certs/ (cert.pem + key.pem)
+# Internet deployment — configure .env (see .env.example), then:
+#   mkdir -p certs && place cert.pem + key.pem
 #   docker compose -f compose.internet.yaml up -d
-#   open https://your-domain/setup — create admin on first visit
+#   open https://your-domain/setup
 
 name: kms-internet
 
@@ -12,7 +9,8 @@ services:
   kms:
     build:
       context: .
-      dockerfile: Dockerfile.kms
+      dockerfile: Dockerfile
+      target: kms
       args:
         BUILD_VERSION: ${KMS_VERSION:-1.10.0}
     image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.10.0}
@@ -37,6 +35,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: gui
       args:
         BUILD_VERSION: ${GUI_VERSION:-1.10.0}
     image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.10.0}

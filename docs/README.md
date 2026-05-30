@@ -11,7 +11,7 @@ Extended reference for [KMS-GUI](../README.md). Start with the root README for i
 
 ## Configuration
 
-Copy [`.env.example`](../.env.example) to `.env`. Internet profile: [`.env.internet.example`](../.env.internet.example).
+Copy [`.env.example`](../.env.example) to `.env`. For internet, use `./scripts/install.sh --mode internet` or set bind/auth/TLS vars manually (see comments in `.env.example`).
 
 | Variable | Default | Notes |
 |----------|---------|--------|
@@ -86,10 +86,12 @@ Admin → **Operations** shows memory, restarts, worker timeouts, slow log.
 
 ## Docker images
 
-| File | Image | Contents |
-|------|-------|----------|
-| `Dockerfile.kms` | `ghcr.io/kissesses/kms` | py-kms, port 1688, volume `/kms/var` |
-| `Dockerfile` | `ghcr.io/kissesses/kms-gui` | nginx + gunicorn/Flask UI, ports 80/443 |
+Single [Dockerfile](../Dockerfile) with multi-stage targets:
+
+| Target | Image | Contents |
+|--------|-------|----------|
+| `kms` | `ghcr.io/kissesses/kms` | py-kms, port 1688, volume `/kms/var` |
+| `gui` | `ghcr.io/kissesses/kms-gui` | nginx + gunicorn/Flask UI, ports 80/443 |
 
 **Build args** (optional):
 
@@ -106,8 +108,8 @@ Compose passes `BUILD_VERSION` from `KMS_VERSION` / `GUI_VERSION` in `.env`.
 ```bash
 docker compose up -d --build
 # or
-docker build -f Dockerfile.kms --build-arg BUILD_VERSION=local -t ghcr.io/kissesses/kms:local .
-docker build -f Dockerfile --build-arg BUILD_VERSION=local -t ghcr.io/kissesses/kms-gui:local .
+docker build --target kms --build-arg BUILD_VERSION=local -t ghcr.io/kissesses/kms:local .
+docker build --target gui --build-arg BUILD_VERSION=local -t ghcr.io/kissesses/kms-gui:local .
 ```
 
 ---
