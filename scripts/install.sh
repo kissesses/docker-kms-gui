@@ -753,7 +753,7 @@ print_summary() {
   echo "    docker compose -f ${COMPOSE_FILE} logs -f gui"
   echo "    docker compose -f ${COMPOSE_FILE} pull && docker compose -f ${COMPOSE_FILE} up -d"
   echo ""
-  echo "  Документация: README.md, SECURITY.md"
+  echo "  Документация: README.md, docs/SECURITY.md"
   echo ""
 }
 

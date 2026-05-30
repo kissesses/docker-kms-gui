@@ -7,6 +7,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation moved to `docs/` (`SECURITY.md`, `CHANGELOG.md`)
+
 ### Removed
 
 - Sidecar deployment (`compose.sidecar.yaml`, `nginx/`) — use built-in nginx in the GUI container

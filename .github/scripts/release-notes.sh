@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Generate GitHub Release body from CHANGELOG.md for a given tag (e.g. v1.6.0)
+# Generate GitHub Release body from docs/CHANGELOG.md for a given tag (e.g. v1.6.0)
 set -euo pipefail
 
 TAG="${1:-}"
-CHANGELOG="${2:-CHANGELOG.md}"
+CHANGELOG="${2:-docs/CHANGELOG.md}"
 
 if [[ -z "$TAG" ]]; then
   echo "Usage: release-notes.sh <tag> [changelog-file]" >&2
@@ -49,7 +49,7 @@ print("docker compose pull")
 print("docker compose up -d")
 print("```\n")
 print("## 🔒 Security\n")
-print("Read [SECURITY.md](https://github.com/kissesses/docker-kms-gui/blob/main/SECURITY.md) before exposing to a network.\n")
+print("Read [SECURITY.md](https://github.com/kissesses/docker-kms-gui/blob/main/docs/SECURITY.md) before exposing to a network.\n")
 print("## 📋 Full changelog\n")
-print(f"[CHANGELOG.md](https://github.com/kissesses/docker-kms-gui/blob/main/CHANGELOG.md)")
+print(f"[CHANGELOG.md](https://github.com/kissesses/docker-kms-gui/blob/main/docs/CHANGELOG.md)")
 PY

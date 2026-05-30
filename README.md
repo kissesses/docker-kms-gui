@@ -15,6 +15,8 @@ Docker stack: **KMS activation server** (py-kms, port 1688) + **web dashboard** 
 
 Both containers share one SQLite volume (`kms-data`) — client list and admin settings persist across restarts.
 
+**Docs:** [Security](docs/SECURITY.md) · [Changelog](docs/CHANGELOG.md)
+
 ---
 
 ## Requirements
@@ -270,7 +272,7 @@ First visit: **`https://your-domain/setup`** — create administrator.
 | `NGINX_TLS_ENABLED` | `true` | Encrypt login and sessions |
 | `GUI_PORT` | `443` | HTTPS |
 
-Full checklist: [SECURITY.md](SECURITY.md).
+Full checklist: [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
 
@@ -396,13 +398,13 @@ docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.8.0 .
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for threat model, rate limits, CSRF, and deployment checklist.
+See [docs/SECURITY.md](docs/SECURITY.md) for threat model, rate limits, CSRF, and deployment checklist.
 
 ---
 
 ## Releases & CI
 
-- [CHANGELOG.md](CHANGELOG.md) — version history
+- [docs/CHANGELOG.md](docs/CHANGELOG.md) — version history
 
 Tag `v*` on `main` triggers GitHub Actions: build → Grype scan → pytest → push to **ghcr.io/kissesses/** → GitHub Release.
 
@@ -414,6 +416,7 @@ Tag `v*` on `main` triggers GitHub Actions: build → Grype scan → pytest → 
 Dockerfile / Dockerfile.kms   # Docker images
 compose.yaml                  # Local / LAN
 compose.internet.yaml         # Public HTTPS + auth
+docs/                         # Security guide, changelog
 rootfs/                       # nginx, entrypoint, UI, Python backend
 docker/kms/                   # KMS server entrypoint
 tests/                        # pytest
