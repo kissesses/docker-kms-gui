@@ -1,114 +1,114 @@
 {% extends 'base.html' %}
 
-{% block title %}Clients · py-kms{% endblock %}
+{% block title %}Clients · KMS-GUI{% endblock %}
 
 {% block content %}
-<div class="max-w-none mx-auto">
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+<div class="page-header">
+    <div class="page-header-row">
         <div>
-            <h1 class="text-3xl font-bold text-white">KMS Clients</h1>
-            <p class="mt-2 text-gray-400">Active client connections and activation status</p>
+            <h1 class="page-title">KMS Clients</h1>
+            <p class="page-subtitle">Active connections and activation status</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-            <a href="/api/v1/clients/export" class="toolbar-btn">Export CSV</a>
-            <select id="auto-refresh" class="toolbar-select" aria-label="Auto refresh">
+        <div class="page-actions">
+            <a href="/api/v1/clients/export" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+            </a>
+            <select id="auto-refresh" class="select" aria-label="Auto refresh">
                 <option value="0">Auto-refresh: Off</option>
                 <option value="30">Every 30s</option>
                 <option value="60">Every 60s</option>
             </select>
         </div>
     </div>
-
-    {% if error %}
-    <div class="mb-6 p-4 rounded-lg bg-red-900/30 border border-red-700 text-red-200">
-        {{ error }}
-    </div>
-    {% else %}
-
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card">
-            <dt class="stat-label">Total Clients</dt>
-            <dd class="stat-value">{{ count_clients }}</dd>
-        </div>
-        <div class="stat-card">
-            <dt class="stat-label">Windows</dt>
-            <dd class="stat-value">{{ count_clients_windows }}</dd>
-        </div>
-        <div class="stat-card">
-            <dt class="stat-label">Office</dt>
-            <dd class="stat-value">{{ count_clients_office }}</dd>
-        </div>
-        <div class="stat-card">
-            <dt class="stat-label">Products</dt>
-            <dd class="stat-value text-blue-400"><a href="/products">{{ count_projects }}</a></dd>
-        </div>
-    </div>
-
-    <div class="mb-4 flex flex-col sm:flex-row gap-3">
-        <input id="client-search" type="search" placeholder="Search by name, IP, app ID, status..." class="toolbar-input flex-1" aria-label="Search clients">
-        <select id="client-filter-app" class="toolbar-select" aria-label="Filter by application">
-            <option value="">All applications</option>
-            <option value="Windows">Windows</option>
-            <option value="Office">Office</option>
-        </select>
-    </div>
-
-    {% if clients %}
-    <div class="panel overflow-x-auto">
-        <table id="clients-table" class="w-full clients-table">
-            <thead>
-                <tr>
-                    <th class="sortable" data-sort="clientMachineId">Client ID</th>
-                    <th class="sortable" data-sort="machineName">Machine</th>
-                    <th class="sortable" data-sort="applicationId">Application</th>
-                    <th class="sortable" data-sort="skuId">SKU ID</th>
-                    <th class="sortable" data-sort="licenseStatus">Status</th>
-                    <th class="sortable" data-sort="requestCount">Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for client in clients %}
-                <tr class="client-row"
-                    data-name="{{ client.machineName | lower }}"
-                    data-ip="{{ client.machineIp | lower }}"
-                    data-app="{{ client.applicationId | lower }}"
-                    data-status="{{ client.licenseStatus | lower }}">
-                    <td class="font-mono text-sm">
-                        <span class="whitespace-normal break-words">{{ client.clientMachineId }}</span>
-                        <div class="text-xs text-gray-500 mt-1">EPID: {{ client.kmsEpid | default('N/A', true) }}</div>
-                    </td>
-                    <td>
-                        <div class="text-sm">{{ client.machineName }}</div>
-                        <div class="text-xs text-gray-500">IP: {{ client.machineIp }}</div>
-                        <div class="text-xs text-gray-500">Last: <span class="convert_timestamp">{{ client.lastRequestTime }}</span></div>
-                    </td>
-                    <td>{{ client.applicationId }}</td>
-                    <td>{{ client.skuId }}</td>
-                    <td>
-                        <span class="status-badge {% if client.licenseStatus == 'Activated' %}status-ok{% else %}status-warn{% endif %}">
-                            {% if client.licenseStatus == 'Notifications Mode' %}Notify{% else %}{{ client.licenseStatus }}{% endif %}
-                        </span>
-                    </td>
-                    <td>{{ client.requestCount }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="panel text-center py-12">
-        <h3 class="text-xl font-medium text-yellow-300">No active connections</h3>
-        <p class="mt-2 text-gray-400">Connect KMS clients to see activation data</p>
-    </div>
-    {% endif %}
-    {% endif %}
 </div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% else %}
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Total</span></div>
+        <div class="stat-value">{{ count_clients }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Windows</span></div>
+        <div class="stat-value">{{ count_clients_windows }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Office</span></div>
+        <div class="stat-value">{{ count_clients_office }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-head"><span class="stat-label">Products</span></div>
+        <div class="stat-value accent"><a href="/products">{{ count_projects }}</a></div>
+    </div>
+</div>
+
+<div class="toolbar-row">
+    <input id="client-search" type="search" placeholder="Search name, IP, app, status…" class="input input-search" aria-label="Search clients">
+    <select id="client-filter-app" class="select" aria-label="Filter by application">
+        <option value="">All applications</option>
+        <option value="Windows">Windows</option>
+        <option value="Office">Office</option>
+    </select>
+</div>
+
+{% if clients %}
+<div class="table-wrap">
+    <table id="clients-table" class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable" data-sort="clientMachineId">Client ID</th>
+                <th class="sortable" data-sort="machineName">Machine</th>
+                <th class="sortable" data-sort="applicationId">Application</th>
+                <th class="sortable" data-sort="skuId">SKU</th>
+                <th class="sortable" data-sort="licenseStatus">Status</th>
+                <th class="sortable" data-sort="requestCount">Requests</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr class="client-row"
+                data-name="{{ client.machineName | lower }}"
+                data-ip="{{ client.machineIp | lower }}"
+                data-app="{{ client.applicationId | lower }}"
+                data-status="{{ client.licenseStatus | lower }}">
+                <td>
+                    <div class="cell-mono">{{ client.clientMachineId }}</div>
+                    <div class="cell-meta">EPID: {{ client.kmsEpid | default('N/A', true) }}</div>
+                </td>
+                <td>
+                    <div class="cell-primary">{{ client.machineName }}</div>
+                    <div class="cell-meta">{{ client.machineIp }} · <span class="convert_timestamp">{{ client.lastRequestTime }}</span></div>
+                </td>
+                <td><span class="badge badge-neutral">{{ client.applicationId }}</span></td>
+                <td class="cell-mono">{{ client.skuId }}</td>
+                <td>
+                    <span class="badge {% if client.licenseStatus == 'Activated' %}badge-ok{% else %}badge-warn{% endif %}">
+                        {% if client.licenseStatus == 'Notifications Mode' %}Notify{% else %}{{ client.licenseStatus }}{% endif %}
+                    </span>
+                </td>
+                <td class="cell-primary">{{ client.requestCount }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p id="client-filter-count" class="cell-meta" style="margin-top:0.75rem;text-align:right;"></p>
+{% else %}
+<div class="panel empty-state">
+    <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+    </div>
+    <h3 class="empty-title">No active connections</h3>
+    <p class="empty-text">Point KMS clients to this server — data will appear here automatically.</p>
+</div>
+{% endif %}
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    PyKmsApp.initClientsTable();
-});
-</script>
+<script>document.addEventListener('DOMContentLoaded', function() { PyKmsApp.initClientsTable(); });</script>
 {% endblock %}

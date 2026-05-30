@@ -1,55 +1,89 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>py-kms {% block title %}{% endblock %}</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pykms-frontend.css') }}">
+    <meta name="theme-color" content="#070b14">
+    <title>{% block title %}KMS-GUI{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
     {% block head %}{% endblock %}
 </head>
-<body class="h-full bg-gray-900 text-gray-100">
-    <div class="min-h-full flex">
-        <aside class="sidebar w-64 shrink-0 border-r border-gray-700 bg-gray-900 hidden md:flex md:flex-col">
-            <div class="p-6 border-b border-gray-700">
-                <a href="/" class="text-xl font-bold text-white">py-kms</a>
-                <p class="text-xs text-gray-400 mt-1">KMS Web GUI</p>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="app-header-inner">
+                <a href="/" class="app-brand">
+                    <div class="app-brand-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 12l2 2 4-4"/>
+                            <rect x="3" y="4" width="18" height="16" rx="2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="app-brand-title">KMS-GUI</div>
+                        <div class="app-brand-sub">kissesses</div>
+                    </div>
+                </a>
+
+                <nav class="app-nav desktop-only" aria-label="Main navigation">
+                    <a href="/" class="nav-link{% if path == '/' %} active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        Dashboard
+                    </a>
+                    <a href="/clients" class="nav-link{% if path == '/clients/' %} active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Clients
+                    </a>
+                    <a href="/products" class="nav-link{% if path == '/products/' %} active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        Products
+                    </a>
+                    <a href="/license" class="nav-link{% if path == '/license/' %} active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        License
+                    </a>
+                </nav>
+
+                <div class="app-header-actions">
+                    <span id="server-status" class="status-pill desktop-only">
+                        <span class="status-dot" id="status-dot"></span>
+                        <span id="status-text">Checking…</span>
+                    </span>
+                    {% if version_info %}
+                    <span class="app-version desktop-only" title="{{ version_info.reference }}">v{{ version_info.hash }}</span>
+                    {% endif %}
+                    <a href="/api/v1/clients/export" class="btn desktop-only" title="Export CSV">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export
+                    </a>
+                    <button id="theme-toggle" type="button" class="btn btn-icon" title="Toggle theme" aria-label="Toggle theme">
+                        <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    </button>
+                    <button id="mobile-menu-toggle" type="button" class="btn btn-icon mobile-only" aria-label="Menu" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                </div>
             </div>
-            <nav class="flex-1 p-4 space-y-1">
+
+            <nav id="mobile-nav" aria-label="Mobile navigation">
                 <a href="/" class="nav-link{% if path == '/' %} active{% endif %}">Dashboard</a>
                 <a href="/clients" class="nav-link{% if path == '/clients/' %} active{% endif %}">Clients</a>
                 <a href="/products" class="nav-link{% if path == '/products/' %} active{% endif %}">Products</a>
                 <a href="/license" class="nav-link{% if path == '/license/' %} active{% endif %}">License</a>
+                <a href="/api/v1/clients/export" class="nav-link">Export CSV</a>
             </nav>
-            <div class="p-4 border-t border-gray-700 text-xs text-gray-500">
-                {% if version_info %}
-                <div>v{{ version_info.hash }}</div>
-                {% endif %}
-            </div>
-        </aside>
+        </header>
 
-        <div class="flex-1 flex flex-col min-w-0">
-            <header class="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-900 md:hidden">
-                <a href="/" class="text-lg font-bold text-white">py-kms</a>
-                <button id="mobile-menu-toggle" type="button" class="px-3 py-1 rounded bg-gray-800 text-gray-300">Menu</button>
-            </header>
-            <nav id="mobile-nav" class="hidden md:hidden border-b border-gray-700 bg-gray-900 px-4 py-2 space-y-1">
-                <a href="/" class="nav-link block{% if path == '/' %} active{% endif %}">Dashboard</a>
-                <a href="/clients" class="nav-link block{% if path == '/clients/' %} active{% endif %}">Clients</a>
-                <a href="/products" class="nav-link block{% if path == '/products/' %} active{% endif %}">Products</a>
-                <a href="/license" class="nav-link block{% if path == '/license/' %} active{% endif %}">License</a>
-            </nav>
-
-            <div class="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-800">
-                <button id="theme-toggle" type="button" class="toolbar-btn" title="Toggle theme">Theme</button>
-            </div>
-
-            <main class="flex-1 py-6 px-4 sm:px-6 lg:px-8 overflow-x-auto">
+        <main class="app-content">
+            <div class="app-container">
                 {% block content %}{% endblock %}
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
+
+    <div id="toast-container" aria-live="polite"></div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% block scripts %}{% endblock %}

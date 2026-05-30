@@ -88,7 +88,12 @@ def _load_clients():
     db_path = _get_db_path()
     if not db_path:
         raise Exception(f'Environment variable is not set: {_dbEnvVarName}')
-    return sql_get_all(db_path)
+    clients = sql_get_all(db_path)
+    if clients:
+        for client in clients:
+            if 'machineIp' not in client and 'lastRequestIP' in client:
+                client['machineIp'] = client['lastRequestIP']
+    return clients
 
 
 def _client_counts(clients):
