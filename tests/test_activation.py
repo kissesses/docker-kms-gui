@@ -45,7 +45,7 @@ def test_health_activated_client(monkeypatch):
 
 
 def test_iso_last_request_time():
-    from pykms_services import parse_ts
+    from pykms_time import parse_ts
 
     iso = '2026-05-30T20:18:39'
     base = parse_ts(iso)

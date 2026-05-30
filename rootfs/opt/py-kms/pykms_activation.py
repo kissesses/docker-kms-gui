@@ -4,7 +4,7 @@ import json
 import os
 import time
 
-from pykms_services import format_ts, parse_ts
+from pykms_time import format_ts, parse_ts
 
 POLICY_FILE = os.environ.get('KMS_POLICY_FILE', '/kms/var/kms-policy.json')
 LICENSING_VALIDITY_DAYS = 180
