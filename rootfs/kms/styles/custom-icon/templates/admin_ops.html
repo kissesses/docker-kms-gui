@@ -89,4 +89,37 @@ WEBHOOK_SECRET=optional-shared-secret
 WEBHOOK_EVENTS=client_new,client_unhealthy
 WEBHOOK_INTERVAL=60</pre>
 </div>
+
+<div class="panel glass-card">
+    <h2 class="panel-title">{{ t('ops.diagnostics_title') }}</h2>
+    <p class="panel-desc">{{ t('ops.diagnostics_desc') }}</p>
+    {% if diagnostics %}
+    <dl class="info-list info-list-cols">
+        <div class="info-row"><dt>Uptime</dt><dd class="mono">{{ diagnostics.uptime_seconds }}s</dd></div>
+        <div class="info-row"><dt>Process RSS</dt><dd class="mono">{{ diagnostics.process_rss_mb or 'n/a' }} MB</dd></div>
+        {% if diagnostics.memory.available %}
+        <div class="info-row"><dt>Host RAM free</dt><dd class="mono">{{ diagnostics.memory.available_mb }} / {{ diagnostics.memory.total_mb }} MB</dd></div>
+        {% endif %}
+        <div class="info-row"><dt>Restart events</dt><dd class="mono">{{ diagnostics.restart_events }}</dd></div>
+        <div class="info-row"><dt>Gunicorn preload</dt><dd class="mono">{{ diagnostics.gunicorn.preload }}</dd></div>
+        <div class="info-row"><dt>Threads</dt><dd class="mono">{{ diagnostics.gunicorn.threads }}</dd></div>
+    </dl>
+    {% if diagnostics.recommendations %}
+    <ul class="admin-list">
+        {% for tip in diagnostics.recommendations %}
+        <li>{{ tip }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% if diagnostics.supervisor_log_tail %}
+    <div class="panel-divider"></div>
+    <h3 class="panel-subtitle">{{ t('ops.supervisor_log') }}</h3>
+    <pre class="mono panel-code log-tail">{% for line in diagnostics.supervisor_log_tail %}{{ line }}
+{% endfor %}</pre>
+    {% endif %}
+    <div class="quick-grid">
+        <a href="/api/v1/diagnostics" class="quick-link">API JSON</a>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

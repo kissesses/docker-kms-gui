@@ -5,6 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.10.1] — 2026-05-30
+
+### Fixed
+
+- **GUI outages every few minutes** — supervisor now waits for gunicorn after crash restart (nginx no longer proxies to dead backend)
+- Safer defaults for small VPS: `GUNICORN_PRELOAD=false`, `GUNICORN_THREADS=2`, `GUNICORN_MAX_REQUESTS=0`
+- Gunicorn access/error logs to Docker stdout; exit signal/code logged to `/kms/var/gui-supervisor.log`
+
+### Added
+
+- **Diagnostics** — Admin → Operations + `GET /api/v1/diagnostics` (memory, restarts, supervisor log)
+
+---
+
 ## [1.10.0] — 2026-05-30
 
 ### Added

@@ -139,11 +139,18 @@ if [ -z "${1}" ]; then
   cd /opt/py-kms
 
   GUNICORN_WORKERS="${GUNICORN_WORKERS:-1}"
-  GUNICORN_THREADS="${GUNICORN_THREADS:-4}"
+  GUNICORN_THREADS="${GUNICORN_THREADS:-2}"
   GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-120}"
-  GUNICORN_MAX_REQUESTS="${GUNICORN_MAX_REQUESTS:-1000}"
-  GUNICORN_PRELOAD="${GUNICORN_PRELOAD:-true}"
+  GUNICORN_MAX_REQUESTS="${GUNICORN_MAX_REQUESTS:-0}"
+  GUNICORN_PRELOAD="${GUNICORN_PRELOAD:-false}"
   GUNICORN_STARTUP_TIMEOUT="${GUNICORN_STARTUP_TIMEOUT:-120}"
+  SUPERVISOR_LOG="${APP_ROOT}/var/gui-supervisor.log"
+
+  _supervisor_log() {
+    mkdir -p "${APP_ROOT}/var"
+    echo "[kms-gui] $(date '+%Y-%m-%d %H:%M:%S') $*" >> "${SUPERVISOR_LOG}"
+    _log "$*"
+  }
 
   if [ "${NGINX_ENABLED}" = "true" ]; then
     GUNICORN_BIND_ADDR="${GUNICORN_BIND:-127.0.0.1:8080}"
@@ -173,9 +180,14 @@ if [ -z "${1}" ]; then
 
   _start_gunicorn() {
     preload_flag=""
+    max_req_flag=""
     if [ "${GUNICORN_PRELOAD}" = "true" ]; then
       preload_flag="--preload"
     fi
+    if [ "${GUNICORN_MAX_REQUESTS}" != "0" ] && [ -n "${GUNICORN_MAX_REQUESTS}" ]; then
+      max_req_flag="--max-requests ${GUNICORN_MAX_REQUESTS} --max-requests-jitter 100"
+    fi
+    # shellcheck disable=SC2086
     gunicorn \
       --log-level "${LOG_LEVEL}" \
       --bind "${GUNICORN_BIND_ADDR}" \
@@ -186,11 +198,14 @@ if [ -z "${1}" ]; then
       --worker-class gthread \
       --timeout "${GUNICORN_TIMEOUT}" \
       --graceful-timeout 30 \
-      --max-requests "${GUNICORN_MAX_REQUESTS}" \
-      --max-requests-jitter 100 \
+      --access-logfile - \
+      --error-logfile - \
+      --capture-output \
+      ${max_req_flag} \
       ${preload_flag} \
       pykms_WebUI:app &
     GUNICORN_PID=$!
+    _supervisor_log "gunicorn started pid=${GUNICORN_PID} preload=${GUNICORN_PRELOAD} threads=${GUNICORN_THREADS}"
   }
 
   _start_gunicorn
@@ -206,21 +221,32 @@ if [ -z "${1}" ]; then
     _log "nginx ${NGINX_VERSION} listening on port ${NGINX_PORT}"
   fi
 
-  _log "started (version ${APP_VERSION}, gunicorn workers=${GUNICORN_WORKERS} threads=${GUNICORN_THREADS})"
+  _supervisor_log "ready (version ${APP_VERSION}, workers=${GUNICORN_WORKERS} threads=${GUNICORN_THREADS} preload=${GUNICORN_PRELOAD})"
 
   while true; do
     while kill -0 "${GUNICORN_PID}" 2>/dev/null; do
       if [ -n "${NGINX_PID}" ] && ! kill -0 "${NGINX_PID}" 2>/dev/null; then
-        _log "nginx exited"
+        _supervisor_log "nginx exited — shutting down"
         _shutdown
         exit 1
       fi
       sleep 1
     done
 
-    _log "gunicorn exited — restarting in 2s"
-    sleep 2
+    wait "${GUNICORN_PID}" 2>/dev/null || true
+    exit_code=$?
+    if [ "${exit_code}" -gt 128 ] 2>/dev/null; then
+      sig=$((exit_code - 128))
+      _supervisor_log "gunicorn exited signal=${sig} (often OOM=9) — restart in 3s"
+    else
+      _supervisor_log "gunicorn exited code=${exit_code} — restart in 3s"
+    fi
+    sleep 3
     _start_gunicorn
+    if ! _wait_for_gunicorn; then
+      _supervisor_log "gunicorn failed readiness check after restart"
+      sleep 5
+    fi
   done
 fi
 

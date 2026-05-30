@@ -32,11 +32,6 @@ def api_stats():
     try:
         env_check()
         clients = load_clients()
-        try:
-            import pykms_webhook as webhook
-            webhook.check_and_notify(clients)
-        except Exception:
-            pass
         return jsonify(build_stats(clients))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -101,6 +96,16 @@ def api_protocol():
     try:
         env_check()
         return jsonify(protocol.build_protocol_overview())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/api/v1/diagnostics')
+def api_diagnostics():
+    import pykms_diagnostics as diagnostics
+    try:
+        env_check()
+        return jsonify(diagnostics.build_report())
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

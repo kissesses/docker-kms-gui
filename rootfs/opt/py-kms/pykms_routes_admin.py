@@ -9,6 +9,7 @@ import pykms_audit as audit
 import pykms_auth as auth
 import pykms_backup as backup
 import pykms_csrf as csrf
+import pykms_diagnostics as diagnostics
 import pykms_i18n as i18n
 import pykms_ops as ops
 from pykms_routes_auth import current_user
@@ -149,6 +150,7 @@ def admin_ops_page():
         admin_tab='ops',
         ops_status=ops.ops_status(),
         backup_files=backup.list_backup_files(),
+        diagnostics=diagnostics.build_report(),
         error=error,
         success=success,
     )

@@ -373,14 +373,22 @@ docker compose logs -f gui
 
 Common causes on small VPS (~512 MB RAM):
 
-1. **OOM** — kernel kills gunicorn; container or gunicorn restarts → brief outage. **Fix:** 2 GB+ RAM or add swap.
-2. **SQLite lock** — KMS writes `kms.db` while GUI reads; rare `database is locked` errors. **Fix:** updated builds retry reads automatically.
-3. **502 from nginx** — gunicorn was busy or restarting. **Fix:** gunicorn auto-restart + proxy timeouts (in recent images).
+1. **OOM** — kernel kills gunicorn (signal 9); container supervisor restarts it → 30–90 s outage. **Fix:** 2 GB+ RAM or swap; set in `.env`:
+   ```bash
+   GUNICORN_PRELOAD=false
+   GUNICORN_THREADS=2
+   GUNICORN_MAX_REQUESTS=0
+   ```
+2. **Gunicorn restart without wait** — fixed in v1.10.1+: supervisor waits for `/livez` after each restart.
+3. **SQLite lock** — rare `database is locked` errors; builds retry reads automatically.
 
-Check:
+**Diagnose:**
 
 ```bash
-docker compose logs gui --tail 100
+docker compose logs gui --tail 200
+docker compose exec gui cat /kms/var/gui-supervisor.log
+curl -H "Cookie: session=..." https://your-server/api/v1/diagnostics   # when logged in
+# or Admin → Operations → Stability diagnostics
 dmesg | grep -i oom    # host OOM kills
 free -h
 ```
