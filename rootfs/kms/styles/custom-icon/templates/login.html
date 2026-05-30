@@ -12,6 +12,7 @@
 {% endif %}
 
 <form method="post" class="auth-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="next" value="{{ next_url }}">
 
     <label class="form-label" for="username">Username</label>

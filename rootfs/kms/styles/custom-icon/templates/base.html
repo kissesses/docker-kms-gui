@@ -29,24 +29,24 @@
                 <nav class="app-nav desktop-only" aria-label="Main navigation">
                     <a href="/" class="nav-link{% if path == '/' %} active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                        Dashboard
+                        {{ t('nav.dashboard') }}
                     </a>
                     <a href="/clients" class="nav-link{% if path == '/clients/' %} active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        Clients
+                        {{ t('nav.clients') }}
                     </a>
                     <a href="/products" class="nav-link{% if path == '/products/' %} active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                        Products
+                        {{ t('nav.products') }}
                     </a>
                     <a href="/license" class="nav-link{% if path == '/license/' %} active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        License
+                        {{ t('nav.license') }}
                     </a>
-                    {% if not auth_enabled or current_user %}
+                    {% if show_admin_nav %}
                     <a href="/admin" class="nav-link{% if path.startswith('/admin') %} active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                        Admin
+                        {{ t('nav.admin') }}
                     </a>
                     {% endif %}
                 </nav>
@@ -61,10 +61,12 @@
                     {% endif %}
                     {% if auth_enabled and current_user %}
                     <span class="user-pill desktop-only">{{ current_user.username }}</span>
-                    <form method="post" action="{{ url_for('logout_page') }}" class="inline-form desktop-only">
-                        <button type="submit" class="btn" title="Sign out">Sign out</button>
+                    <form method="post" action="{{ url_for('auth.logout_page') }}" class="inline-form desktop-only">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn" title="{{ t('nav.sign_out') }}">{{ t('nav.sign_out') }}</button>
                     </form>
                     {% endif %}
+                    <a href="{{ url_for('auth.set_lang', lang_code='en' if lang == 'ru' else 'ru') }}" class="btn btn-icon desktop-only" title="Language">{{ lang | upper }}</a>
                     <a href="/api/v1/clients/export" class="btn desktop-only" title="Export CSV">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Export
@@ -84,9 +86,11 @@
                 <a href="/clients" class="nav-link{% if path == '/clients/' %} active{% endif %}">Clients</a>
                 <a href="/products" class="nav-link{% if path == '/products/' %} active{% endif %}">Products</a>
                 <a href="/license" class="nav-link{% if path == '/license/' %} active{% endif %}">License</a>
-                {% if not auth_enabled or current_user %}
-                <a href="/admin" class="nav-link{% if path.startswith('/admin') %} active{% endif %}">Admin</a>
-                <form method="post" action="{{ url_for('logout_page') }}"><button type="submit" class="nav-link nav-button">Sign out</button></form>
+                {% if show_admin_nav %}
+                <a href="/admin" class="nav-link{% if path.startswith('/admin') %} active{% endif %}">{{ t('nav.admin') }}</a>
+                {% endif %}
+                {% if auth_enabled and current_user %}
+                <form method="post" action="{{ url_for('auth.logout_page') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="nav-link nav-button">{{ t('nav.sign_out') }}</button></form>
                 {% endif %}
                 <a href="/api/v1/clients/export" class="nav-link">Export CSV</a>
             </nav>

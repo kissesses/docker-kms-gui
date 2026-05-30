@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Security · Admin · KMS-GUI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <h1 class="page-title">Administration</h1>
+            <p class="page-subtitle">Security settings and deployment profile</p>
+        </div>
+    </div>
+</div>
+
+{% include 'admin_nav.html' %}
+
+<div class="panel-grid">
+    <div class="panel">
+        <h2 class="panel-title">Authentication</h2>
+        <dl class="info-list">
+            <div class="info-row">
+                <dt>App auth</dt>
+                <dd>{% if stats.auth_enabled %}<span class="badge badge-ok">Enabled</span>{% else %}<span class="badge badge-warn">Disabled</span>{% endif %}</dd>
+            </div>
+            <div class="info-row">
+                <dt>Admin without login</dt>
+                <dd>{% if config.ADMIN_PUBLIC %}<span class="badge badge-warn">Public</span>{% else %}<span class="badge badge-ok">Protected</span>{% endif %}</dd>
+            </div>
+            <div class="info-row">
+                <dt>TLS</dt>
+                <dd>{% if config.TLS_ENABLED %}<span class="badge badge-ok">Enabled</span>{% else %}<span class="badge badge-neutral">Off</span>{% endif %}</dd>
+            </div>
+            <div class="info-row">
+                <dt>CSRF</dt>
+                <dd><span class="badge badge-ok">Forms protected</span></dd>
+            </div>
+        </dl>
+    </div>
+    <div class="panel">
+        <h2 class="panel-title">Recommendations</h2>
+        <ul class="admin-list">
+            <li>Enable <code>GUI_AUTH_ENABLED=true</code> before exposing the panel to a network.</li>
+            <li>Use TLS (<code>NGINX_TLS_ENABLED=true</code>) for internet deployments.</li>
+            <li>Keep <code>ADMIN_PUBLIC=false</code> unless you trust the local network only.</li>
+            <li>KMS port <strong>1688</strong> can be public; protect the web GUI separately.</li>
+            <li>Review the <a href="{{ url_for('admin.admin_audit_page') }}">audit log</a> regularly.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

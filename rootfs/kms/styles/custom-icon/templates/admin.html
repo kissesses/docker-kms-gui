@@ -42,6 +42,7 @@
         {% endif %}
         <div class="panel-divider"></div>
         <form method="post" class="auth-form auth-form-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="action" value="change_password">
             <h3 class="panel-subtitle">Change password</h3>
             <label class="form-label" for="current_password">Current password</label>
@@ -85,7 +86,7 @@
         {% endif %}
         <div class="panel-divider"></div>
         <div class="quick-grid">
-            <a href="{{ url_for('admin_activations_page') }}" class="quick-link">Activations</a>
+            <a href="{{ url_for('admin.admin_activations_page') }}" class="quick-link">Activations</a>
             <a href="/api/v1/clients/export" class="quick-link">Export CSV</a>
             <a href="/api/v1/stats" class="quick-link">API Stats</a>
             <a href="/clients" class="quick-link">View Clients</a>
@@ -102,7 +103,8 @@
         <li>Session cookies are HttpOnly; enable TLS for Secure cookies.</li>
         <li>Sign out when using shared computers.</li>
     </ul>
-    <form method="post" action="{{ url_for('logout_page') }}" class="admin-logout-form">
+    <form method="post" action="{{ url_for('auth.logout_page') }}" class="admin-logout-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="btn">Sign out</button>
     </form>
 </div>

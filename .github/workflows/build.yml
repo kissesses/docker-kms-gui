@@ -124,9 +124,27 @@ jobs:
           sarif_file: grype-${{ matrix.image }}.sarif
           category: grype-${{ matrix.image }}
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch py-kms for tests
+        run: |
+          git clone --filter=blob:none https://github.com/Py-KMS-Organization/py-kms.git /tmp/py-kms
+          cd /tmp/py-kms && git checkout b0e1615dec06
+      - name: Install test dependencies
+        run: pip install pytest Flask werkzeug
+      - name: Run pytest
+        env:
+          PYTHONPATH: rootfs/opt/py-kms:/tmp/py-kms/py-kms
+        run: pytest tests/ -q
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build, security-scan]
+    needs: [build, security-scan, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

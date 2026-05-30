@@ -86,6 +86,15 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
+    location ~ ^/(login|setup)$ {
+        limit_req zone=auth_limit burst=3 nodelay;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
     location / {
         limit_req zone=general_limit burst=30 nodelay;
         proxy_pass http://127.0.0.1:8080;
@@ -131,7 +140,7 @@ if [ -z "${1}" ]; then
     --log-level "${LOG_LEVEL}" \
     --bind "${GUNICORN_BIND_ADDR}" \
     --user "${APP_UID:-1000}" \
-    --group "${APP_GID:-1000}" \
+    --group kms \
     pykms_WebUI:app &
   GUNICORN_PID=$!
 

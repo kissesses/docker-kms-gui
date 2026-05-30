@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit · Admin · KMS-GUI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <h1 class="page-title">Administration</h1>
+            <p class="page-subtitle">Audit log of admin actions</p>
+        </div>
+    </div>
+</div>
+
+{% include 'admin_nav.html' %}
+
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Detail</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in entries %}
+            <tr>
+                <td class="cell-meta">{{ row.created_at_fmt }}</td>
+                <td>{{ row.username or '—' }}</td>
+                <td><code>{{ row.action }}</code></td>
+                <td>{{ row.detail or '—' }}</td>
+                <td class="cell-meta">{{ row.ip or '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="cell-meta">No audit entries yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

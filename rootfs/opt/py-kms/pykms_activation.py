@@ -52,7 +52,30 @@ def _normalize_policy(data):
         'host': str(data.get('host', 'kms')),
         'licensing_validity_days': int(data.get('licensing_validity_days', LICENSING_VALIDITY_DAYS)),
         'updated_at': data.get('updated_at'),
+        'pending_kms_restart': bool(data.get('pending_kms_restart', False)),
     }
+
+
+def save_policy(client_count, activation_interval_minutes, renewal_interval_minutes, hwid=None):
+    if client_count < 1 or client_count > 9999:
+        raise ValueError('Client count must be 1–9999')
+    if activation_interval_minutes < 15 or activation_interval_minutes > 43200:
+        raise ValueError('Activation interval must be 15–43200 minutes')
+    if renewal_interval_minutes < 15 or renewal_interval_minutes > 43200:
+        raise ValueError('Renewal interval must be 15–43200 minutes')
+    policy = load_policy()
+    policy['client_count'] = int(client_count)
+    policy['activation_interval_minutes'] = int(activation_interval_minutes)
+    policy['renewal_interval_minutes'] = int(renewal_interval_minutes)
+    if hwid:
+        policy['hwid'] = str(hwid).strip() or 'RANDOM'
+    policy['updated_at'] = int(time.time())
+    policy['pending_kms_restart'] = True
+    os.makedirs(os.path.dirname(POLICY_FILE) or '.', exist_ok=True)
+    with open(POLICY_FILE, 'w', encoding='utf-8') as f:
+        json.dump(policy, f, indent=2)
+        f.write('\n')
+    return _normalize_policy(policy)
 
 
 def format_duration(minutes):
@@ -166,6 +189,7 @@ def build_activation_overview(clients, policy=None, now=None):
             'client_threshold_office': 5,
             'threshold_windows_met': policy['client_count'] >= 25,
             'threshold_office_met': policy['client_count'] >= 5,
+            'pending_kms_restart': policy.get('pending_kms_restart', False),
         },
         'clients': enriched,
         'summary': {

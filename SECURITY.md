@@ -21,9 +21,11 @@ This stack is designed for **home / lab use**:
 | nginx 1.30.2 | CVE-2026-9256 patched; no risky rewrite rules |
 | Reverse proxy | Gunicorn on `127.0.0.1:8080` only (default mode) |
 | Headers | CSP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy |
-| Rate limits | 10 req/s on `/`, 30 req/s on `/api/` |
+| Rate limits | 10 req/s on `/`, 30 req/s on `/api/`; **5 req/min** on `/login` and `/setup` |
+| CSRF | Flask session tokens on all POST forms |
+| Auth | Application login (`GUI_AUTH_ENABLED`) or nginx Basic Auth |
+| Admin guard | `/admin*` hidden when auth off unless `ADMIN_PUBLIC=true` |
 | TLS | Optional; HSTS when TLS enabled |
-| Auth | Optional HTTP Basic Auth via nginx |
 | Build | py-kms pinned to specific commit (supply chain) |
 | CI | Grype scan (HIGH/CRITICAL, fixed only), SARIF reports, Dependabot updates |
 
@@ -76,6 +78,8 @@ First visit: **`https://your-server/setup`** — create administrator account.
 
 After setup, sign in at `/login`. Manage account at `/admin`.
 
+Set `ADMIN_PUBLIC=false` (default) so admin routes stay hidden when auth is disabled on LAN deployments.
+
 ---
 
 ## Application auth (local or internet)
@@ -117,7 +121,7 @@ Mount in `compose.sidecar.yaml` (see example file comments).
 | Risk | Severity | Mitigation |
 |------|----------|------------|
 | GUI container runs nginx as root | Low (local) | Bind GUI to localhost |
-| API has no separate auth token | Medium | Basic Auth; don't expose port 80 |
+| API has no separate auth token | Medium | Enable `GUI_AUTH_ENABLED`; CSRF on writes |
 | KMS protocol unencrypted on 1688 | Medium | Expected for KMS; limit exposure |
 | Password in env vars | Low | Docker secrets for production |
 | py-kms upstream trust | Low | Commit pinned in Dockerfile |

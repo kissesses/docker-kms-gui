@@ -1382,3 +1382,31 @@ a { color: inherit; }
 .badge.health-at_risk { background: var(--danger-bg); color: var(--danger); }
 .badge.health-grace { background: var(--warning-bg); color: var(--warning); }
 .badge.health-unknown { background: var(--bg-hover); color: var(--text-muted); }
+
+.alert-warn {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.btn-danger-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.btn-danger-sm:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.inline-delete-form {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}

@@ -72,10 +72,6 @@
                 <dd id="stat-uptime" class="mono">{{ stats.uptime_seconds if stats else 0 }}s</dd>
             </div>
             <div class="info-row">
-                <dt>Requests served</dt>
-                <dd data-stat="serve_count">{{ stats.serve_count if stats else 0 }}</dd>
-            </div>
-            <div class="info-row">
                 <dt>Version</dt>
                 <dd>{{ stats.version if stats and stats.version else 'N/A' }}</dd>
             </div>
@@ -87,6 +83,7 @@
         {% if total > 0 %}
         <div class="panel-divider"></div>
         <div class="stat-label">Client distribution</div>
+        <canvas id="client-chart" width="320" height="160" aria-label="Client distribution chart"></canvas>
         <div class="dist-bar" id="dist-bar">
             <div class="dist-segment win" id="dist-win" style="width: {{ win_pct }}%"></div>
             <div class="dist-segment office" id="dist-office" style="width: {{ office_pct }}%"></div>

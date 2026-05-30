@@ -119,6 +119,7 @@ const PyKmsApp = (function() {
           uptimeEl.textContent = formatUptime(data.uptime_seconds);
         }
         updateDistBar(data);
+        drawClientChart(data.chart_windows || 0, data.chart_office || 0);
       })
       .catch(function() { setServerStatus(false, 'Unreachable'); });
   }
@@ -128,6 +129,61 @@ const PyKmsApp = (function() {
     initTheme();
     initMobileNav();
     refreshStats();
+  }
+
+  function drawClientChart(windows, office) {
+    const canvas = document.getElementById('client-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const total = windows + office;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (total <= 0) return;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const r = Math.min(cx, cy) - 8;
+    let start = -Math.PI / 2;
+    const slices = [
+      { v: windows, c: '#38bdf8' },
+      { v: office, c: '#6366f1' }
+    ];
+    slices.forEach(function(s) {
+      if (s.v <= 0) return;
+      const angle = (s.v / total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, start + angle);
+      ctx.closePath();
+      ctx.fillStyle = s.c;
+      ctx.fill();
+      start += angle;
+    });
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.55, 0, Math.PI * 2);
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-surface') || '#121a2b';
+    ctx.fill();
+  }
+
+  function initClientsLive() {
+    initClientsTable();
+    setInterval(refreshStats, 30000);
+  }
+
+  function initActivationsLive() {
+    initCommon();
+    function refreshActivations() {
+      fetch('/api/v1/activations')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.summary) return;
+          document.querySelectorAll('[data-act-stat]').forEach(function(el) {
+            const key = el.getAttribute('data-act-stat');
+            if (data.summary[key] !== undefined) el.textContent = data.summary[key];
+          });
+        })
+        .catch(function() {});
+    }
+    refreshActivations();
+    setInterval(refreshActivations, 30000);
   }
 
   function initDashboard() {
@@ -279,6 +335,8 @@ const PyKmsApp = (function() {
     initCommon: initCommon,
     initDashboard: initDashboard,
     initClientsTable: initClientsTable,
+    initClientsLive: initClientsLive,
+    initActivationsLive: initActivationsLive,
     initProducts: initProducts,
     showToast: showToast,
     convertTimestamps: convertTimestamps

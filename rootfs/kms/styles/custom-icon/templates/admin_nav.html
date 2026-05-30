@@ -1,4 +1,6 @@
 <nav class="admin-tabs" aria-label="Administration sections">
-    <a href="{{ url_for('admin_page') }}" class="admin-tab{% if admin_tab == 'account' %} active{% endif %}">Account</a>
-    <a href="{{ url_for('admin_activations_page') }}" class="admin-tab{% if admin_tab == 'activations' %} active{% endif %}">Activations</a>
+    <a href="{{ url_for('admin.admin_page') }}" class="admin-tab{% if admin_tab == 'account' %} active{% endif %}">{{ t('admin.account') }}</a>
+    <a href="{{ url_for('admin.admin_activations_page') }}" class="admin-tab{% if admin_tab == 'activations' %} active{% endif %}">{{ t('admin.activations') }}</a>
+    <a href="{{ url_for('admin.admin_security_page') }}" class="admin-tab{% if admin_tab == 'security' %} active{% endif %}">{{ t('admin.security') }}</a>
+    <a href="{{ url_for('admin.admin_audit_page') }}" class="admin-tab{% if admin_tab == 'audit' %} active{% endif %}">{{ t('admin.audit') }}</a>
 </nav>

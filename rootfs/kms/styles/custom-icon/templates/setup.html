@@ -12,6 +12,7 @@
 {% endif %}
 
 <form method="post" class="auth-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <label class="form-label" for="username">Username</label>
     <input class="input form-input" type="text" id="username" name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_-]+" autocomplete="username" autofocus>
 

@@ -44,7 +44,9 @@ FROM alpine:3.22
   ENV LOG_LEVEL=INFO
 
   ENV GUI_AUTH_ENABLED=false
+  ENV ADMIN_PUBLIC=false
   ENV GUI_AUTH_DB_PATH=/kms/var/gui_auth.db
+  ENV GUI_AUDIT_DB_PATH=/kms/var/gui_audit.db
   ENV GUI_SECRET_FILE=/kms/var/.gui_secret
 
   ENV KMS_POLICY_FILE=/kms/var/kms-policy.json

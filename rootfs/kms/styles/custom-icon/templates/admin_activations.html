@@ -17,6 +17,9 @@
 {% if error %}
 <div class="alert alert-error">{{ error }}</div>
 {% endif %}
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
 
 {% set policy = overview.policy %}
 {% set summary = overview.summary %}
@@ -24,15 +27,15 @@
 <div class="stat-grid">
     <div class="stat-card">
         <div class="stat-card-head"><span class="stat-label">Active clients</span></div>
-        <div class="stat-value">{{ summary.total }}</div>
+        <div class="stat-value" data-act-stat="total">{{ summary.total }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-card-head"><span class="stat-label">Activated</span></div>
-        <div class="stat-value">{{ summary.activated }}</div>
+        <div class="stat-value" data-act-stat="activated">{{ summary.activated }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-card-head"><span class="stat-label">Healthy</span></div>
-        <div class="stat-value">{{ summary.healthy }}</div>
+        <div class="stat-value" data-act-stat="healthy">{{ summary.healthy }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-card-head"><span class="stat-label">Need attention</span></div>
@@ -90,6 +93,24 @@
                 <dd>{{ policy.updated_at_fmt }}</dd>
             </div>
         </dl>
+        {% if policy.pending_kms_restart %}
+        <div class="alert alert-warn">Pending KMS restart — update compose env and run <code>docker compose restart kms</code></div>
+        {% endif %}
+        <div class="panel-divider"></div>
+        <h3 class="panel-subtitle">Edit policy</h3>
+        <form method="post" class="auth-form auth-form-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="action" value="save_policy">
+            <label class="form-label" for="client_count">Client count</label>
+            <input class="input form-input" type="number" id="client_count" name="client_count" min="1" max="9999" value="{{ policy.client_count }}" required>
+            <label class="form-label" for="activation_interval_minutes">Activation retry (min)</label>
+            <input class="input form-input" type="number" id="activation_interval_minutes" name="activation_interval_minutes" min="15" max="43200" value="{{ policy.activation_interval_minutes }}" required>
+            <label class="form-label" for="renewal_interval_minutes">Renewal interval (min)</label>
+            <input class="input form-input" type="number" id="renewal_interval_minutes" name="renewal_interval_minutes" min="15" max="43200" value="{{ policy.renewal_interval_minutes }}" required>
+            <label class="form-label" for="hwid">HWID</label>
+            <input class="input form-input" type="text" id="hwid" name="hwid" value="{{ policy.hwid }}">
+            <button type="submit" class="btn btn-primary">Save policy</button>
+        </form>
     </div>
 
     <div class="panel">
@@ -173,6 +194,13 @@
                 <dd>{{ client.requestCount }}</dd>
             </div>
         </dl>
+        <form method="post" class="inline-delete-form" onsubmit="return confirm('Remove this client from the database?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="action" value="delete_client">
+            <input type="hidden" name="client_machine_id" value="{{ client.clientMachineId }}">
+            <input type="hidden" name="application_id" value="{{ client.applicationId }}">
+            <button type="submit" class="btn btn-danger-sm">Remove client</button>
+        </form>
     </article>
     {% endfor %}
 </div>
@@ -185,4 +213,8 @@
     <p class="empty-text">When clients connect to KMS, their binding and renewal schedule appears here.</p>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>document.addEventListener('DOMContentLoaded', function() { PyKmsApp.initActivationsLive(); });</script>
 {% endblock %}

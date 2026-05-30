@@ -33,12 +33,12 @@ KMS clients connect to **127.0.0.1:1688**
 ```yaml
 services:
   kms:
-    image: ghcr.io/kissesses/kms:1.7.2
+    image: ghcr.io/kissesses/kms:1.8.0
     ports: ["127.0.0.1:1688:1688"]
     volumes: [kms-data:/kms/var]
 
   gui:
-    image: ghcr.io/kissesses/kms-gui:1.7.2
+    image: ghcr.io/kissesses/kms-gui:1.8.0
     ports: ["127.0.0.1:80:80"]
     volumes: [kms-data:/kms/var]
     depends_on:
@@ -108,8 +108,8 @@ Full list: [`.env.example`](.env.example)
 ## Build manually
 
 ```bash
-docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.7.2 .
-docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.7.2 .
+docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.8.0 .
+docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.8.0 .
 ```
 
 ## Security
@@ -121,8 +121,8 @@ See [SECURITY.md](SECURITY.md) for personal deployment checklist.
 See [RELEASE.md](RELEASE.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ```bash
-git tag v1.7.2
-git push origin v1.7.2
+git tag v1.8.0
+git push origin v1.8.0
 ```
 
 GitHub Actions builds and pushes both images to **ghcr.io/kissesses/**.

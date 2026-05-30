@@ -5,6 +5,36 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.8.0] — 2026-05-30
+
+### Added
+
+- **CSRF protection** on all POST forms (setup, login, admin, client delete, policy edit)
+- **Login rate limit** — nginx `auth_limit` zone (5 req/min) on `/login` and `/setup`
+- **Admin tabs** — Account, Activations, Security, Audit log
+- **Policy editor** — save KMS limits to `kms-policy.json` (restart KMS to apply)
+- **Audit log** — SQLite trail of admin actions at `/admin/audit`
+- **Delete client** — remove stale entries from Activations tab
+- **Live refresh** — clients and activations pages poll API every 30s
+- **Dashboard chart** — canvas doughnut for client distribution
+- **i18n** — English / Russian toggle via `/lang/<code>`
+- **pytest** CI job — auth, activation, app smoke tests
+- **`ADMIN_PUBLIC`** — optional admin access when app auth is disabled
+
+### Changed
+
+- **Refactored Flask app** — blueprints (`auth`, `pages`, `admin`, `api`), `pykms_config`, `pykms_services`
+- Removed legacy `serve_count` metric from dashboard and API
+- GUI container healthcheck in compose
+- KMS policy env vars exposed in `compose.yaml` (`KMS_CLIENT_COUNT`, etc.)
+
+### Security
+
+- Admin routes hidden when auth disabled unless `ADMIN_PUBLIC=true`
+- Session secret persisted to `/kms/var/.gui_secret`
+
+---
+
 ## [1.7.2] — 2026-05-30
 
 ### Changed
