@@ -8,6 +8,11 @@ DB_DIR="/tmp/kms-screenshot"
 BASE_URL="http://127.0.0.1:${PORT}"
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+if [[ "$OUT_DIR" = /* ]]; then
+  OUTPUT="$OUT_DIR"
+else
+  OUTPUT="${ROOT}/${OUT_DIR}"
+fi
 cd "$ROOT"
 
 echo "==> Building kms-gui image for screenshots"
@@ -51,7 +56,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "${ROOT}/${OUT_DIR}"
+mkdir -p "${OUTPUT}"
 
 echo "==> Phase 1: public pages (auth disabled)"
 start_gui false
@@ -63,7 +68,7 @@ npm install --omit=dev
 npx playwright install chromium --with-deps
 
 echo "==> Capturing public screenshots"
-node capture.mjs "${BASE_URL}" "${ROOT}/${OUT_DIR}" public
+node capture.mjs "${BASE_URL}" "${OUTPUT}" public
 
 echo "==> Phase 2: setup, login keys, admin (auth enabled)"
 cd "$ROOT"
@@ -72,6 +77,6 @@ start_gui true
 wait_gui
 
 echo "==> Capturing auth screenshots"
-node scripts/screenshots/capture.mjs "${BASE_URL}" "${ROOT}/${OUT_DIR}" auth
+node scripts/screenshots/capture.mjs "${BASE_URL}" "${OUTPUT}" auth
 
-ls -la "${ROOT}/${OUT_DIR}"
+ls -la "${OUTPUT}"

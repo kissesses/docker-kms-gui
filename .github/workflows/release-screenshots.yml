@@ -43,4 +43,4 @@ jobs:
           name: Release ${{ inputs.tag }}
           body: ${{ steps.notes.outputs.body }}
           files: /tmp/release-screenshots/*.png
-          allow_updates: true
+          overwrite_files: true
