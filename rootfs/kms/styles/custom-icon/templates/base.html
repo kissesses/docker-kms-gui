@@ -143,6 +143,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>document.addEventListener('DOMContentLoaded', function() { PyKmsApp.initCommon(); });</script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,5 +1,7 @@
 const PyKmsApp = (function() {
   let refreshTimer = null;
+  let shellReady = false;
+  let statsTimer = null;
 
   function formatUptime(seconds) {
     const d = Math.floor(seconds / 86400);
@@ -14,8 +16,16 @@ const PyKmsApp = (function() {
     return parts.join(' ');
   }
 
-  function fetchJson(url) {
-    return fetch(url, { credentials: 'same-origin' }).then(function(r) { return r.json(); });
+  function fetchJson(url, timeoutMs) {
+    const ms = timeoutMs || 10000;
+    const controller = new AbortController();
+    const timer = setTimeout(function() { controller.abort(); }, ms);
+    return fetch(url, { credentials: 'same-origin', signal: controller.signal })
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .finally(function() { clearTimeout(timer); });
   }
 
   function showToast(message, type) {
@@ -145,11 +155,20 @@ const PyKmsApp = (function() {
       .catch(function() { setServerStatus(false, 'Unreachable'); });
   }
 
+  function startStatsPolling(intervalMs) {
+    if (statsTimer) return;
+    statsTimer = setInterval(refreshStats, intervalMs || 30000);
+  }
+
   function initCommon() {
     convertTimestamps();
-    initTheme();
-    initMobileNav();
+    if (!shellReady) {
+      shellReady = true;
+      initTheme();
+      initMobileNav();
+    }
     refreshStats();
+    startStatsPolling(30000);
   }
 
   function drawClientChart(windows, office) {
@@ -186,7 +205,6 @@ const PyKmsApp = (function() {
 
   function initClientsLive() {
     initClientsTable();
-    setInterval(refreshStats, 30000);
   }
 
   function initActivationsLive() {
@@ -208,8 +226,6 @@ const PyKmsApp = (function() {
 
   function initDashboard() {
     initCommon();
-    refreshStats();
-    setInterval(refreshStats, 30000);
   }
 
   function filterClients() {
