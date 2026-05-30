@@ -35,18 +35,25 @@ EOF
 
 _validate_security() {
   if [ "${INTERNET_MODE}" = "true" ]; then
-    if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then
-      _log "ERROR: INTERNET_MODE requires NGINX_BASIC_AUTH_USER and NGINX_BASIC_AUTH_PASS"
+    if [ "${GUI_AUTH_ENABLED}" != "true" ]; then
+      _log "ERROR: INTERNET_MODE requires GUI_AUTH_ENABLED=true"
       exit 1
     fi
     if [ "${DEBUG}" != "" ]; then
       _log "ERROR: DEBUG must not be enabled in INTERNET_MODE"
       exit 1
     fi
-    _log "internet mode: auth required, GUI should bind to localhost only"
+    _log "internet mode: application auth required"
   fi
-  if [ -n "${NGINX_BASIC_AUTH_PASS}" ] && [ ${#NGINX_BASIC_AUTH_PASS} -lt 12 ]; then
+  if [ "${GUI_AUTH_ENABLED}" = "true" ]; then
+    _log "application auth enabled (setup at /setup on first run)"
+  elif [ -n "${NGINX_BASIC_AUTH_PASS}" ] && [ ${#NGINX_BASIC_AUTH_PASS} -lt 12 ]; then
     _log "WARNING: NGINX_BASIC_AUTH_PASS is shorter than 12 characters — use a longer password"
+  fi
+  if [ "${NGINX_ENABLED}" = "true" ] && [ "${GUI_AUTH_ENABLED}" != "true" ]; then
+    if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then
+      _log "WARNING: Web UI has no authentication — enable GUI_AUTH or NGINX_BASIC_AUTH"
+    fi
   fi
 }
 
@@ -142,7 +149,9 @@ if [ -z "${1}" ]; then
     _configure_auth
     _configure_tls
     if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then
-      _log "WARNING: Web UI has no authentication — set NGINX_BASIC_AUTH_USER and NGINX_BASIC_AUTH_PASS"
+      if [ "${GUI_AUTH_ENABLED}" != "true" ]; then
+        _log "WARNING: Web UI has no authentication — enable GUI_AUTH or NGINX_BASIC_AUTH"
+      fi
     fi
     nginx -t
     nginx -g 'daemon off;' &

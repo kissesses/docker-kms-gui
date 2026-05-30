@@ -5,6 +5,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.7.0] — 2026-05-30
+
+### Added
+
+- **Application admin auth** — first-run setup at `/setup`, login at `/login`
+- **Admin panel** at `/admin` — account info, change password, system overview
+- Session cookies (HttpOnly, Secure with TLS, 7-day remember-me)
+- Password hashing via Werkzeug (scrypt/pbkdf2)
+- `GUI_AUTH_ENABLED` — app-level auth instead of nginx Basic Auth for internet
+
+### Changed
+
+- **`compose.internet.yaml`** — GUI public (`0.0.0.0`) with app login + TLS
+- `INTERNET_MODE` now requires `GUI_AUTH_ENABLED=true` (not nginx Basic Auth)
+- All pages and API protected when auth enabled (except `/livez`, `/readyz`)
+- CI: Grype (Anchore) image scan + SARIF in GitHub Security; replaced Trivy after supply-chain incident
+
+---
+
 ## [1.6.1] — 2026-05-30
 
 ### Security

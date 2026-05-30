@@ -44,6 +44,10 @@ FROM alpine:3.22
   ENV NGINX_TLS_KEY=/etc/nginx/certs/key.pem
   ENV LOG_LEVEL=INFO
 
+  ENV GUI_AUTH_ENABLED=false
+  ENV GUI_AUTH_DB_PATH=/kms/var/gui_auth.db
+  ENV GUI_SECRET_FILE=/kms/var/.gui_secret
+
   RUN apk add --no-cache \
       bash \
       python3 \

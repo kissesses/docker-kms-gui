@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
   packages: write
+  security-events: write
 
 jobs:
   build:
@@ -92,14 +93,36 @@ jobs:
       - name: Build image for scan
         run: docker build -f ${{ matrix.file }} -t scan:${{ matrix.image }} .
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
+      - name: Scan image with Grype
+        id: grype
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
         with:
-          image-ref: scan:${{ matrix.image }}
-          format: table
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
+          image: scan:${{ matrix.image }}
+          fail-build: false
+          output-format: table
+          severity-cutoff: high
+          only-fixed: true
+          cache-db: true
+
+      - name: Generate SARIF report
+        id: sarif
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
+        with:
+          image: scan:${{ matrix.image }}
+          fail-build: false
+          output-format: sarif
+          output-file: grype-${{ matrix.image }}.sarif
+          severity-cutoff: high
+          only-fixed: true
+          cache-db: true
+
+      - name: Upload SARIF to GitHub Security
+        if: always() && steps.sarif.outputs.sarif != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: grype-${{ matrix.image }}.sarif
+          category: grype-${{ matrix.image }}
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')

@@ -1,9 +1,10 @@
-# Internet deployment: KMS public, GUI localhost-only (VPN/SSH tunnel for dashboard)
+# Internet deployment — KMS + GUI public with application login
 #
 # Usage:
 #   cp .env.internet.example .env
-#   # mount TLS certs to gui: /etc/nginx/certs/cert.pem + key.pem
+#   # mount TLS certs to ./certs/ (cert.pem + key.pem)
 #   docker compose -f compose.internet.yaml up -d
+#   open https://your-domain/setup — create admin on first visit
 
 name: kms-internet
 
@@ -13,8 +14,8 @@ services:
       context: .
       dockerfile: Dockerfile.kms
       args:
-        BUILD_VERSION: ${KMS_VERSION:-1.6.1}
-    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.6.1}
+        BUILD_VERSION: ${KMS_VERSION:-1.7.0}
+    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.7.0}
     environment:
       TZ: ${TZ:-UTC}
       LOGLEVEL: ${KMS_LOGLEVEL:-INFO}
@@ -37,26 +38,25 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BUILD_VERSION: ${GUI_VERSION:-1.6.1}
-    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.6.1}
+        BUILD_VERSION: ${GUI_VERSION:-1.7.0}
+    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.7.0}
     depends_on:
       kms:
         condition: service_healthy
     environment:
       TZ: ${TZ:-UTC}
       INTERNET_MODE: "true"
+      GUI_AUTH_ENABLED: "true"
       NGINX_ENABLED: "true"
       NGINX_PORT: "80"
       NGINX_TLS_ENABLED: ${NGINX_TLS_ENABLED:-true}
-      NGINX_BASIC_AUTH_USER: ${NGINX_BASIC_AUTH_USER:?Set NGINX_BASIC_AUTH_USER in .env}
-      NGINX_BASIC_AUTH_PASS: ${NGINX_BASIC_AUTH_PASS:?Set NGINX_BASIC_AUTH_PASS in .env}
       KMS_GUI_STYLE: ${KMS_GUI_STYLE:-custom-icon}
     volumes:
       - kms-data:/kms/var
       - ${TLS_CERT_DIR:-./certs}:/etc/nginx/certs:ro
     ports:
-      - "${GUI_BIND:-127.0.0.1}:${GUI_PORT:-443}:443/tcp"
-      - "${GUI_BIND:-127.0.0.1}:80:80/tcp"
+      - "${GUI_BIND:-0.0.0.0}:${GUI_PORT:-443}:443/tcp"
+      - "${GUI_BIND:-0.0.0.0}:80:80/tcp"
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

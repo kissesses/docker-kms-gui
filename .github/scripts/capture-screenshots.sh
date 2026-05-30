@@ -24,6 +24,7 @@ docker run -d --name kms-screenshot \
   -p "${PORT}:80" \
   -v "${DB_DIR}:/kms/var" \
   -e NGINX_ENABLED=true \
+  -e GUI_AUTH_ENABLED=false \
   kms-gui:screenshot
 
 cleanup() {

@@ -25,7 +25,7 @@ This stack is designed for **home / lab use**:
 | TLS | Optional; HSTS when TLS enabled |
 | Auth | Optional HTTP Basic Auth via nginx |
 | Build | py-kms pinned to specific commit (supply chain) |
-| CI | Trivy scan (CRITICAL/HIGH), Dependabot updates |
+| CI | Grype scan (HIGH/CRITICAL, fixed only), SARIF reports, Dependabot updates |
 
 ---
 
@@ -56,30 +56,39 @@ docker compose up -d
 
 ## Internet deployment
 
-**Never expose port 80/443 to the world.** Only KMS port 1688 should be public.
+KMS and GUI can both be public when **application auth** is enabled:
 
 ```bash
 cp .env.internet.example .env
-# Edit .env — set strong password, place cert.pem + key.pem in ./certs/
+# Place cert.pem + key.pem in ./certs/
 docker compose -f compose.internet.yaml up -d
 ```
+
+First visit: **`https://your-server/setup`** — create administrator account.
 
 | Setting | Value | Why |
 |---------|-------|-----|
 | `KMS_BIND` | `0.0.0.0` | Windows clients connect from internet |
-| `GUI_BIND` | `127.0.0.1` | Dashboard only via SSH tunnel / Tailscale |
-| `NGINX_BASIC_AUTH_*` | **Required** | Enforced by `INTERNET_MODE=true` |
-| `NGINX_TLS_ENABLED` | `true` | HTTPS for local GUI access |
+| `GUI_BIND` | `0.0.0.0` | Web panel accessible over HTTPS |
+| `GUI_AUTH_ENABLED` | `true` | Required — enforced by `INTERNET_MODE=true` |
+| `NGINX_TLS_ENABLED` | `true` | HTTPS for login and sessions |
 | `DEBUG` | empty | Blocked in internet mode |
 
-Access GUI remotely:
+After setup, sign in at `/login`. Manage account at `/admin`.
 
-```bash
-ssh -L 8443:127.0.0.1:443 user@your-server
-# browser: https://localhost:8443
+---
+
+## Application auth (local or internet)
+
+```env
+GUI_AUTH_ENABLED=true
 ```
 
-Or use **Tailscale** — no port forwarding for GUI.
+1. Open **`/setup`** — create admin (once, min 12 char password)
+2. Sign in at **`/login`**
+3. Change password at **`/admin`**
+
+When `GUI_AUTH_ENABLED=true`, nginx Basic Auth is optional (double auth is possible but not required).
 
 ---
 

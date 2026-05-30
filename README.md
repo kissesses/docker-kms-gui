@@ -33,12 +33,12 @@ KMS clients connect to **127.0.0.1:1688**
 ```yaml
 services:
   kms:
-    image: ghcr.io/kissesses/kms:1.6.1
+    image: ghcr.io/kissesses/kms:1.7.0
     ports: ["127.0.0.1:1688:1688"]
     volumes: [kms-data:/kms/var]
 
   gui:
-    image: ghcr.io/kissesses/kms-gui:1.6.1
+    image: ghcr.io/kissesses/kms-gui:1.7.0
     ports: ["127.0.0.1:80:80"]
     volumes: [kms-data:/kms/var]
     depends_on:
@@ -58,12 +58,20 @@ GUI on **http://localhost:3000** via external nginx 1.30.2.
 
 ## Internet deployment
 
-KMS public, GUI localhost-only (VPN/SSH tunnel for dashboard):
+KMS and GUI public — protected by **application login** (not nginx Basic Auth):
 
 ```bash
 cp .env.internet.example .env
-# set password, add TLS certs to ./certs/
+# add TLS certs to ./certs/
 docker compose -f compose.internet.yaml up -d
+```
+
+First visit: **`https://your-server/setup`** — create administrator account.
+
+Or enable auth on default compose:
+
+```env
+GUI_AUTH_ENABLED=true
 ```
 
 See [SECURITY.md](SECURITY.md) for full checklist.
@@ -96,8 +104,8 @@ Full list: [`.env.example`](.env.example)
 ## Build manually
 
 ```bash
-docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.6.1 .
-docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.6.1 .
+docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.7.0 .
+docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.7.0 .
 ```
 
 ## Security
@@ -109,8 +117,8 @@ See [SECURITY.md](SECURITY.md) for personal deployment checklist.
 See [RELEASE.md](RELEASE.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ```bash
-git tag v1.6.1
-git push origin v1.6.1
+git tag v1.7.0
+git push origin v1.7.0
 ```
 
 GitHub Actions builds and pushes both images to **ghcr.io/kissesses/**.

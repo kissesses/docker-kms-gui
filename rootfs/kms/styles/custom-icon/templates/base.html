@@ -43,6 +43,12 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         License
                     </a>
+                    {% if auth_enabled and current_user %}
+                    <a href="/admin" class="nav-link{% if path == '/admin/' %} active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        Admin
+                    </a>
+                    {% endif %}
                 </nav>
 
                 <div class="app-header-actions">
@@ -52,6 +58,12 @@
                     </span>
                     {% if version_info %}
                     <span class="app-version desktop-only" title="{{ version_info.reference }}">v{{ version_info.hash }}</span>
+                    {% endif %}
+                    {% if auth_enabled and current_user %}
+                    <span class="user-pill desktop-only">{{ current_user.username }}</span>
+                    <form method="post" action="{{ url_for('logout_page') }}" class="inline-form desktop-only">
+                        <button type="submit" class="btn" title="Sign out">Sign out</button>
+                    </form>
                     {% endif %}
                     <a href="/api/v1/clients/export" class="btn desktop-only" title="Export CSV">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -72,12 +84,25 @@
                 <a href="/clients" class="nav-link{% if path == '/clients/' %} active{% endif %}">Clients</a>
                 <a href="/products" class="nav-link{% if path == '/products/' %} active{% endif %}">Products</a>
                 <a href="/license" class="nav-link{% if path == '/license/' %} active{% endif %}">License</a>
+                {% if auth_enabled and current_user %}
+                <a href="/admin" class="nav-link{% if path == '/admin/' %} active{% endif %}">Admin</a>
+                <form method="post" action="{{ url_for('logout_page') }}"><button type="submit" class="nav-link nav-button">Sign out</button></form>
+                {% endif %}
                 <a href="/api/v1/clients/export" class="nav-link">Export CSV</a>
             </nav>
         </header>
 
         <main class="app-content">
             <div class="app-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
                 {% block content %}{% endblock %}
             </div>
         </main>
