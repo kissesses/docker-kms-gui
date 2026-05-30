@@ -58,9 +58,11 @@ def create_app():
 
     @app.context_processor
     def inject():
+        from flask import request
         from pykms_routes_auth import current_user
         user = current_user()
         ctx = {
+            'path': request.path,
             'auth_enabled': auth.is_enabled(),
             'admin_public': config.ADMIN_PUBLIC,
             'current_user': user,

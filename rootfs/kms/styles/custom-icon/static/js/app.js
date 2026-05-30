@@ -52,7 +52,7 @@ const PyKmsApp = (function() {
     if (darkIcon) darkIcon.style.display = isLight ? 'none' : 'block';
     if (lightIcon) lightIcon.style.display = isLight ? 'block' : 'none';
     document.querySelector('meta[name="theme-color"]')?.setAttribute(
-      'content', isLight ? '#f1f5f9' : '#070b14'
+      'content', isLight ? '#f0f4f8' : '#0a0f1a'
     );
   }
 
@@ -73,38 +73,43 @@ const PyKmsApp = (function() {
   }
 
   function initMobileNav() {
-    const toggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('sidebar-backdrop');
-    if (!toggle || !sidebar) return;
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const nav = document.getElementById('mobile-nav');
+    if (!toggle || !nav) return;
 
-    function closeSidebar() {
-      sidebar.classList.remove('open');
-      if (backdrop) backdrop.hidden = true;
+    function closeNav() {
+      nav.hidden = true;
+      nav.classList.remove('open');
       toggle.setAttribute('aria-expanded', 'false');
     }
 
-    function openSidebar() {
-      sidebar.classList.add('open');
-      if (backdrop) backdrop.hidden = false;
+    function openNav() {
+      nav.hidden = false;
+      nav.classList.add('open');
       toggle.setAttribute('aria-expanded', 'true');
     }
 
     toggle.addEventListener('click', function() {
-      if (sidebar.classList.contains('open')) closeSidebar();
-      else openSidebar();
+      if (nav.classList.contains('open')) closeNav();
+      else openNav();
     });
-    if (backdrop) backdrop.addEventListener('click', closeSidebar);
-    sidebar.querySelectorAll('.sidebar-link').forEach(function(link) {
-      link.addEventListener('click', closeSidebar);
+    nav.querySelectorAll('.nav-link').forEach(function(link) {
+      link.addEventListener('click', closeNav);
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeNav();
     });
   }
 
   function setServerStatus(online, label) {
     const dot = document.getElementById('status-dot');
     const el = document.getElementById('status-text');
+    const dotM = document.getElementById('status-dot-mobile');
+    const elM = document.getElementById('status-text-mobile');
     if (dot) dot.classList.toggle('live', online);
     if (el) el.textContent = label;
+    if (dotM) dotM.classList.toggle('live', online);
+    if (elM) elM.textContent = label;
   }
 
   function updateDistBar(data) {
@@ -159,8 +164,8 @@ const PyKmsApp = (function() {
     const r = Math.min(cx, cy) - 8;
     let start = -Math.PI / 2;
     const slices = [
-      { v: windows, c: '#38bdf8' },
-      { v: office, c: '#6366f1' }
+      { v: windows, c: '#34d399' },
+      { v: office, c: '#60a5fa' }
     ];
     slices.forEach(function(s) {
       if (s.v <= 0) return;
