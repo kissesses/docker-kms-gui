@@ -546,7 +546,7 @@ const PyKmsApp = (function() {
     const keyEl = document.getElementById('keys-picker-key');
     const copyBtn = document.getElementById('keys-picker-copy');
 
-    let keysCache = null;
+    let keysCache = Array.isArray(labels.keys) ? labels.keys : null;
     let loading = false;
     let selectedIndex = -1;
 
@@ -570,7 +570,7 @@ const PyKmsApp = (function() {
     }
 
     function loadKeys() {
-      if (keysCache) {
+      if (keysCache && keysCache.length) {
         renderList();
         return;
       }
@@ -580,6 +580,12 @@ const PyKmsApp = (function() {
       fetchJson('/api/v1/keys/public')
         .then(function(data) {
           keysCache = Array.isArray(data) ? data : [];
+          if (!keysCache.length) {
+            setStatus(labels.empty || 'No products found');
+            if (list) list.innerHTML = '';
+            if (result) result.hidden = true;
+            return;
+          }
           renderList();
         })
         .catch(function() {

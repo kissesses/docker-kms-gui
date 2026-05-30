@@ -75,6 +75,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   PyKmsApp.initLoginKeysPicker({
+    keys: {{ keys_data | tojson }},
     loading: {{ t('login.keys_loading') | tojson }},
     empty: {{ t('login.keys_empty') | tojson }},
     error: {{ t('login.keys_error') | tojson }},

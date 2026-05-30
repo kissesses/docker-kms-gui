@@ -100,6 +100,8 @@ def create_app():
             return redirect(url_for('pages.dashboard'))
 
         if path.startswith('/api/'):
+            if path == '/api/v1/keys/public' and config.KEYS_PUBLIC:
+                return None
             if auth.api_protection_enabled():
                 if not auth.verify_api_bearer() and not current_user():
                     return jsonify({'error': 'Unauthorized'}), 401

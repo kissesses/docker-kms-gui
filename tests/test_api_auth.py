@@ -97,3 +97,10 @@ def test_api_protected_when_tls_enabled(tmp_path, monkeypatch, pykms_src):
 def test_livez_public_when_protected(protected_app):
     rv = protected_app.get('/livez')
     assert rv.status_code == 200
+
+
+def test_keys_public_without_auth(protected_app):
+    rv = protected_app.get('/api/v1/keys/public')
+    assert rv.status_code == 200
+    assert rv.is_json
+    assert isinstance(rv.get_json(), list)

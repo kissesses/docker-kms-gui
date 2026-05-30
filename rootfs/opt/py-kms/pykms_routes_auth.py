@@ -6,6 +6,7 @@ from pykms_config import config
 import pykms_audit as audit
 import pykms_auth as auth
 import pykms_csrf as csrf
+from pykms_services import flatten_product_keys
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -72,12 +73,29 @@ def login_page():
             return redirect(nxt)
         audit.log('login_failed', request.form.get('username', ''))
         error = 'Invalid username or password'
+    keys_data = []
+    if config.KEYS_PUBLIC:
+        try:
+            rows, _ = flatten_product_keys()
+            keys_data = [
+                {
+                    'category': row['category'],
+                    'name': row['name'],
+                    'gvlk': row['gvlk'],
+                    'type': row['type'],
+                }
+                for row in rows
+                if row['gvlk']
+            ]
+        except Exception:
+            keys_data = []
     return render_template(
         'login.html',
         path='/login/',
         error=error,
         next_url=nxt,
         keys_public=config.KEYS_PUBLIC,
+        keys_data=keys_data,
     )
 
 
