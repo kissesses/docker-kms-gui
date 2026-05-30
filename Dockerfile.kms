@@ -2,19 +2,22 @@
 # https://github.com/Py-KMS-Organization/py-kms
 
 ARG PYKMS_REPO=https://github.com/Py-KMS-Organization/py-kms.git
-ARG PYKMS_REF=main
+ARG PYKMS_COMMIT=b0e1615dec06
 
 FROM alpine:3.22 AS pykms-src
   ARG PYKMS_REPO
-  ARG PYKMS_REF
+  ARG PYKMS_COMMIT
   RUN apk add --no-cache git \
-    && git clone --depth 1 --branch "${PYKMS_REF}" "${PYKMS_REPO}" /src
+    && git clone --filter=blob:none "${PYKMS_REPO}" /src \
+    && cd /src && git checkout "${PYKMS_COMMIT}"
 
 FROM alpine:3.22
 
   ARG BUILD_VERSION=dev
   ARG APP_UID=1000
   ARG APP_GID=1000
+
+  ARG PYKMS_COMMIT=b0e1615dec06
 
   ENV IP=0.0.0.0
   ENV PORT=1688
@@ -44,7 +47,7 @@ FROM alpine:3.22
   COPY --from=pykms-src /src/LICENSE /LICENSE
 
   RUN echo "${BUILD_VERSION}" > /VERSION \
-    && echo "Py-KMS-Organization/py-kms" >> /VERSION \
+    && echo "${PYKMS_COMMIT:-b0e1615dec06}" >> /VERSION \
     && addgroup -g "${APP_GID}" kms 2>/dev/null || true \
     && adduser -S -u "${APP_UID}" -G kms kms 2>/dev/null || adduser -S -u "${APP_UID}" kms \
     && mkdir -p /kms/var \

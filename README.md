@@ -14,6 +14,7 @@ Standalone Docker stack for KMS activation server + web GUI with **nginx 1.30.2*
 - Dashboard, clients, products, license pages
 - REST API: `/api/v1/stats`, `/api/v1/clients`, CSV export
 - Basic Auth, optional TLS, sidecar nginx mode
+- Localhost bind by default — see [SECURITY.md](SECURITY.md)
 
 ## Quick start
 
@@ -24,21 +25,21 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Open **http://localhost** — web GUI  
-KMS clients connect to **port 1688**
+Open **http://localhost** — web GUI (bound to `127.0.0.1` by default)  
+KMS clients connect to **127.0.0.1:1688**
 
 ## Compose
 
 ```yaml
 services:
   kms:
-    image: kissesses/kms:1.5.0
-    ports: ["1688:1688"]
+    image: ghcr.io/kissesses/kms:1.5.1
+    ports: ["127.0.0.1:1688:1688"]
     volumes: [kms-data:/kms/var]
 
   gui:
-    image: kissesses/kms-gui:1.5.0
-    ports: ["80:80"]
+    image: ghcr.io/kissesses/kms-gui:1.5.1
+    ports: ["127.0.0.1:80:80"]
     volumes: [kms-data:/kms/var]
     depends_on:
       kms:
@@ -59,6 +60,7 @@ GUI on **http://localhost:3000** via external nginx 1.30.2.
 
 | Variable | Default | Description |
 |---|---|---|
+| `BIND_ADDRESS` | 127.0.0.1 | Host bind for published ports |
 | `TZ` | UTC | Timezone |
 | `KMS_LOGLEVEL` | INFO | KMS server log level |
 | `KMS_GUI_STYLE` | custom-icon | UI theme (`custom-icon`, `py-kms`) |
@@ -80,32 +82,32 @@ Full list: [`.env.example`](.env.example)
 ## Build manually
 
 ```bash
-docker build -f Dockerfile.kms -t kissesses/kms:1.5.0 .
-docker build -f Dockerfile -t kissesses/kms-gui:1.5.0 .
+docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.5.1 .
+docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.5.1 .
 ```
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for personal deployment checklist.
 
 ## Releases
 
-See [RELEASE.md](RELEASE.md).
+See [RELEASE.md](RELEASE.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ```bash
-git tag v1.5.0
-git push origin v1.5.0
+git tag v1.5.1
+git push origin v1.5.1
 ```
 
-GitHub Actions builds and pushes both images to Docker Hub.
+GitHub Actions builds and pushes both images to **ghcr.io/kissesses/**.
 
-## CI secrets (required for release tags only)
+## CI
 
-Add to **GitHub → Settings → Secrets and variables → Actions**:
-
-| Secret | Description |
+| Trigger | Action |
 |---|---|
-| `DOCKERHUB_USERNAME` | Docker Hub login (`kissesses`) |
-| `DOCKERHUB_TOKEN` | Access token from [hub.docker.com/settings/security](https://hub.docker.com/settings/security) |
-
-> Push to `main` runs a **build-only** check (no Docker Hub login needed).  
-> Push tag `v*` or manual **workflow_dispatch** builds and publishes images.
+| Push to `main` | Build only (no publish) |
+| Tag `v*` | Build + push to ghcr.io + GitHub Release |
+| `workflow_dispatch` | Build + push to ghcr.io |
 
 ## Project structure
 

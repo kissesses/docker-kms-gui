@@ -46,6 +46,7 @@ server {
     ssl_certificate ${NGINX_TLS_CERT};
     ssl_certificate_key ${NGINX_TLS_KEY};
     ssl_protocols TLSv1.2 TLSv1.3;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     include /etc/nginx/conf.d/auth.conf;
     add_header X-Content-Type-Options nosniff always;
     add_header X-Frame-Options SAMEORIGIN always;
@@ -119,6 +120,9 @@ if [ -z "${1}" ]; then
   if [ "${NGINX_ENABLED}" = "true" ]; then
     _configure_auth
     _configure_tls
+    if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then
+      _log "WARNING: Web UI has no authentication — set NGINX_BASIC_AUTH_USER and NGINX_BASIC_AUTH_PASS"
+    fi
     nginx -t
     nginx -g 'daemon off;' &
     NGINX_PID=$!

@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.kms
       args:
-        BUILD_VERSION: ${KMS_VERSION:-1.5.0}
-    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.5.0}
+        BUILD_VERSION: ${KMS_VERSION:-1.5.1}
+    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.5.1}
     environment:
       TZ: ${TZ:-UTC}
       LOGLEVEL: ${KMS_LOGLEVEL:-INFO}
@@ -16,7 +16,7 @@ services:
     volumes:
       - kms-data:/kms/var
     ports:
-      - "${KMS_PORT:-1688}:1688/tcp"
+      - "${BIND_ADDRESS:-127.0.0.1}:${KMS_PORT:-1688}:1688/tcp"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pgrep", "-f", "pykms_Server.py"]
@@ -30,8 +30,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BUILD_VERSION: ${GUI_VERSION:-1.5.0}
-    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.5.0}
+        BUILD_VERSION: ${GUI_VERSION:-1.5.1}
+    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.5.1}
     depends_on:
       kms:
         condition: service_healthy
@@ -47,7 +47,7 @@ services:
     volumes:
       - kms-data:/kms/var
     ports:
-      - "${GUI_PORT:-80}:80/tcp"
+      - "${BIND_ADDRESS:-127.0.0.1}:${GUI_PORT:-80}:80/tcp"
     restart: unless-stopped
 
 volumes:

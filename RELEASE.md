@@ -2,52 +2,52 @@
 
 Maintainer: **kissesses**
 
-## Version locations
+## Before each release
 
-Update version in all of these before a release:
+1. Update version in:
+   - [`.json`](.json) → `"version"`
+   - [`.env.example`](.env.example) → `KMS_VERSION`, `GUI_VERSION`
+   - [`compose.yaml`](compose.yaml) / [`compose.sidecar.yaml`](compose.sidecar.yaml) → defaults
 
-| File | Field |
-|---|---|
-| [`.json`](.json) | `"version"` |
-| [`.env.example`](.env.example) | `KMS_VERSION`, `GUI_VERSION` |
-| [`compose.yaml`](compose.yaml) | default in `${KMS_VERSION:-X.Y.Z}` |
+2. Add a section to [`CHANGELOG.md`](CHANGELOG.md):
 
-## Release workflow
+```markdown
+## [1.5.2] — YYYY-MM-DD
 
-```bash
-# 1. Update version numbers (see table above)
-# 2. Commit
-git add .
-git commit -m "Release 1.5.0"
-git push origin main
+### Added
+- ...
 
-# 3. Tag and push
-git tag v1.5.0
-git push origin v1.5.0
+### Security
+- ...
+
+### Changed
+- ...
 ```
 
-GitHub Actions (`.github/workflows/build.yml`) will:
+3. Commit and push to `main`.
 
-1. Build `kissesses/kms:1.5.0` and `kissesses/kms-gui:1.5.0`
-2. Push to Docker Hub (amd64 + arm64)
-3. Create GitHub Release with auto-generated notes
-
-## Docker Hub secrets
-
-Repository **Settings → Secrets and variables → Actions**:
-
-- `DOCKERHUB_USERNAME` = `kissesses`
-- `DOCKERHUB_TOKEN` = token from [hub.docker.com/settings/security](https://hub.docker.com/settings/security)
-
-## Manual publish (without CI)
+## Publish
 
 ```bash
-docker build -f Dockerfile.kms -t kissesses/kms:1.5.0 .
-docker build -f Dockerfile   -t kissesses/kms-gui:1.5.0 .
-docker login
-docker push kissesses/kms:1.5.0
-docker push kissesses/kms-gui:1.5.0
+git tag v1.5.1
+git push origin v1.5.1
 ```
+
+GitHub Actions will:
+
+1. Build `ghcr.io/kissesses/kms:1.5.1` and `ghcr.io/kissesses/kms-gui:1.5.1` (amd64 + arm64)
+2. Push to **GitHub Container Registry**
+3. Create a GitHub Release with notes from `CHANGELOG.md` (via `.github/scripts/release-notes.sh`)
+
+## Preview release notes locally
+
+```bash
+.github/scripts/release-notes.sh v1.5.1
+```
+
+## Make packages public (first time)
+
+After first push, open **GitHub → Packages** and set visibility to **Public** for `kms` and `kms-gui`.
 
 ## Daily changes (no release)
 
@@ -57,4 +57,4 @@ git commit -m "Describe your change"
 git push origin main
 ```
 
-This updates the repo only — Docker images are built on **tag push** (`v*`).
+Images are published only on **tag push** (`v*`) or manual **workflow_dispatch**.

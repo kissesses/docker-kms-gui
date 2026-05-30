@@ -3,7 +3,7 @@
 
 ARG NGINX_VERSION=1.30.2
 ARG PYKMS_REPO=https://github.com/Py-KMS-Organization/py-kms.git
-ARG PYKMS_REF=main
+ARG PYKMS_COMMIT=b0e1615dec06
 ARG BUILD_VERSION=dev
 ARG APP_UID=1000
 ARG APP_GID=1000
@@ -12,9 +12,10 @@ FROM nginx:${NGINX_VERSION}-alpine AS nginx
 
 FROM alpine:3.22 AS pykms-src
   ARG PYKMS_REPO
-  ARG PYKMS_REF
+  ARG PYKMS_COMMIT
   RUN apk add --no-cache git \
-    && git clone --depth 1 --branch "${PYKMS_REF}" "${PYKMS_REPO}" /src
+    && git clone --filter=blob:none "${PYKMS_REPO}" /src \
+    && cd /src && git checkout "${PYKMS_COMMIT}"
 
 FROM alpine:3.22
 
@@ -22,7 +23,7 @@ FROM alpine:3.22
   ARG BUILD_VERSION
   ARG APP_UID
   ARG APP_GID
-  ARG PYKMS_REF=main
+  ARG PYKMS_COMMIT=b0e1615dec06
 
   ENV APP_ROOT=/kms
   ENV APP_UID=${APP_UID}
@@ -78,7 +79,7 @@ FROM alpine:3.22
 
   RUN set -ex \
     && echo "${BUILD_VERSION}" > /opt/py-kms/VERSION \
-    && echo "${PYKMS_REF:-main}" >> /opt/py-kms/VERSION \
+    && echo "${PYKMS_COMMIT}" >> /opt/py-kms/VERSION \
     && mkdir -p ${APP_ROOT}/var ${APP_ROOT}/styles/py-kms ${APP_ROOT}/styles/custom-icon \
     && cp -R /opt/py-kms/templates ${APP_ROOT}/styles/py-kms/ \
     && cp -R /opt/py-kms/static ${APP_ROOT}/styles/py-kms/ \
