@@ -53,7 +53,7 @@ jobs:
           fi
 
       - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Login to GitHub Container Registry
         if: steps.push.outputs.enabled == 'true'
@@ -93,7 +93,7 @@ jobs:
             image: kms-gui
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Build image for scan
         run: docker build -f ${{ matrix.file }} --target ${{ matrix.target }} -t scan:${{ matrix.image }} .
