@@ -97,6 +97,12 @@ jobs:
           chmod +x .github/scripts/capture-screenshots.sh
           .github/scripts/capture-screenshots.sh screenshots
 
+      - name: Verify screenshots
+        run: |
+          test -f screenshots/dashboard.png
+          test -f screenshots/clients.png
+          ls -la screenshots/
+
       - name: Generate release notes
         id: notes
         env:
@@ -114,6 +120,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.notes.outputs.body }}
+          fail_on_unmatched_files: false
           files: |
             screenshots/dashboard.png
             screenshots/dashboard-light.png

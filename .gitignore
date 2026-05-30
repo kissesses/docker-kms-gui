@@ -1,4 +1,4 @@
 maintain/
 .env
-screenshots/
+/screenshots/
 scripts/screenshots/node_modules/

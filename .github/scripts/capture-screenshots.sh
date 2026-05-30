@@ -47,8 +47,12 @@ done
 
 echo "==> Installing Playwright"
 cd scripts/screenshots
+if [[ ! -f package.json ]] || [[ ! -f capture.mjs ]]; then
+  echo "Missing scripts/screenshots/package.json or capture.mjs" >&2
+  exit 1
+fi
 npm install --omit=dev
-npx playwright install chromium
+npx playwright install chromium --with-deps
 
 echo "==> Capturing screenshots"
 node capture.mjs "${BASE_URL}" "${ROOT}/${OUT_DIR}"
