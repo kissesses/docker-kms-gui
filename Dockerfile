@@ -30,7 +30,6 @@ FROM alpine:3.22
   ENV APP_GID=${APP_GID}
   ENV APP_VERSION=${BUILD_VERSION}
 
-  ENV KMS_GUI_STYLE=custom-icon
   ENV PYKMS_SQLITE_DB_PATH=/kms/var/kms.db
   ENV PYKMS_LICENSE_PATH=/opt/py-kms/LICENSE
   ENV PYKMS_VERSION_PATH=/opt/py-kms/VERSION
@@ -84,9 +83,7 @@ FROM alpine:3.22
   RUN set -ex \
     && echo "${BUILD_VERSION}" > /opt/py-kms/VERSION \
     && echo "${PYKMS_COMMIT}" >> /opt/py-kms/VERSION \
-    && mkdir -p ${APP_ROOT}/var ${APP_ROOT}/styles/py-kms ${APP_ROOT}/styles/custom-icon \
-    && cp -R /opt/py-kms/templates ${APP_ROOT}/styles/py-kms/ \
-    && cp -R /opt/py-kms/static ${APP_ROOT}/styles/py-kms/ \
+    && mkdir -p ${APP_ROOT}/var ${APP_ROOT}/styles/custom-icon \
     && rm -rf /opt/py-kms/templates /opt/py-kms/static \
     && addgroup -g "${APP_GID}" kms 2>/dev/null || true \
     && adduser -S -u "${APP_UID}" -G kms kms 2>/dev/null || adduser -S -u "${APP_UID}" kms \

@@ -33,12 +33,12 @@ KMS clients connect to **127.0.0.1:1688**
 ```yaml
 services:
   kms:
-    image: ghcr.io/kissesses/kms:1.7.0
+    image: ghcr.io/kissesses/kms:1.7.1
     ports: ["127.0.0.1:1688:1688"]
     volumes: [kms-data:/kms/var]
 
   gui:
-    image: ghcr.io/kissesses/kms-gui:1.7.0
+    image: ghcr.io/kissesses/kms-gui:1.7.1
     ports: ["127.0.0.1:80:80"]
     volumes: [kms-data:/kms/var]
     depends_on:
@@ -72,6 +72,7 @@ Or enable auth on default compose:
 
 ```env
 GUI_AUTH_ENABLED=true
+docker compose up -d
 ```
 
 See [SECURITY.md](SECURITY.md) for full checklist.
@@ -85,10 +86,12 @@ See [SECURITY.md](SECURITY.md) for full checklist.
 | `GUI_BIND` | — | Override GUI host bind |
 | `TZ` | UTC | Timezone |
 | `KMS_LOGLEVEL` | INFO | KMS server log level |
-| `KMS_GUI_STYLE` | custom-icon | UI theme (`custom-icon`, `py-kms`) |
+| `GUI_AUTH_ENABLED` | false | Application login (`/setup`, `/login`) |
 | `NGINX_ENABLED` | true | In-container nginx |
-| `NGINX_BASIC_AUTH_USER/PASS` | — | Protect web UI |
+| `NGINX_BASIC_AUTH_USER/PASS` | — | nginx basic auth (alternative to app login) |
 | `NGINX_TLS_ENABLED` | false | TLS termination |
+| `TLS_CERT_DIR` | ./certs | Host path mounted to `/etc/nginx/certs` |
+| `DEBUG` | — | Enable debug logs (blocked in internet mode) |
 
 Full list: [`.env.example`](.env.example)
 
@@ -104,8 +107,8 @@ Full list: [`.env.example`](.env.example)
 ## Build manually
 
 ```bash
-docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.7.0 .
-docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.7.0 .
+docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.7.1 .
+docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.7.1 .
 ```
 
 ## Security
@@ -117,8 +120,8 @@ See [SECURITY.md](SECURITY.md) for personal deployment checklist.
 See [RELEASE.md](RELEASE.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ```bash
-git tag v1.7.0
-git push origin v1.7.0
+git tag v1.7.1
+git push origin v1.7.1
 ```
 
 GitHub Actions builds and pushes both images to **ghcr.io/kissesses/**.
@@ -147,7 +150,7 @@ docker/kms/         # KMS server entrypoint
 
 - [Py-KMS-Organization/py-kms](https://github.com/Py-KMS-Organization/py-kms) — KMS engine
 - [11notes/docker-KMS-GUI](https://github.com/11notes/docker-KMS-GUI) — original GUI wrapper (abandoned)
-- UI theme based on [fork-pykms-frontend](https://github.com/11notes/fork-pykms-frontend)
+- Custom Web UI (`rootfs/kms/styles/custom-icon/`)
 
 ## License
 

@@ -2,7 +2,6 @@ import csv
 import io
 import os
 import secrets
-import uuid
 import datetime
 
 from flask import (
@@ -13,10 +12,6 @@ from flask import (
 import pykms_auth as auth
 from pykms_Sql import sql_get_all
 from pykms_DB2Dict import kmsDB2Dict
-
-
-def _random_uuid():
-    return str(uuid.uuid4()).replace('-', '_')
 
 
 _serve_count = 0
@@ -73,11 +68,14 @@ def _load_secret_key():
         with open(path, 'r', encoding='utf-8') as f:
             return f.read().strip()
     key = secrets.token_hex(32)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(key)
     try:
-        os.chmod(path, 0o600)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(key)
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
     except OSError:
         pass
     return key
@@ -93,8 +91,6 @@ app.config.update(
 )
 
 app.jinja_env.globals['start_time'] = datetime.datetime.now()
-app.jinja_env.globals['get_serve_count'] = _get_serve_count
-app.jinja_env.globals['random_uuid'] = _random_uuid
 app.jinja_env.globals['version_info'] = None
 
 _version_info_path = os.environ.get('PYKMS_VERSION_PATH', '../VERSION')

@@ -52,7 +52,7 @@ _validate_security() {
   fi
   if [ "${NGINX_ENABLED}" = "true" ] && [ "${GUI_AUTH_ENABLED}" != "true" ]; then
     if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then
-      _log "WARNING: Web UI has no authentication — enable GUI_AUTH or NGINX_BASIC_AUTH"
+      _log "WARNING: Web UI has no authentication — enable GUI_AUTH_ENABLED or NGINX_BASIC_AUTH"
     fi
   fi
 }
@@ -111,21 +111,12 @@ if [ -z "${1}" ]; then
   fi
 
   mkdir -p "${APP_ROOT}/var"
+  chown -R "${APP_UID:-1000}:${APP_GID:-1000}" "${APP_ROOT}/var"
 
   rm -rf /opt/py-kms/templates /opt/py-kms/static
-  TEMPLATE_DIR="${APP_ROOT}/styles"
-  case ${KMS_GUI_STYLE} in
-    py-kms)
-      ln -s "${TEMPLATE_DIR}/py-kms/templates" /opt/py-kms/templates
-      ln -s "${TEMPLATE_DIR}/py-kms/static" /opt/py-kms/static
-      _log "UI theme: py-kms"
-    ;;
-    *)
-      ln -s "${TEMPLATE_DIR}/custom-icon/templates" /opt/py-kms/templates
-      ln -s "${TEMPLATE_DIR}/custom-icon/static" /opt/py-kms/static
-      _log "UI theme: custom-icon"
-    ;;
-  esac
+  ln -sf "${APP_ROOT}/styles/custom-icon/templates" /opt/py-kms/templates
+  ln -sf "${APP_ROOT}/styles/custom-icon/static" /opt/py-kms/static
+  _log "UI theme: custom-icon"
 
   cd /opt/py-kms
 
@@ -148,11 +139,6 @@ if [ -z "${1}" ]; then
     _validate_security
     _configure_auth
     _configure_tls
-    if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then
-      if [ "${GUI_AUTH_ENABLED}" != "true" ]; then
-        _log "WARNING: Web UI has no authentication — enable GUI_AUTH or NGINX_BASIC_AUTH"
-      fi
-    fi
     nginx -t
     nginx -g 'daemon off;' &
     NGINX_PID=$!

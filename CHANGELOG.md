@@ -5,6 +5,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.7.1] — 2026-05-30
+
+### Removed
+
+- Legacy `py-kms` UI theme and duplicate templates under `rootfs/opt/py-kms/templates/`
+- Unused `pykms-frontend.css` and dead helpers in `pykms_WebUI.py`
+
+### Fixed
+
+- Release CI: gunicorn could not write `/kms/var/.gui_secret` on bind-mounted volumes
+- `GUI_AUTH_ENABLED` now passed through `compose.yaml` (`.env` setting actually works)
+- `compose.internet.yaml` reads `${GUI_AUTH_ENABLED}` from `.env`
+- `.env.example` / `.env.internet.example` reorganized and aligned with compose
+- Duplicate auth warning removed from entrypoint
+
+---
+
 ## [1.7.0] — 2026-05-30
 
 ### Added

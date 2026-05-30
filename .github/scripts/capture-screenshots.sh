@@ -25,6 +25,7 @@ docker run -d --name kms-screenshot \
   -v "${DB_DIR}:/kms/var" \
   -e NGINX_ENABLED=true \
   -e GUI_AUTH_ENABLED=false \
+  -e GUI_SECRET_KEY=screenshot-ci-secret \
   kms-gui:screenshot
 
 cleanup() {

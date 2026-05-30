@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.kms
       args:
-        BUILD_VERSION: ${KMS_VERSION:-1.7.0}
-    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.7.0}
+        BUILD_VERSION: ${KMS_VERSION:-1.7.1}
+    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.7.1}
     environment:
       TZ: ${TZ:-UTC}
       LOGLEVEL: ${KMS_LOGLEVEL:-INFO}
@@ -30,8 +30,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BUILD_VERSION: ${GUI_VERSION:-1.7.0}
-    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.7.0}
+        BUILD_VERSION: ${GUI_VERSION:-1.7.1}
+    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.7.1}
     depends_on:
       kms:
         condition: service_healthy
@@ -42,10 +42,11 @@ services:
       NGINX_BASIC_AUTH_USER: ${NGINX_BASIC_AUTH_USER:-}
       NGINX_BASIC_AUTH_PASS: ${NGINX_BASIC_AUTH_PASS:-}
       NGINX_TLS_ENABLED: ${NGINX_TLS_ENABLED:-false}
-      KMS_GUI_STYLE: ${KMS_GUI_STYLE:-custom-icon}
+      GUI_AUTH_ENABLED: ${GUI_AUTH_ENABLED:-false}
       DEBUG: ${DEBUG:-}
     volumes:
       - kms-data:/kms/var
+      - ${TLS_CERT_DIR:-./certs}:/etc/nginx/certs:ro
     ports:
       - "${GUI_BIND:-${BIND_ADDRESS:-127.0.0.1}}}:${GUI_PORT:-80}:80/tcp"
     restart: unless-stopped
