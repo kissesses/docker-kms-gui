@@ -23,8 +23,8 @@ Both containers share one SQLite volume (`kms-data`) — client list and admin s
 
 | | |
 |---|---|
-| **OS** | Linux **x86_64** or **aarch64** (also macOS / Windows with [Docker Desktop](https://www.docker.com/products/docker-desktop/)) |
-| **Docker** | Engine **24.0+**, Compose plugin **v2.20+** (`docker compose version`) |
+| **OS** | Linux **x86_64** or **aarch64** (Docker auto-install via script; macOS/Windows — [Docker Desktop](https://www.docker.com/products/docker-desktop/)) |
+| **Docker** | Engine **24.0+**, Compose plugin **v2.20+** — **installed automatically** by `install.sh` if missing (Linux) |
 | **CPU** | 1 core |
 | **RAM** | **512 MB** free for Docker + 2 containers |
 | **Disk** | **2 GB** free (images ~300–500 MB + SQLite volume) |

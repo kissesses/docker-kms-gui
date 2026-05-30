@@ -22,6 +22,7 @@
 #   --build          собрать образы локально вместо pull
 #   --enable-auth    включить GUI_AUTH_ENABLED (для local/lan)
 #   --yes            не спрашивать подтверждение
+#   --skip-docker-install  не ставить Docker автоматически, только проверка
 #   --tz Europe/Moscow
 #
 # Переменные окружения (альтернатива --dir / --ref):
@@ -72,6 +73,8 @@ TZ_VALUE="${DEFAULT_TZ}"
 COMPOSE_FILE="compose.yaml"
 INSTALL_DIR="${DEFAULT_INSTALL_DIR}"
 REPO_REF="${DEFAULT_REPO_REF}"
+SKIP_DOCKER_INSTALL=false
+DOCKER=()
 
 # --- Цвета для вывода (если терминал поддерживает) ---------------------------
 if [[ -t 1 ]]; then
@@ -107,6 +110,8 @@ Options:
   -b, --build         build images locally instead of pull
   --enable-auth       enable GUI_AUTH_ENABLED (local/lan)
   -y, --yes           skip confirmations
+  --skip-docker-install
+                      do not auto-install Docker (fail if missing)
   --tz TZ             timezone (default: UTC)
   -h, --help          show this help
 
@@ -143,6 +148,10 @@ parse_args() {
         ;;
       -y|--yes)
         ASSUME_YES=true
+        shift
+        ;;
+      --skip-docker-install)
+        SKIP_DOCKER_INSTALL=true
         shift
         ;;
       --tz)
@@ -199,6 +208,121 @@ confirm() {
   [[ "${reply}" =~ ^[Yy]$ ]]
 }
 
+# --- root / sudo ----------------------------------------------------------------
+is_root() {
+  [[ "$(id -u)" -eq 0 ]]
+}
+
+run_as_root() {
+  if is_root; then
+    "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+  else
+    fail "Нужны права root. Запустите: sudo bash scripts/install.sh …"
+  fi
+}
+
+# --- Установка Docker (https://get.docker.com) ----------------------------------
+install_docker() {
+  command -v curl >/dev/null 2>&1 || fail "curl не найден — нужен для установки Docker."
+
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    fail "На macOS установите Docker Desktop: https://www.docker.com/products/docker-desktop/"
+  fi
+
+  if [[ "$(uname -s)" != "Linux" ]]; then
+    fail "Автоустановка Docker поддерживается только на Linux."
+  fi
+
+  info "Установка Docker через get.docker.com (может занять 1–3 мин)…"
+
+  if is_root; then
+    curl -fsSL https://get.docker.com | sh
+  else
+    curl -fsSL https://get.docker.com | sudo sh
+  fi
+
+  run_as_root systemctl enable docker 2>/dev/null || true
+  run_as_root systemctl start docker 2>/dev/null \
+    || run_as_root service docker start 2>/dev/null \
+    || true
+
+  local i=0
+  while [[ $i -lt 15 ]]; do
+    if docker info >/dev/null 2>&1; then
+      ok "Docker установлен"
+      return 0
+    fi
+    if command -v sudo >/dev/null 2>&1 && sudo docker info >/dev/null 2>&1; then
+      ok "Docker установлен (доступ через sudo)"
+      return 0
+    fi
+    sleep 2
+    i=$((i + 1))
+  done
+
+  fail "Docker установлен, но daemon не отвечает. Проверьте: systemctl status docker"
+}
+
+install_docker_if_needed() {
+  command -v docker >/dev/null 2>&1 && return 0
+
+  if [[ "${SKIP_DOCKER_INSTALL}" == true ]]; then
+    fail "Docker не найден. Установите вручную или уберите --skip-docker-install."
+  fi
+
+  if [[ "${ASSUME_YES}" == true ]]; then
+    install_docker
+    return 0
+  fi
+
+  if confirm "Docker не найден. Установить автоматически (get.docker.com)?"; then
+    install_docker
+  else
+    fail "Docker обязателен. Установите: curl -fsSL https://get.docker.com | sh"
+  fi
+}
+
+start_docker_daemon() {
+  docker info >/dev/null 2>&1 && return 0
+  command -v sudo >/dev/null 2>&1 && sudo docker info >/dev/null 2>&1 && return 0
+
+  info "Запуск Docker daemon…"
+  run_as_root systemctl start docker 2>/dev/null \
+    || run_as_root service docker start 2>/dev/null \
+    || true
+  sleep 2
+}
+
+setup_docker_cmd() {
+  COMPOSE=()
+
+  if docker info >/dev/null 2>&1; then
+    DOCKER=(docker)
+  elif command -v sudo >/dev/null 2>&1 && sudo docker info >/dev/null 2>&1; then
+    DOCKER=(sudo docker)
+    warn "Используется sudo docker. Чтобы без sudo: usermod -aG docker ${USER} && newgrp docker"
+  else
+    return 1
+  fi
+
+  if "${DOCKER[@]}" compose version >/dev/null 2>&1; then
+    COMPOSE=("${DOCKER[@]}" compose)
+  elif command -v docker-compose >/dev/null 2>&1; then
+    if [[ "${DOCKER[0]}" == "sudo" ]]; then
+      COMPOSE=(sudo docker-compose)
+    else
+      COMPOSE=(docker-compose)
+    fi
+    warn "Используется legacy docker-compose; рекомендуется Docker Compose v2."
+  else
+    return 1
+  fi
+
+  return 0
+}
+
 # --- Минимальные / рекомендуемые ресурсы (предупреждения, не блокируют) ----
 check_system_hints() {
   info "Проверка окружения…"
@@ -208,7 +332,11 @@ check_system_hints() {
 
   # Версия Docker Engine
   local docker_ver
-  docker_ver="$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo "0")"
+  if [[ ${#DOCKER[@]} -gt 0 ]]; then
+    docker_ver="$("${DOCKER[@]}" version --format '{{.Server.Version}}' 2>/dev/null || echo "0")"
+  else
+    docker_ver="$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo "0")"
+  fi
   if [[ "${docker_ver}" != "0" ]]; then
     local major="${docker_ver%%.*}"
     if [[ "${major}" -lt 24 ]]; then
@@ -248,22 +376,20 @@ check_system_hints() {
 check_dependencies() {
   info "Проверка Docker и Docker Compose…"
 
-  command -v docker >/dev/null 2>&1 || fail "Docker не найден. Установите: https://docs.docker.com/engine/install/"
+  install_docker_if_needed
+  start_docker_daemon
 
-  if ! docker info >/dev/null 2>&1; then
-    fail "Docker daemon не запущен или нет прав. Запустите Docker или добавьте пользователя в группу docker."
+  if ! setup_docker_cmd; then
+    if is_root && [[ -n "${SUDO_USER:-}" ]] && id "${SUDO_USER}" >/dev/null 2>&1; then
+      usermod -aG docker "${SUDO_USER}" 2>/dev/null || true
+      warn "Пользователь ${SUDO_USER} добавлен в группу docker — выполните: newgrp docker"
+    fi
+    setup_docker_cmd || fail "Docker недоступен. Проверьте: systemctl status docker"
   fi
 
-  if docker compose version >/dev/null 2>&1; then
-    COMPOSE=(docker compose)
-  elif command -v docker-compose >/dev/null 2>&1; then
-    COMPOSE=(docker-compose)
-    warn "Используется legacy docker-compose; рекомендуется Docker Compose v2."
-  else
-    fail "Docker Compose не найден."
-  fi
-
-  ok "Docker готов"
+  local docker_ver
+  docker_ver="$("${DOCKER[@]}" version --format '{{.Server.Version}}' 2>/dev/null || echo "?")"
+  ok "Docker готов (${docker_ver})"
 }
 
 # --- Клонирование репозитория (one-liner / curl | bash) -----------------------
