@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.10.2] — 2026-05-30
+
+### Fixed
+
+- **Intermittent GUI outages without container restarts** — likely gunicorn worker timeouts (master stays alive, so supervisor showed nothing). Worker timeout events now logged to `gui-supervisor.log`; default timeout raised to 300s; 2 workers by default
+- **`/api/v1/stats` polling** no longer reloads full product catalog on every request (cached 5 min)
+- **SQLite** client reads use 30s lock timeout instead of default 5s
+- **nginx** upstream keepalive to gunicorn; proxy read timeout 330s
+
+### Added
+
+- **`/kms/var/gui-slow.log`** — requests slower than 2s
+- Diagnostics: `worker_timeout_events`, `slow_log_tail`
+
+---
+
 ## [1.10.1] — 2026-05-30
 
 ### Fixed

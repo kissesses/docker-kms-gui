@@ -101,6 +101,9 @@ WEBHOOK_INTERVAL=60</pre>
         <div class="info-row"><dt>Host RAM free</dt><dd class="mono">{{ diagnostics.memory.available_mb }} / {{ diagnostics.memory.total_mb }} MB</dd></div>
         {% endif %}
         <div class="info-row"><dt>Restart events</dt><dd class="mono">{{ diagnostics.restart_events }}</dd></div>
+        <div class="info-row"><dt>Worker timeouts</dt><dd class="mono">{{ diagnostics.worker_timeout_events }}</dd></div>
+        <div class="info-row"><dt>Gunicorn workers</dt><dd class="mono">{{ diagnostics.gunicorn.workers }}</dd></div>
+        <div class="info-row"><dt>Gunicorn timeout</dt><dd class="mono">{{ diagnostics.gunicorn.timeout }}s</dd></div>
         <div class="info-row"><dt>Gunicorn preload</dt><dd class="mono">{{ diagnostics.gunicorn.preload }}</dd></div>
         <div class="info-row"><dt>Threads</dt><dd class="mono">{{ diagnostics.gunicorn.threads }}</dd></div>
     </dl>
@@ -115,6 +118,12 @@ WEBHOOK_INTERVAL=60</pre>
     <div class="panel-divider"></div>
     <h3 class="panel-subtitle">{{ t('ops.supervisor_log') }}</h3>
     <pre class="mono panel-code log-tail">{% for line in diagnostics.supervisor_log_tail %}{{ line }}
+{% endfor %}</pre>
+    {% endif %}
+    {% if diagnostics.slow_log_tail %}
+    <div class="panel-divider"></div>
+    <h3 class="panel-subtitle">Slow requests (&gt;2s)</h3>
+    <pre class="mono panel-code log-tail">{% for line in diagnostics.slow_log_tail %}{{ line }}
 {% endfor %}</pre>
     {% endif %}
     <div class="quick-grid">

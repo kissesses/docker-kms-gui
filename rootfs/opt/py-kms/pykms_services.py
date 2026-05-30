@@ -6,7 +6,6 @@ import sqlite3
 import time
 
 from pykms_DB2Dict import kmsDB2Dict
-from pykms_Sql import sql_get_all
 from pykms_time import format_ts, parse_ts
 
 import pykms_auth as auth
@@ -14,7 +13,13 @@ from pykms_config import config
 
 _kms_items = None
 _kms_items_noglvk = None
+_product_stats_cache = {'at': 0.0, 'payload': None}
 _start_time = datetime.datetime.now()
+
+_CLIENT_COLUMNS = (
+    'clientMachineId', 'machineName', 'applicationId', 'skuId',
+    'licenseStatus', 'lastRequestTime', 'kmsEpid', 'requestCount', 'lastRequestIP',
+)
 
 
 def start_time():
@@ -32,11 +37,21 @@ def env_check():
 
 def load_clients():
     env_check()
-    import time
     last_err = None
-    for attempt in range(5):
+    for attempt in range(8):
         try:
-            clients = sql_get_all(config.DB_PATH)
+            with sqlite3.connect(config.DB_PATH, timeout=30) as con:
+                con.row_factory = sqlite3.Row
+                cur = con.execute(
+                    f"SELECT {', '.join(_CLIENT_COLUMNS)} FROM clients"
+                )
+                clients = []
+                for row in cur.fetchall():
+                    item = {col: row[col] for col in _CLIENT_COLUMNS}
+                    ts = item.get('lastRequestTime')
+                    if isinstance(ts, (int, float)):
+                        item['lastRequestTime'] = datetime.datetime.fromtimestamp(ts).isoformat()
+                    clients.append(item)
             if clients:
                 for client in clients:
                     if 'machineIp' not in client and 'lastRequestIP' in client:
@@ -46,7 +61,7 @@ def load_clients():
             last_err = e
             if 'locked' not in str(e).lower():
                 raise
-            time.sleep(0.2 * (attempt + 1))
+            time.sleep(0.25 * (attempt + 1))
     raise last_err
 
 
@@ -150,6 +165,17 @@ def product_counts():
     return items, noglvk, count_products, count_windows, count_office
 
 
+def _cached_product_stats(max_age=300):
+    global _product_stats_cache
+    now = time.time()
+    cached = _product_stats_cache.get('payload')
+    if cached and now - _product_stats_cache.get('at', 0) < max_age:
+        return cached
+    payload = product_counts()
+    _product_stats_cache = {'at': now, 'payload': payload}
+    return payload
+
+
 def load_version_info():
     if not os.path.exists(config.VERSION_PATH):
         return None
@@ -157,14 +183,21 @@ def load_version_info():
         return {'hash': f.readline().strip(), 'reference': f.readline().strip()}
 
 
-def build_stats(clients=None):
+def build_stats(clients=None, include_products=True):
     if clients is None:
         try:
             clients = load_clients()
         except Exception:
             clients = None
     count_clients, count_windows, count_office = client_counts(clients)
-    _, noglvk, count_products, cpw, cpo = product_counts()
+    if include_products:
+        _, noglvk, count_products, cpw, cpo = _cached_product_stats()
+    else:
+        cached = _product_stats_cache.get('payload')
+        if cached:
+            _, noglvk, count_products, cpw, cpo = cached
+        else:
+            noglvk, count_products, cpw, cpo = 0, 0, 0, 0
     version = load_version_info() or {}
     return {
         'uptime_seconds': uptime_seconds(),

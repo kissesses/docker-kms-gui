@@ -1,9 +1,9 @@
 """Runtime diagnostics for GUI stability troubleshooting."""
 
 import os
-import time
 
 from pykms_config import config
+from pykms_slowlog import tail_slow_log
 
 SUPERVISOR_LOG = os.path.join(
     os.path.dirname(config.DB_PATH),
@@ -79,6 +79,7 @@ def var_files():
         'gui_audit.db',
         'kms-policy.json',
         'gui-supervisor.log',
+        'gui-slow.log',
         '.webhook_state.json',
         '.gui_secret',
     )
@@ -95,34 +96,50 @@ def var_files():
 
 def gunicorn_config():
     return {
-        'workers': os.environ.get('GUNICORN_WORKERS', '1'),
+        'workers': os.environ.get('GUNICORN_WORKERS', '2'),
         'threads': os.environ.get('GUNICORN_THREADS', '2'),
         'preload': os.environ.get('GUNICORN_PRELOAD', 'false'),
         'max_requests': os.environ.get('GUNICORN_MAX_REQUESTS', '0'),
-        'timeout': os.environ.get('GUNICORN_TIMEOUT', '120'),
+        'timeout': os.environ.get('GUNICORN_TIMEOUT', '300'),
     }
-
-
-def recommendations(mem, restart_count):
-    tips = []
-    if mem.get('available') and mem.get('available_mb') is not None:
-        if mem['available_mb'] < 128:
-            tips.append('Low RAM (<128 MB free): set GUNICORN_PRELOAD=false, GUNICORN_THREADS=2, add swap or use 2 GB+ VPS.')
-    if restart_count and restart_count > 0:
-        tips.append('Gunicorn restarted in this container lifetime — check gui-supervisor.log and host dmesg for OOM kills.')
-    if os.environ.get('GUNICORN_PRELOAD', 'false').lower() in ('1', 'true', 'yes'):
-        tips.append('GUNICORN_PRELOAD=true increases memory use on small VPS — try GUNICORN_PRELOAD=false.')
-    if not tips:
-        tips.append('If outages persist: docker compose logs gui --tail 200 and dmesg | grep -i oom on the host.')
-    return tips
 
 
 def restart_count():
     count = 0
     for line in tail_supervisor_log(500):
-        if 'gunicorn exited' in line or 'exit code' in line:
+        if 'gunicorn exited' in line:
             count += 1
     return count
+
+
+def worker_timeout_count():
+    count = 0
+    for line in tail_supervisor_log(500):
+        if 'WORKER TIMEOUT' in line:
+            count += 1
+    return count
+
+
+def recommendations(mem, restart_count, timeout_count):
+    tips = []
+    if timeout_count > 0:
+        tips.append(
+            f'Worker timeout events: {timeout_count} — check gui-slow.log for slow endpoints; '
+            'KMS/GUI may block on kms.db (SQLite lock).'
+        )
+    if mem.get('available') and mem.get('available_mb') is not None:
+        if mem['available_mb'] < 128:
+            tips.append('Low RAM (<128 MB free): set GUNICORN_PRELOAD=false, GUNICORN_THREADS=2, add swap or use 2 GB+ VPS.')
+    if restart_count and restart_count > 0:
+        tips.append('Gunicorn master restarted — check gui-supervisor.log and host dmesg for OOM kills.')
+    elif timeout_count == 0 and not tips:
+        tips.append(
+            'No master restarts and no worker timeouts logged. If outages continue, check '
+            '/var/log/nginx/error.log inside the container and any reverse proxy (Cloudflare) in front.'
+        )
+    if os.environ.get('GUNICORN_PRELOAD', 'false').lower() in ('1', 'true', 'yes'):
+        tips.append('GUNICORN_PRELOAD=true increases memory use on small VPS — try GUNICORN_PRELOAD=false.')
+    return tips
 
 
 def build_report():
@@ -130,14 +147,17 @@ def build_report():
 
     mem = memory_snapshot()
     restarts = restart_count()
+    timeouts = worker_timeout_count()
     return {
         'uptime_seconds': uptime_seconds(),
         'memory': mem,
         'process_rss_mb': process_rss_mb(),
         'gunicorn': gunicorn_config(),
         'supervisor_log_tail': tail_supervisor_log(),
+        'slow_log_tail': tail_slow_log(),
         'restart_events': restarts,
+        'worker_timeout_events': timeouts,
         'var_files': var_files(),
-        'recommendations': recommendations(mem, restarts),
+        'recommendations': recommendations(mem, restarts, timeouts),
         'webhook_enabled': bool(os.environ.get('WEBHOOK_URL', '').strip()),
     }

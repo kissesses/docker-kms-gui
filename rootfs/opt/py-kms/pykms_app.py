@@ -3,6 +3,7 @@
 import datetime
 import os
 import secrets
+import time
 
 from flask import Flask
 
@@ -72,6 +73,20 @@ def create_app():
         ctx.update(csrf.inject())
         ctx.update(i18n.inject())
         return ctx
+
+    @app.before_request
+    def _request_timer():
+        from flask import g
+        g._req_start = time.time()
+
+    @app.after_request
+    def _log_slow_request(response):
+        from flask import g, request
+        start = getattr(g, '_req_start', None)
+        if start is not None:
+            from pykms_slowlog import log_slow
+            log_slow(request.method, request.path, (time.time() - start) * 1000, response.status_code)
+        return response
 
     @app.before_request
     def guard():

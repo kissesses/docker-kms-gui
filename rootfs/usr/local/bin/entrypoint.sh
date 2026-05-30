@@ -79,11 +79,12 @@ server {
     add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self';" always;
     location /api/ {
         limit_req zone=api_limit burst=10 nodelay;
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://kms_gui_backend;
         proxy_http_version 1.1;
         proxy_connect_timeout 60s;
-        proxy_send_timeout 120s;
-        proxy_read_timeout 120s;
+        proxy_send_timeout 330s;
+        proxy_read_timeout 330s;
+        proxy_set_header Connection "";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -91,11 +92,12 @@ server {
     }
     location ~ ^/(login|setup)$ {
         limit_req zone=auth_limit burst=3 nodelay;
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://kms_gui_backend;
         proxy_http_version 1.1;
         proxy_connect_timeout 60s;
-        proxy_send_timeout 120s;
-        proxy_read_timeout 120s;
+        proxy_send_timeout 330s;
+        proxy_read_timeout 330s;
+        proxy_set_header Connection "";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -103,11 +105,12 @@ server {
     }
     location / {
         limit_req zone=general_limit burst=30 nodelay;
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://kms_gui_backend;
         proxy_http_version 1.1;
         proxy_connect_timeout 60s;
-        proxy_send_timeout 120s;
-        proxy_read_timeout 120s;
+        proxy_send_timeout 330s;
+        proxy_read_timeout 330s;
+        proxy_set_header Connection "";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -138,13 +141,15 @@ if [ -z "${1}" ]; then
 
   cd /opt/py-kms
 
-  GUNICORN_WORKERS="${GUNICORN_WORKERS:-1}"
+  GUNICORN_WORKERS="${GUNICORN_WORKERS:-2}"
   GUNICORN_THREADS="${GUNICORN_THREADS:-2}"
-  GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-120}"
+  GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-300}"
   GUNICORN_MAX_REQUESTS="${GUNICORN_MAX_REQUESTS:-0}"
   GUNICORN_PRELOAD="${GUNICORN_PRELOAD:-false}"
   GUNICORN_STARTUP_TIMEOUT="${GUNICORN_STARTUP_TIMEOUT:-120}"
   SUPERVISOR_LOG="${APP_ROOT}/var/gui-supervisor.log"
+  export GUI_SUPERVISOR_LOG="${SUPERVISOR_LOG}"
+  export GUI_SLOW_LOG="${APP_ROOT}/var/gui-slow.log"
 
   _supervisor_log() {
     mkdir -p "${APP_ROOT}/var"
@@ -179,33 +184,13 @@ if [ -z "${1}" ]; then
   }
 
   _start_gunicorn() {
-    preload_flag=""
-    max_req_flag=""
-    if [ "${GUNICORN_PRELOAD}" = "true" ]; then
-      preload_flag="--preload"
-    fi
-    if [ "${GUNICORN_MAX_REQUESTS}" != "0" ] && [ -n "${GUNICORN_MAX_REQUESTS}" ]; then
-      max_req_flag="--max-requests ${GUNICORN_MAX_REQUESTS} --max-requests-jitter 100"
-    fi
-    # shellcheck disable=SC2086
-    gunicorn \
-      --log-level "${LOG_LEVEL}" \
-      --bind "${GUNICORN_BIND_ADDR}" \
-      --user "${APP_UID:-1000}" \
-      --group kms \
-      --workers "${GUNICORN_WORKERS}" \
-      --threads "${GUNICORN_THREADS}" \
-      --worker-class gthread \
-      --timeout "${GUNICORN_TIMEOUT}" \
-      --graceful-timeout 30 \
-      --access-logfile - \
-      --error-logfile - \
-      --capture-output \
-      ${max_req_flag} \
-      ${preload_flag} \
-      pykms_WebUI:app &
+    export GUNICORN_BIND="${GUNICORN_BIND_ADDR}"
+    export GUNICORN_WORKERS GUNICORN_THREADS GUNICORN_TIMEOUT
+    export GUNICORN_MAX_REQUESTS GUNICORN_PRELOAD GUI_SUPERVISOR_LOG
+    export LOG_LEVEL="${LOG_LEVEL:-INFO}"
+    gunicorn -c /opt/py-kms/gunicorn_conf.py pykms_WebUI:app &
     GUNICORN_PID=$!
-    _supervisor_log "gunicorn started pid=${GUNICORN_PID} preload=${GUNICORN_PRELOAD} threads=${GUNICORN_THREADS}"
+    _supervisor_log "gunicorn started pid=${GUNICORN_PID} workers=${GUNICORN_WORKERS} threads=${GUNICORN_THREADS} timeout=${GUNICORN_TIMEOUT}s preload=${GUNICORN_PRELOAD}"
   }
 
   _start_gunicorn

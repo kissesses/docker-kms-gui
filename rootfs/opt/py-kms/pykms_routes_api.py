@@ -32,7 +32,7 @@ def api_stats():
     try:
         env_check()
         clients = load_clients()
-        return jsonify(build_stats(clients))
+        return jsonify(build_stats(clients, include_products=False))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
