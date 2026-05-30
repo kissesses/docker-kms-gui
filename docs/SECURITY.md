@@ -37,7 +37,7 @@ This stack is designed for **home / lab use**:
 | Profile | Compose file | Use case |
 |---------|--------------|----------|
 | **Local** (default) | `compose.yaml` | `127.0.0.1` only |
-| **Internet** | `compose.internet.yaml` | KMS + GUI public, TLS + auth |
+| **Internet** | `.env` + `compose.yaml` | KMS + GUI public, TLS + auth (`INTERNET_MODE=true`) |
 
 ---
 
@@ -61,10 +61,10 @@ docker compose up -d
 KMS and GUI can both be public when **application auth** is enabled:
 
 ```bash
-cp .env.example .env
-# Or: ./scripts/install.sh --mode internet
+./scripts/install.sh --mode internet
+# Or: cp .env.example .env, set INTERNET_MODE=true and TLS vars
 # Place cert.pem + key.pem in ./certs/
-docker compose -f compose.internet.yaml up -d
+docker compose up -d
 ```
 
 First visit: **`https://your-server/setup`** — create administrator account.

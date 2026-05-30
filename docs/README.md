@@ -18,7 +18,9 @@ Copy [`.env.example`](../.env.example) to `.env`. For internet, use `./scripts/i
 | `KMS_VERSION` / `GUI_VERSION` | `1.10.0` | Image tags on ghcr.io |
 | `KMS_BIND` / `GUI_BIND` | `127.0.0.1` | Use `0.0.0.0` for remote KMS or public GUI |
 | `KMS_PORT` | `1688` | KMS on host |
-| `GUI_PORT` | `80` | `443` with TLS in internet mode |
+| `GUI_HTTP_PORT` | `80` | Host port → container HTTP |
+| `GUI_TLS_PORT` | `443` | Host port → container HTTPS (internet) |
+| `INTERNET_MODE` | `false` | `true` for public HTTPS deployment |
 | `KMS_CLIENT_COUNT` | `26` | Reported client count to activators |
 | `KMS_ACTIVATION_INTERVAL` | `120` | Minutes (activation retry) |
 | `KMS_RENEWAL_INTERVAL` | `10080` | Minutes (7 days) |

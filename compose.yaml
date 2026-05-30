@@ -1,3 +1,9 @@
+# KMS + GUI — one stack for local, LAN, and internet (configure via .env)
+#
+#   cp .env.example .env
+#   ./scripts/install.sh --mode local|lan|internet
+#   docker compose up -d
+
 name: kms
 
 services:
@@ -43,6 +49,7 @@ services:
         condition: service_healthy
     environment:
       TZ: ${TZ:-UTC}
+      INTERNET_MODE: ${INTERNET_MODE:-false}
       NGINX_ENABLED: ${NGINX_ENABLED:-true}
       NGINX_PORT: "80"
       NGINX_BASIC_AUTH_USER: ${NGINX_BASIC_AUTH_USER:-}
@@ -52,13 +59,23 @@ services:
       API_AUTH_REQUIRED: ${API_AUTH_REQUIRED:-false}
       OPS_DOCKER_ENABLED: ${OPS_DOCKER_ENABLED:-false}
       WEBHOOK_URL: ${WEBHOOK_URL:-}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-}
       ADMIN_PUBLIC: ${ADMIN_PUBLIC:-false}
+      KEYS_PUBLIC: ${KEYS_PUBLIC:-true}
+      GUI_DEFAULT_LANG: ${GUI_DEFAULT_LANG:-en}
       DEBUG: ${DEBUG:-}
+      GUNICORN_PRELOAD: ${GUNICORN_PRELOAD:-false}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-2}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-300}
+      GUNICORN_MAX_REQUESTS: ${GUNICORN_MAX_REQUESTS:-0}
     volumes:
       - kms-data:/kms/var
       - ${TLS_CERT_DIR:-./certs}:/etc/nginx/certs:ro
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:ro
     ports:
-      - "${GUI_BIND:-127.0.0.1}:${GUI_PORT:-80}:80/tcp"
+      - "${GUI_BIND:-127.0.0.1}:${GUI_HTTP_PORT:-80}:80/tcp"
+      - "${GUI_BIND:-127.0.0.1}:${GUI_TLS_PORT:-443}:443/tcp"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "/usr/local/bin/healthcheck.sh"]
@@ -66,6 +83,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 90s
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   kms-data:

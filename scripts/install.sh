@@ -71,7 +71,6 @@ BUILD=false       # pull готовых образов или локальная
 ENABLE_AUTH=false # GUI_AUTH_ENABLED=true
 ASSUME_YES=false
 TZ_VALUE="${DEFAULT_TZ}"
-COMPOSE_FILE="compose.yaml"
 INSTALL_DIR="${DEFAULT_INSTALL_DIR}"
 REPO_REF="${DEFAULT_REPO_REF}"
 SKIP_DOCKER_INSTALL=false
@@ -543,10 +542,6 @@ fix_env_binds() {
 
 # --- Создание .env для выбранного режима --------------------------------------
 setup_env_file() {
-  if [[ "${MODE}" == "internet" ]]; then
-    COMPOSE_FILE="compose.internet.yaml"
-  fi
-
   if [[ -f "${REPO_ROOT}/.env" ]]; then
     warn "Файл .env уже существует."
     if confirm "Перезаписать .env из .env.example?"; then
@@ -565,11 +560,14 @@ setup_env_file() {
 
   case "${MODE}" in
     local)
+      set_env_var "INTERNET_MODE" "false"
       set_env_var "BIND_ADDRESS" "127.0.0.1"
       set_env_var "KMS_BIND" "127.0.0.1"
       set_env_var "GUI_BIND" "127.0.0.1"
-      set_env_var "GUI_PORT" "80"
+      set_env_var "GUI_HTTP_PORT" "80"
+      set_env_var "GUI_TLS_PORT" "443"
       set_env_var "NGINX_TLS_ENABLED" "false"
+      set_env_var "OPS_DOCKER_ENABLED" "false"
       if [[ "${ENABLE_AUTH}" == true ]]; then
         set_env_var "GUI_AUTH_ENABLED" "true"
       else
@@ -579,21 +577,25 @@ setup_env_file() {
       ;;
 
     lan)
-      # KMS слушает все интерфейсы, панель — только localhost
+      set_env_var "INTERNET_MODE" "false"
       set_env_var "KMS_BIND" "0.0.0.0"
       set_env_var "GUI_BIND" "127.0.0.1"
-      set_env_var "GUI_PORT" "80"
+      set_env_var "GUI_HTTP_PORT" "80"
+      set_env_var "GUI_TLS_PORT" "443"
       set_env_var "NGINX_TLS_ENABLED" "false"
       set_env_var "GUI_AUTH_ENABLED" "true"
       set_env_var "API_AUTH_REQUIRED" "true"
+      set_env_var "OPS_DOCKER_ENABLED" "false"
       set_env_var "ADMIN_PUBLIC" "false"
       info "LAN: клиенты подключаются к <IP-хоста>:1688, GUI — http://127.0.0.1/"
       ;;
 
     internet)
+      set_env_var "INTERNET_MODE" "true"
       set_env_var "KMS_BIND" "0.0.0.0"
       set_env_var "GUI_BIND" "0.0.0.0"
-      set_env_var "GUI_PORT" "443"
+      set_env_var "GUI_HTTP_PORT" "80"
+      set_env_var "GUI_TLS_PORT" "443"
       set_env_var "GUI_AUTH_ENABLED" "true"
       set_env_var "API_AUTH_REQUIRED" "true"
       set_env_var "OPS_DOCKER_ENABLED" "true"
@@ -658,15 +660,15 @@ setup_tls_certs() {
 
 # --- Pull или build образов ---------------------------------------------------
 deploy_stack() {
-  info "Compose file: ${COMPOSE_FILE}"
+  info "Запуск: docker compose up -d"
 
   if [[ "${BUILD}" == true ]]; then
     info "Сборка образов (может занять несколько минут)…"
-    "${COMPOSE[@]}" -f "${COMPOSE_FILE}" up -d --build
+    "${COMPOSE[@]}" up -d --build
   else
     info "Загрузка образов с ghcr.io…"
-    "${COMPOSE[@]}" -f "${COMPOSE_FILE}" pull
-    "${COMPOSE[@]}" -f "${COMPOSE_FILE}" up -d
+    "${COMPOSE[@]}" pull
+    "${COMPOSE[@]}" up -d
   fi
 
   ok "Контейнеры запущены"
@@ -685,7 +687,7 @@ wait_for_healthy() {
     sleep 5
     i=$((i + 1))
   done
-  warn "Healthcheck не успел — проверьте: docker compose -f ${COMPOSE_FILE} ps"
+  warn "Healthcheck не успел — проверьте: docker compose ps"
 }
 
 # --- IP хоста для подсказок LAN/internet --------------------------------------
@@ -752,10 +754,10 @@ print_summary() {
   echo ""
   echo "  Полезные команды:"
   echo "    cd ${REPO_ROOT}"
-  echo "    docker compose -f ${COMPOSE_FILE} ps"
-  echo "    docker compose -f ${COMPOSE_FILE} logs -f"
-  echo "    docker compose -f ${COMPOSE_FILE} logs -f gui"
-  echo "    docker compose -f ${COMPOSE_FILE} pull && docker compose -f ${COMPOSE_FILE} up -d"
+  echo "    docker compose ps"
+  echo "    docker compose logs -f"
+  echo "    docker compose logs -f gui"
+  echo "    docker compose pull && docker compose up -d"
   echo ""
   echo "  Документация: README.md, docs/SECURITY.md"
   echo ""
@@ -781,7 +783,7 @@ main() {
 
   if ! confirm "Запустить docker compose?"; then
     info "Конфигурация сохранена в .env — запустите вручную:"
-    echo "  docker compose -f ${COMPOSE_FILE} up -d"
+    echo "  docker compose up -d"
     exit 0
   fi
 

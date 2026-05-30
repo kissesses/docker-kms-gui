@@ -91,20 +91,23 @@ curl -s http://127.0.0.1/livez    # → OK
 
 ### 🌐 Режимы развёртывания
 
-| Режим | 📁 Compose | 👤 Кому |
-|-------|------------|---------|
-| 🏠 **Local** | `compose.yaml` | Один ПК, всё на `127.0.0.1` |
-| 🏢 **LAN** | `compose.yaml` | Офис / дом — KMS в сети (`KMS_BIND=0.0.0.0`) |
-| 🌍 **Internet** | `compose.internet.yaml` | VPS с доменом, HTTPS + обязательный login |
+| Режим | ⚙️ Настройка | 👤 Кому |
+|-------|--------------|---------|
+| 🏠 **Local** | `./scripts/install.sh --mode local` | Один ПК, `127.0.0.1` |
+| 🏢 **LAN** | `./scripts/install.sh --mode lan` | KMS в сети (`KMS_BIND=0.0.0.0`) |
+| 🌍 **Internet** | `./scripts/install.sh --mode internet` | VPS, HTTPS + login |
+
+Один файл **`compose.yaml`** — режим задаётся через **`.env`** (`INTERNET_MODE`, bind, TLS).
 
 <details>
 <summary><b>🌍 Internet — пошагово</b></summary>
 
 ```bash
-cp .env.example .env
-mkdir -p certs    # положите cert.pem и key.pem (Let's Encrypt, Cloudflare Origin…)
-docker compose -f compose.internet.yaml pull
-docker compose -f compose.internet.yaml up -d
+./scripts/install.sh --mode internet --dir /opt/kms-gui --tz Europe/Moscow --yes
+# или вручную:
+cp .env.example .env   # INTERNET_MODE=true, binds, TLS — см. install.sh
+mkdir -p certs         # cert.pem + key.pem
+docker compose pull && docker compose up -d
 ```
 
 1. Первый визит → **`https://ваш-домен/setup`** — создайте администратора  
@@ -199,8 +202,7 @@ docker compose pull && docker compose up -d
 # internet:
 cd /opt/kms-gui
 git pull
-docker compose -f compose.internet.yaml pull
-docker compose -f compose.internet.yaml up -d --build gui
+docker compose pull && docker compose up -d --build gui
 ```
 
 > ✅ Данные в `kms-data` сохраняются.
@@ -248,13 +250,15 @@ curl -s http://127.0.0.1/livez    # → OK
 
 ### 🌐 Deployment modes
 
-| Mode | Compose | Use case |
-|------|---------|----------|
-| **Local** | `compose.yaml` | Same machine, `127.0.0.1` bind |
-| **LAN** | `compose.yaml` | `KMS_BIND=0.0.0.0` for network clients |
-| **Internet** | `compose.internet.yaml` | Public HTTPS + **required** app login |
+| Mode | Setup | Use case |
+|------|-------|----------|
+| **Local** | `./scripts/install.sh --mode local` | Same machine, `127.0.0.1` |
+| **LAN** | `./scripts/install.sh --mode lan` | `KMS_BIND=0.0.0.0` for network clients |
+| **Internet** | `./scripts/install.sh --mode internet` | Public HTTPS + **required** app login |
 
-Internet: `cp .env.example .env` (or `./scripts/install.sh --mode internet`) → TLS certs in `./certs/` → `docker compose -f compose.internet.yaml up -d` → first visit **`/setup`**.
+Single **`compose.yaml`** — mode is controlled via **`.env`** (`INTERNET_MODE`, bind addresses, TLS).
+
+Internet: `./scripts/install.sh --mode internet` → TLS certs in `./certs/` → `docker compose up -d` → first visit **`/setup`**.
 
 ### 🖥️ Localization
 
