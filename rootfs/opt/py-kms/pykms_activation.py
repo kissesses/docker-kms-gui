@@ -92,6 +92,24 @@ def save_policy(client_count, activation_interval_minutes, renewal_interval_minu
     return _normalize_policy(policy)
 
 
+def clear_pending_restart():
+    if not os.path.isfile(POLICY_FILE):
+        return False
+    try:
+        with open(POLICY_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return False
+        data['pending_kms_restart'] = False
+        data['updated_at'] = int(time.time())
+        with open(POLICY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+            f.write('\n')
+        return True
+    except (OSError, json.JSONDecodeError):
+        return False
+
+
 def format_duration(minutes):
     if minutes is None:
         return 'N/A'

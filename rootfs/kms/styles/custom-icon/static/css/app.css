@@ -975,6 +975,16 @@ a { color: inherit; }
   color: var(--text-muted);
 }
 
+.panel-code {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+  overflow-x: auto;
+}
+
 .product-key-block {
   margin-top: 0.25rem;
 }

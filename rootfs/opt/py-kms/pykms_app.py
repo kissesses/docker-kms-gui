@@ -110,4 +110,26 @@ def create_app():
     return app
 
 
+def _start_webhook_worker(app):
+    import os
+    import threading
+    import time
+
+    if not os.environ.get('WEBHOOK_URL', '').strip():
+        return
+
+    def _loop():
+        import pykms_webhook as webhook
+        while True:
+            time.sleep(int(os.environ.get('WEBHOOK_INTERVAL', '60')))
+            with app.app_context():
+                try:
+                    webhook.check_and_notify()
+                except Exception:
+                    pass
+
+    threading.Thread(target=_loop, daemon=True, name='webhook-worker').start()
+
+
 app = create_app()
+_start_webhook_worker(app)

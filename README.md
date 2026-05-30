@@ -330,7 +330,7 @@ Full list: [`.env.example`](.env.example)
 | Endpoint | Description |
 |----------|-------------|
 | `GET /api/v1/stats` | Server statistics (JSON) |
-| `GET /api/v1/clients` | Client list (JSON) |
+| `GET /api/v1/clients` | Client list (JSON). Query: `q`, `app`, `status`, `health` |
 | `GET /api/v1/clients/export` | CSV export |
 | `GET /api/v1/activations` | Policy + client bindings + renewal health |
 | `GET /livez` | Liveness probe |

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Operations · Admin · KMS-GUI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <h1 class="page-title">Administration</h1>
+            <p class="page-subtitle">{{ t('ops.subtitle') }}</p>
+        </div>
+    </div>
+</div>
+
+{% include 'admin_nav.html' %}
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+
+<div class="panel-grid">
+    <div class="panel">
+        <h2 class="panel-title">{{ t('ops.kms_title') }}</h2>
+        <p class="panel-desc">{{ t('ops.kms_desc') }}</p>
+        <dl class="info-list">
+            <div class="info-row">
+                <dt>Docker ops</dt>
+                <dd>{% if ops_status.docker_enabled %}<span class="badge badge-ok">Enabled</span>{% else %}<span class="badge badge-warn">Disabled</span>{% endif %}</dd>
+            </div>
+            {% if ops_status.kms_container %}
+            <div class="info-row">
+                <dt>Container</dt>
+                <dd class="mono">{{ ops_status.kms_container }}</dd>
+            </div>
+            <div class="info-row">
+                <dt>Status</dt>
+                <dd>{% if ops_status.kms_running %}<span class="badge badge-ok">Running</span>{% else %}<span class="badge badge-warn">Stopped</span>{% endif %}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% if ops_status.docker_enabled %}
+        <form method="post" class="admin-logout-form" onsubmit="return confirm('{{ t('ops.restart_confirm') }}');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="action" value="restart_kms">
+            <button type="submit" class="btn btn-primary">{{ t('ops.restart_kms') }}</button>
+        </form>
+        {% else %}
+        <p class="form-hint">{{ t('ops.docker_hint') }}</p>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h2 class="panel-title">{{ t('ops.backup_title') }}</h2>
+        <p class="panel-desc">{{ t('ops.backup_desc') }}</p>
+        <ul class="admin-list">
+            {% for item in backup_files %}
+            <li><code>{{ item.name }}</code> — {% if item.exists %}{{ item.size }} bytes{% else %}<em>missing</em>{% endif %}</li>
+            {% endfor %}
+        </ul>
+        <div class="quick-grid">
+            <a href="{{ url_for('admin.admin_ops_backup_download') }}" class="quick-link btn btn-primary">{{ t('ops.download_backup') }}</a>
+        </div>
+        <div class="panel-divider"></div>
+        <h3 class="panel-subtitle">{{ t('ops.restore_title') }}</h3>
+        <form method="post" enctype="multipart/form-data" class="auth-form auth-form-inline" onsubmit="return confirm('{{ t('ops.restore_confirm') }}');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="action" value="restore_backup">
+            <label class="form-label" for="backup_file">{{ t('ops.restore_file') }}</label>
+            <input class="input form-input" type="file" id="backup_file" name="backup_file" accept=".tar.gz,.tgz,application/gzip" required>
+            <button type="submit" class="btn">{{ t('ops.restore_submit') }}</button>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <h2 class="panel-title">{{ t('ops.webhook_title') }}</h2>
+    <p class="panel-desc">{{ t('ops.webhook_desc') }}</p>
+    <dl class="info-list">
+        <div class="info-row">
+            <dt>Status</dt>
+            <dd>{% if ops_status.webhook_configured %}<span class="badge badge-ok">Configured</span>{% else %}<span class="badge badge-neutral">Not set</span>{% endif %}</dd>
+        </div>
+    </dl>
+    <pre class="mono panel-code">WEBHOOK_URL=https://example.com/hook
+WEBHOOK_SECRET=optional-shared-secret
+WEBHOOK_EVENTS=client_new,client_unhealthy
+WEBHOOK_INTERVAL=60</pre>
+</div>
+{% endblock %}

@@ -94,7 +94,14 @@
             </div>
         </dl>
         {% if policy.pending_kms_restart %}
-        <div class="alert alert-warn">Pending KMS restart — update compose env and run <code>docker compose restart kms</code></div>
+        <div class="alert alert-warn">{{ t('policy.pending_restart') }}</div>
+        {% if ops_status and ops_status.docker_enabled %}
+        <form method="post" class="inline-delete-form" onsubmit="return confirm('{{ t('ops.restart_confirm') }}');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="action" value="restart_kms">
+            <button type="submit" class="btn btn-primary">{{ t('ops.restart_kms') }}</button>
+        </form>
+        {% endif %}
         {% endif %}
         <div class="panel-divider"></div>
         <h3 class="panel-subtitle">Edit policy</h3>

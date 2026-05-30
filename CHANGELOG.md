@@ -5,6 +5,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.9.0] — 2026-05-30
+
+### Added
+
+- **Restart KMS from admin** — one-click restart when Docker socket is mounted (`OPS_DOCKER_ENABLED`)
+- **Backup / restore** — download and upload tar.gz of databases and policy (`/admin/ops`)
+- **Client filters** — search by status and health on Clients page; API query params `q`, `app`, `status`, `health`
+- **Webhooks** — `WEBHOOK_URL` for `client_new` and `client_unhealthy` events
+- **KMS policy on restart** — KMS container reads saved `kms-policy.json` on startup
+
+### Changed
+
+- New admin tab **Operations**
+- Activations page shows restart button when policy is pending
+
+---
+
 ## [1.8.0] — 2026-05-30
 
 ### Added

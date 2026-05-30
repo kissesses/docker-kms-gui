@@ -53,6 +53,19 @@
         <option value="Windows">Windows</option>
         <option value="Office">Office</option>
     </select>
+    <select id="client-filter-status" class="select" aria-label="Filter by license status">
+        <option value="">All statuses</option>
+        <option value="activated">Activated</option>
+        <option value="notify">Notifications Mode</option>
+    </select>
+    <select id="client-filter-health" class="select" aria-label="Filter by health">
+        <option value="">All health</option>
+        <option value="healthy">Healthy</option>
+        <option value="due_soon">Due soon</option>
+        <option value="overdue">Overdue</option>
+        <option value="grace">Grace</option>
+        <option value="at_risk">At risk</option>
+    </select>
     <select id="client-sort" class="select" aria-label="Sort clients">
         <option value="machineName">Sort: Machine name</option>
         <option value="lastRequestTime">Sort: Last seen</option>
@@ -69,6 +82,7 @@
         data-ip="{{ client.machineIp | lower }}"
         data-app="{{ client.applicationId | lower }}"
         data-status="{{ client.licenseStatus | lower }}"
+        data-health="{{ client.health | default('unknown') }}"
         data-machine-name="{{ client.machineName | lower }}"
         data-last-request="{{ client.lastRequestTime }}"
         data-request-count="{{ client.requestCount }}"

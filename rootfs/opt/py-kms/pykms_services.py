@@ -3,6 +3,7 @@
 import datetime
 import os
 import sqlite3
+import time
 
 from pykms_DB2Dict import kmsDB2Dict
 from pykms_Sql import sql_get_all
@@ -57,6 +58,54 @@ def delete_client(client_machine_id, application_id):
             (client_machine_id, application_id),
         )
         return cur.rowcount > 0
+
+
+def filter_clients(clients, query=None, application=None, status=None, health=None):
+    """Filter client list by search query and optional fields."""
+    if not clients:
+        return []
+    rows = list(clients)
+    q = (query or '').strip().lower()
+    app = (application or '').strip().lower()
+    st = (status or '').strip().lower()
+    hl = (health or '').strip().lower()
+
+    if app:
+        rows = [c for c in rows if (c.get('applicationId') or '').lower() == app]
+
+    if st:
+        rows = [
+            c for c in rows
+            if st in (c.get('licenseStatus') or '').lower()
+            or (st == 'notify' and (c.get('licenseStatus') or '') == 'Notifications Mode')
+        ]
+
+    if q:
+        def _haystack(client):
+            parts = [
+                client.get('machineName', ''),
+                client.get('machineIp', ''),
+                client.get('lastRequestIP', ''),
+                client.get('applicationId', ''),
+                client.get('licenseStatus', ''),
+                client.get('clientMachineId', ''),
+                client.get('skuId', ''),
+                client.get('kmsEpid', ''),
+            ]
+            return ' '.join(str(p) for p in parts).lower()
+
+        rows = [c for c in rows if q in _haystack(c)]
+
+    if hl:
+        import pykms_activation as activation
+        policy = activation.load_policy()
+        now = int(time.time())
+        rows = [
+            c for c in rows
+            if activation.enrich_client(c, policy, now).get('health') == hl
+        ]
+
+    return rows
 
 
 def client_counts(clients):

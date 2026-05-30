@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.kms
       args:
-        BUILD_VERSION: ${KMS_VERSION:-1.8.0}
-    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.8.0}
+        BUILD_VERSION: ${KMS_VERSION:-1.9.0}
+    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.9.0}
     environment:
       TZ: ${TZ:-UTC}
       LOGLEVEL: ${KMS_LOGLEVEL:-INFO}
@@ -34,8 +34,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BUILD_VERSION: ${GUI_VERSION:-1.8.0}
-    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.8.0}
+        BUILD_VERSION: ${GUI_VERSION:-1.9.0}
+    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.9.0}
     depends_on:
       kms:
         condition: service_healthy
@@ -48,6 +48,8 @@ services:
       NGINX_TLS_ENABLED: ${NGINX_TLS_ENABLED:-false}
       GUI_AUTH_ENABLED: ${GUI_AUTH_ENABLED:-false}
       API_AUTH_REQUIRED: ${API_AUTH_REQUIRED:-false}
+      OPS_DOCKER_ENABLED: ${OPS_DOCKER_ENABLED:-false}
+      WEBHOOK_URL: ${WEBHOOK_URL:-}
       ADMIN_PUBLIC: ${ADMIN_PUBLIC:-false}
       DEBUG: ${DEBUG:-}
     volumes:

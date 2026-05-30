@@ -9,7 +9,7 @@ import pykms_activation as activation
 import pykms_audit as audit
 import pykms_auth as auth
 from pykms_routes_auth import current_user
-from pykms_services import build_stats, env_check, load_clients, uptime_seconds
+from pykms_services import build_stats, env_check, filter_clients, load_clients, uptime_seconds
 
 api_bp = Blueprint('api', __name__)
 
@@ -32,6 +32,11 @@ def api_stats():
     try:
         env_check()
         clients = load_clients()
+        try:
+            import pykms_webhook as webhook
+            webhook.check_and_notify(clients)
+        except Exception:
+            pass
         return jsonify(build_stats(clients))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -41,7 +46,15 @@ def api_stats():
 def api_clients():
     try:
         env_check()
-        return jsonify(load_clients())
+        clients = load_clients()
+        clients = filter_clients(
+            clients,
+            query=request.args.get('q'),
+            application=request.args.get('app'),
+            status=request.args.get('status'),
+            health=request.args.get('health'),
+        )
+        return jsonify(clients)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

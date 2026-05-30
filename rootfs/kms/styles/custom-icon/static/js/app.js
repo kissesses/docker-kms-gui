@@ -197,14 +197,23 @@ const PyKmsApp = (function() {
   function filterClients() {
     const query = (document.getElementById('client-search')?.value || '').toLowerCase();
     const appFilter = (document.getElementById('client-filter-app')?.value || '').toLowerCase();
+    const statusFilter = (document.getElementById('client-filter-status')?.value || '').toLowerCase();
+    const healthFilter = (document.getElementById('client-filter-health')?.value || '').toLowerCase();
     let visible = 0;
     document.querySelectorAll('.client-row').forEach(function(row) {
       const text = [
         row.dataset.name, row.dataset.ip, row.dataset.app,
         row.dataset.status, row.textContent.toLowerCase()
       ].join(' ');
+      const status = row.dataset.status || '';
+      const matchesStatus = !statusFilter ||
+        (statusFilter === 'notify' && status.includes('notifications')) ||
+        (statusFilter === 'activated' && status.includes('activated')) ||
+        status.includes(statusFilter);
       const matches = (!query || text.includes(query)) &&
-                      (!appFilter || row.dataset.app === appFilter);
+                      (!appFilter || row.dataset.app === appFilter) &&
+                      matchesStatus &&
+                      (!healthFilter || row.dataset.health === healthFilter);
       row.classList.toggle('hidden', !matches);
       if (matches) visible++;
     });
@@ -249,9 +258,13 @@ const PyKmsApp = (function() {
 
     const search = document.getElementById('client-search');
     const filter = document.getElementById('client-filter-app');
+    const statusFilter = document.getElementById('client-filter-status');
+    const healthFilter = document.getElementById('client-filter-health');
     const sort = document.getElementById('client-sort');
     if (search) search.addEventListener('input', filterClients);
     if (filter) filter.addEventListener('change', filterClients);
+    if (statusFilter) statusFilter.addEventListener('change', filterClients);
+    if (healthFilter) healthFilter.addEventListener('change', filterClients);
     if (sort) {
       sort.addEventListener('change', function() { sortClients(sort.value); });
       sortClients(sort.value);
