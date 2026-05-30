@@ -426,17 +426,108 @@ const PyKmsApp = (function() {
       toggle.addEventListener('click', function() { toggleCategorySection(toggle); });
     });
 
-    document.querySelectorAll('.gvlk-key').forEach(function(el) {
-      el.addEventListener('click', function() { copyGvlk(el); });
-      el.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); copyGvlk(el); }
-      });
-    });
+    bindGvlkCopy(document.querySelectorAll('.gvlk-key'));
 
     const search = document.getElementById('product-search');
     const typeFilter = document.getElementById('product-filter-type');
     if (search) search.addEventListener('input', filterProducts);
     if (typeFilter) typeFilter.addEventListener('change', filterProducts);
+  }
+
+  function bindGvlkCopy(elements) {
+    elements.forEach(function(el) {
+      el.addEventListener('click', function() { copyGvlk(el); });
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); copyGvlk(el); }
+      });
+    });
+  }
+
+  function sortKeyRows(mode) {
+    const tbody = document.getElementById('keys-tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('.keys-row'));
+    const typeOrder = { windows: 0, office: 1, other: 2 };
+
+    rows.sort(function(a, b) {
+      if (mode === 'default') {
+        return parseInt(a.dataset.defaultIndex, 10) - parseInt(b.dataset.defaultIndex, 10);
+      }
+      if (mode === 'name') {
+        return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+      }
+      if (mode === 'category') {
+        const cat = (a.dataset.category || '').localeCompare(b.dataset.category || '');
+        return cat !== 0 ? cat : (a.dataset.name || '').localeCompare(b.dataset.name || '');
+      }
+      if (mode === 'type') {
+        const ta = typeOrder[a.dataset.type] ?? 9;
+        const tb = typeOrder[b.dataset.type] ?? 9;
+        if (ta !== tb) return ta - tb;
+        const cat = (a.dataset.category || '').localeCompare(b.dataset.category || '');
+        return cat !== 0 ? cat : (a.dataset.name || '').localeCompare(b.dataset.name || '');
+      }
+      return 0;
+    });
+
+    rows.forEach(function(row) { tbody.appendChild(row); });
+  }
+
+  function filterKeys() {
+    const query = (document.getElementById('keys-search')?.value || '').toLowerCase();
+    const typeFilter = (document.getElementById('keys-filter-type')?.value || '').toLowerCase();
+    let visible = 0;
+
+    document.querySelectorAll('.keys-row').forEach(function(row) {
+      const text = row.dataset.search || row.textContent.toLowerCase();
+      const type = row.dataset.type || '';
+      const matchesSearch = !query || text.includes(query);
+      const matchesType = !typeFilter || type === typeFilter;
+      const show = matchesSearch && matchesType;
+      row.classList.toggle('hidden', !show);
+      if (show) visible += 1;
+    });
+
+    const countEl = document.getElementById('keys-count');
+    if (countEl) {
+      const label = countEl.dataset.label || '{n} shown';
+      countEl.textContent = label.replace('{n}', String(visible));
+    }
+  }
+
+  function initKeys() {
+    initCommon();
+
+    const tbody = document.getElementById('keys-tbody');
+    if (tbody) {
+      Array.from(tbody.querySelectorAll('.keys-row')).forEach(function(row, index) {
+        row.dataset.defaultIndex = String(index);
+      });
+    }
+
+    bindGvlkCopy(document.querySelectorAll('.gvlk-key'));
+
+    document.querySelectorAll('.keys-copy-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const keyEl = btn.closest('.keys-row')?.querySelector('.gvlk-key');
+        if (keyEl) copyGvlk(keyEl);
+      });
+    });
+
+    const search = document.getElementById('keys-search');
+    const typeFilter = document.getElementById('keys-filter-type');
+    const sortSelect = document.getElementById('keys-sort');
+
+    if (search) search.addEventListener('input', filterKeys);
+    if (typeFilter) typeFilter.addEventListener('change', filterKeys);
+    if (sortSelect) {
+      sortSelect.addEventListener('change', function() {
+        sortKeyRows(sortSelect.value || 'default');
+        filterKeys();
+      });
+    }
+
+    filterKeys();
   }
 
   return {
@@ -446,6 +537,7 @@ const PyKmsApp = (function() {
     initClientsLive: initClientsLive,
     initActivationsLive: initActivationsLive,
     initProducts: initProducts,
+    initKeys: initKeys,
     showToast: showToast,
     convertTimestamps: convertTimestamps
   };

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t('keys.title') }} · KMS-GUI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <h1 class="page-title">{{ t('keys.title') }}</h1>
+            <p class="page-subtitle">{{ t('keys.subtitle') }}</p>
+        </div>
+        <div class="page-actions">
+            <span class="badge badge-neutral">{{ count_with_gvlk }} {{ t('keys.with_key') }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="keys-stats stat-grid stat-grid-compact">
+    <div class="stat-card stat-card-compact">
+        <div class="stat-card-head"><span class="stat-label">{{ t('keys.total') }}</span></div>
+        <div class="stat-value">{{ count_products + filtered }}</div>
+    </div>
+    <div class="stat-card stat-card-compact">
+        <div class="stat-card-head"><span class="stat-label">Windows</span></div>
+        <div class="stat-value">{{ count_products_windows }}</div>
+    </div>
+    <div class="stat-card stat-card-compact">
+        <div class="stat-card-head"><span class="stat-label">Office</span></div>
+        <div class="stat-value">{{ count_products_office }}</div>
+    </div>
+    <div class="stat-card stat-card-compact">
+        <div class="stat-card-head"><span class="stat-label">{{ t('keys.other') }}</span></div>
+        <div class="stat-value">{{ filtered }}</div>
+    </div>
+</div>
+
+<div class="toolbar-row keys-toolbar">
+    <input id="keys-search" type="search" placeholder="{{ t('keys.search') }}" class="input input-search" aria-label="{{ t('keys.search') }}">
+    <select id="keys-filter-type" class="select" aria-label="{{ t('keys.filter_type') }}">
+        <option value="">{{ t('keys.all_types') }}</option>
+        <option value="windows">Windows</option>
+        <option value="office">Office</option>
+        <option value="other">{{ t('keys.other') }}</option>
+    </select>
+    <select id="keys-sort" class="select" aria-label="{{ t('keys.sort') }}">
+        <option value="default">{{ t('keys.sort_default') }}</option>
+        <option value="name">{{ t('keys.sort_name') }}</option>
+        <option value="category">{{ t('keys.sort_category') }}</option>
+        <option value="type">{{ t('keys.sort_type') }}</option>
+    </select>
+</div>
+
+<p id="keys-count" class="keys-result-count" aria-live="polite" data-label="{{ t('keys.visible') }}"></p>
+
+<div class="table-wrap keys-table-wrap">
+    <table class="data-table keys-table" id="keys-table">
+        <thead>
+            <tr>
+                <th scope="col" class="keys-col-type">{{ t('keys.col_type') }}</th>
+                <th scope="col" class="keys-col-category">{{ t('keys.col_category') }}</th>
+                <th scope="col" class="keys-col-product">{{ t('keys.col_product') }}</th>
+                <th scope="col" class="keys-col-gvlk">{{ t('keys.col_gvlk') }}</th>
+                <th scope="col" class="keys-col-action"><span class="sr-only">{{ t('keys.copy') }}</span></th>
+            </tr>
+        </thead>
+        <tbody id="keys-tbody">
+            {% for row in keys %}
+            <tr class="keys-row"
+                data-search="{{ row.search }}"
+                data-type="{{ row.type }}"
+                data-category="{{ row.category | lower }}"
+                data-name="{{ row.name | lower }}">
+                <td class="keys-col-type">
+                    <span class="badge keys-type-badge keys-type-{{ row.type }}">{{ row.type | capitalize }}</span>
+                </td>
+                <td class="keys-col-category">{{ row.category }}</td>
+                <td class="keys-col-product">{{ row.name }}</td>
+                <td class="keys-col-gvlk">
+                    {% if row.gvlk %}
+                    <code class="gvlk-key gvlk-key-compact" tabindex="0" title="{{ t('keys.copy_hint') }}">{{ row.gvlk }}</code>
+                    {% else %}
+                    <span class="gvlk-na">{{ t('keys.no_key') }}</span>
+                    {% endif %}
+                </td>
+                <td class="keys-col-action">
+                    {% if row.gvlk %}
+                    <button type="button" class="btn btn-icon keys-copy-btn" title="{{ t('keys.copy') }}" aria-label="{{ t('keys.copy') }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>document.addEventListener('DOMContentLoaded', function() { PyKmsApp.initKeys(); });</script>
+{% endblock %}

@@ -153,6 +153,15 @@ def _get_kms_items_cache():
     return _kms_items, _kms_items_noglvk
 
 
+def _product_type(category_name):
+    name = category_name.lower()
+    if 'windows' in name:
+        return 'windows'
+    if 'office' in name:
+        return 'office'
+    return 'other'
+
+
 def product_counts():
     items, noglvk = _get_kms_items_cache()
     count_products = sum(len(entries) for entries in items.values())
@@ -163,6 +172,29 @@ def product_counts():
         len(entries) for name, entries in items.items() if 'office' in name.lower()
     )
     return items, noglvk, count_products, count_windows, count_office
+
+
+def flatten_product_keys():
+    """Flat list of GVLK rows for compact keys table (type → category → name)."""
+    items, noglvk = _get_kms_items_cache()
+    type_order = {'windows': 0, 'office': 1, 'other': 2}
+    rows = []
+    for category, editions in items.items():
+        cat_type = _product_type(category)
+        for name, gvlk in editions.items():
+            rows.append({
+                'category': category,
+                'name': name,
+                'gvlk': gvlk or '',
+                'type': cat_type,
+                'search': f'{category} {name} {gvlk or ""}'.lower(),
+            })
+    rows.sort(key=lambda r: (
+        type_order.get(r['type'], 9),
+        r['category'].lower(),
+        r['name'].lower(),
+    ))
+    return rows, noglvk
 
 
 def _cached_product_stats(max_age=300):

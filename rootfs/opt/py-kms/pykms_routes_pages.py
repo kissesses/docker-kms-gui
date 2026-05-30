@@ -2,11 +2,17 @@
 
 import time
 
-from flask import Blueprint, render_template
+from flask import Blueprint, redirect, render_template, url_for
 
 import pykms_activation as activation
 import pykms_protocol as protocol
-from pykms_services import build_stats, client_counts, load_clients, product_counts
+from pykms_services import (
+    build_stats,
+    client_counts,
+    flatten_product_keys,
+    load_clients,
+    product_counts,
+)
 
 pages_bp = Blueprint('pages', __name__)
 
@@ -78,18 +84,26 @@ def protocol_page():
     ), 200 if error is None else 500
 
 
-@pages_bp.route('/products')
-def products():
-    items, noglvk, count_products, count_windows, count_office = product_counts()
+@pages_bp.route('/keys')
+def keys_page():
+    keys, noglvk = flatten_product_keys()
+    _, _, count_products, count_windows, count_office = product_counts()
+    with_gvlk = sum(1 for row in keys if row['gvlk'])
     return render_template(
-        'products.html',
-        path='/products/',
-        products=items,
+        'keys.html',
+        path='/keys/',
+        keys=keys,
         filtered=noglvk,
         count_products=count_products,
         count_products_windows=count_windows,
         count_products_office=count_office,
+        count_with_gvlk=with_gvlk,
     )
+
+
+@pages_bp.route('/products')
+def products():
+    return redirect(url_for('pages.keys_page'))
 
 
 @pages_bp.route('/license')
