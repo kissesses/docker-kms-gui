@@ -159,6 +159,11 @@ jobs:
         id: version
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
+      - name: Capture release screenshots
+        run: |
+          chmod +x .github/scripts/capture-screenshots.sh
+          .github/scripts/capture-screenshots.sh /tmp/release-screenshots
+
       - name: Generate release notes
         id: notes
         env:
@@ -175,3 +180,4 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.notes.outputs.body }}
+          files: /tmp/release-screenshots/*.png

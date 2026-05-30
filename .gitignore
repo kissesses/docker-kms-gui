@@ -1,3 +1,5 @@
 maintain/
 .env
+/screenshots/
+scripts/screenshots/node_modules/
 nginx/.htpasswd

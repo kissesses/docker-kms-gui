@@ -15,6 +15,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **GVLK picker** — compact `/keys` page (master-detail, keyboard nav) and login modal with Windows/Office activation guide
 - **README** — bilingual RU/EN quick start with Russia VPS tips
+- **Release screenshots** — Playwright captures dashboard, clients, keys, protocol, login GVLK modal, setup, admin
 
 ### Changed
 
@@ -31,7 +32,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ### Removed
 
 - Sidecar deployment (`compose.sidecar.yaml`, `nginx/`) — use built-in nginx in the GUI container
-- Release screenshot tooling, stale metadata, unused assets
+- Stale metadata, unused assets
 - Legacy **`products.html`** and dead `/products` UI (`/products` redirects to `/keys`)
 - Root **`install.sh`**, **`Dockerfile.kms`**, **`.env.internet.example`**, **`compose.internet.yaml`**
 

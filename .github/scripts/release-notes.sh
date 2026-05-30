@@ -39,6 +39,25 @@ else:
     print(body)
 
 print("\n---\n")
+print("## 📸 Screenshots\n")
+shots = [
+    ("dashboard.png", "Dashboard — overview and KMS status"),
+    ("dashboard-light.png", "Dashboard (light theme)"),
+    ("clients.png", "Clients — activated machines"),
+    ("keys.png", "GVLK keys — picker and activation guide"),
+    ("protocol.png", "Protocol — KMS activation flow"),
+    ("login-keys.png", "Login — GVLK modal with Windows/Office guide"),
+    ("setup.png", "First-run admin setup"),
+    ("admin-activations.png", "Admin — KMS activation policy"),
+]
+repo = os.environ.get("GITHUB_REPOSITORY", "kissesses/docker-kms-gui")
+tag = os.environ.get("RELEASE_TAG", f"v{version}")
+for fname, caption in shots:
+    url = f"https://github.com/{repo}/releases/download/{tag}/{fname}"
+    print(f"### {caption}\n")
+    print(f"![{caption}]({url})\n")
+
+print("\n---\n")
 print("## 📦 Docker images\n")
 print("| Service | Image |")
 print("|---------|-------|")
