@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.kms
       args:
-        BUILD_VERSION: ${KMS_VERSION:-1.5.1}
-    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.5.1}
+        BUILD_VERSION: ${KMS_VERSION:-1.6.0}
+    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.6.0}
     environment:
       TZ: ${TZ:-UTC}
       LOGLEVEL: ${KMS_LOGLEVEL:-INFO}
@@ -30,8 +30,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BUILD_VERSION: ${GUI_VERSION:-1.5.1}
-    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.5.1}
+        BUILD_VERSION: ${GUI_VERSION:-1.6.0}
+    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.6.0}
     depends_on:
       kms:
         condition: service_healthy

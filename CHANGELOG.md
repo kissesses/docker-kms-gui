@@ -5,6 +5,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.6.0] — 2026-05-30
+
+### Added
+
+- **Modern Web GUI** — new design system, top navigation, SVG icons, favicon
+- Live server status pill, client distribution bar, toast notifications
+- Product search and one-click GVLK copy
+- **Release screenshots** — Playwright captures dashboard/clients/products for GitHub Releases
+- Demo database seed script for screenshot previews
+
+### Changed
+
+- Sidebar layout replaced with sticky **top navigation**
+- Removed heavy Tailwind bundle; single cohesive `app.css`
+- Light/dark theme with system-style tokens
+
+### Fixed
+
+- Client IP display (`lastRequestIP` mapped correctly in UI)
+
+---
+
 ## [1.5.1] — 2026-05-30
 
 ### Security

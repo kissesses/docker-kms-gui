@@ -35,14 +35,32 @@ git push origin v1.5.1
 
 GitHub Actions will:
 
-1. Build `ghcr.io/kissesses/kms:1.5.1` and `ghcr.io/kissesses/kms-gui:1.5.1` (amd64 + arm64)
+1. Build `ghcr.io/kissesses/kms:X.Y.Z` and `ghcr.io/kissesses/kms-gui:X.Y.Z` (amd64 + arm64)
 2. Push to **GitHub Container Registry**
-3. Create a GitHub Release with notes from `CHANGELOG.md` (via `.github/scripts/release-notes.sh`)
+3. Capture **screenshots** of the Web GUI (Playwright)
+4. Create a GitHub Release with notes from `CHANGELOG.md` + embedded screenshots
 
 ## Preview release notes locally
 
 ```bash
-.github/scripts/release-notes.sh v1.5.1
+.github/scripts/release-notes.sh v1.6.0
+```
+
+With screenshot links (for preview after assets exist):
+
+```bash
+INCLUDE_SCREENSHOTS=1 GITHUB_REPOSITORY=kissesses/docker-kms-gui \
+  .github/scripts/release-notes.sh v1.6.0
+```
+
+## Capture screenshots locally
+
+Requires Docker and Node.js 20+:
+
+```bash
+chmod +x .github/scripts/capture-screenshots.sh
+.github/scripts/capture-screenshots.sh screenshots
+open screenshots/dashboard.png
 ```
 
 ## Make packages public (first time)
