@@ -385,55 +385,6 @@ const PyKmsApp = (function() {
     }).catch(function() { showToast('Copy failed', 'error'); });
   }
 
-  function toggleCategorySection(toggle) {
-    const section = toggle.closest('.category-section');
-    const body = section?.querySelector('.category-section-body');
-    if (!body) return;
-    const isOpen = toggle.getAttribute('aria-expanded') !== 'false';
-    toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-    body.classList.toggle('open', !isOpen);
-  }
-
-  function filterProducts() {
-    const query = (document.getElementById('product-search')?.value || '').toLowerCase();
-    const typeFilter = (document.getElementById('product-filter-type')?.value || '').toLowerCase();
-
-    document.querySelectorAll('.product-row').forEach(function(row) {
-      const text = row.dataset.search || row.textContent.toLowerCase();
-      const type = row.dataset.type || '';
-      const matchesSearch = !query || text.includes(query);
-      const matchesType = !typeFilter || type === typeFilter;
-      row.classList.toggle('hidden', !(matchesSearch && matchesType));
-    });
-
-    document.querySelectorAll('.product-category').forEach(function(cat) {
-      const visible = cat.querySelectorAll('.product-row:not(.hidden)').length;
-      const matchesType = !typeFilter || (cat.dataset.type || '') === typeFilter;
-      cat.classList.toggle('hidden', !matchesType || (visible === 0 && (query || typeFilter)));
-      if (query && visible > 0) {
-        const body = cat.querySelector('.category-section-body');
-        const toggle = cat.querySelector('.category-toggle');
-        if (body) body.classList.add('open');
-        if (toggle) toggle.setAttribute('aria-expanded', 'true');
-      }
-    });
-  }
-
-  function initProducts() {
-    initCommon();
-
-    document.querySelectorAll('.category-toggle').forEach(function(toggle) {
-      toggle.addEventListener('click', function() { toggleCategorySection(toggle); });
-    });
-
-    bindGvlkCopy(document.querySelectorAll('.gvlk-key'));
-
-    const search = document.getElementById('product-search');
-    const typeFilter = document.getElementById('product-filter-type');
-    if (search) search.addEventListener('input', filterProducts);
-    if (typeFilter) typeFilter.addEventListener('change', filterProducts);
-  }
-
   function bindGvlkCopy(elements) {
     elements.forEach(function(el) {
       el.addEventListener('click', function() { copyGvlk(el); });
@@ -744,7 +695,6 @@ const PyKmsApp = (function() {
     initClientsTable: initClientsTable,
     initClientsLive: initClientsLive,
     initActivationsLive: initActivationsLive,
-    initProducts: initProducts,
     initKeys: initKeys,
     initLoginKeysPicker: initLoginKeysPicker,
     showToast: showToast,

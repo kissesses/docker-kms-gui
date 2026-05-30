@@ -8,7 +8,6 @@ MESSAGES = {
     'en': {
         'nav.dashboard': 'Dashboard',
         'nav.clients': 'Clients',
-        'nav.products': 'Products',
         'nav.keys': 'Keys',
         'nav.license': 'License',
         'nav.protocol': 'Protocol',
@@ -125,7 +124,6 @@ MESSAGES = {
     'ru': {
         'nav.dashboard': 'Панель',
         'nav.clients': 'Клиенты',
-        'nav.products': 'Продукты',
         'nav.keys': 'Ключи',
         'nav.license': 'Лицензия',
         'nav.protocol': 'Протокол',

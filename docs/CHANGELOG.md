@@ -10,12 +10,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 
 - Documentation moved to `docs/` (`SECURITY.md`, `CHANGELOG.md`)
+- Root **README** trimmed to install and daily use; API, Docker images, troubleshooting in `docs/README.md`
+- **Dockerfiles** simplified (grouped ENV, removed redundant defaults)
 
 ### Removed
 
 - Sidecar deployment (`compose.sidecar.yaml`, `nginx/`) — use built-in nginx in the GUI container
 - Release screenshot tooling (`scripts/screenshots/`, `seed-demo-db.py`, `capture-screenshots.sh`)
 - Stale metadata (`.json`), unused `img/`, duplicate `favicon.ico`, `RELEASE.md` (merged into README)
+- Legacy **`products.html`** and dead `/products` UI code (`/products` still redirects to `/keys`)
 
 ---
 
