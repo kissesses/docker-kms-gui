@@ -69,7 +69,7 @@ curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/insta
 
 Interactive menu, clones to **`~/kms-gui`** automatically.
 
-Examples:
+> **Note:** with `curl | bash`, answer prompts in the same terminal session (input uses `/dev/tty`). For fully non-interactive install, pass `--mode` and `--yes`:
 
 ```bash
 # local, no prompts

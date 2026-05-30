@@ -172,13 +172,30 @@ parse_args() {
   esac
 }
 
+# --- Ввод с терминала (curl | bash: stdin = pipe, читаем из /dev/tty) ---------
+read_tty() {
+  local __var="$1"
+  local __prompt="$2"
+  local __reply=""
+
+  if [[ -r /dev/tty ]]; then
+    read -r -p "${__prompt}" __reply </dev/tty
+  elif [[ -t 0 ]]; then
+    read -r -p "${__prompt}" __reply
+  else
+    fail "Нет интерактивного терминала (curl|bash без TTY). Укажите режим явно, например:\n  bash -s -- --mode internet --yes"
+  fi
+  printf -v "${__var}" '%s' "${__reply}"
+}
+
 # --- Подтверждение действия ---------------------------------------------------
 confirm() {
   local prompt="$1"
+  local reply=""
   if [[ "${ASSUME_YES}" == true ]]; then
     return 0
   fi
-  read -r -p "${prompt} [y/N] " reply
+  read_tty reply "${prompt} [y/N] "
   [[ "${reply}" =~ ^[Yy]$ ]]
 }
 
@@ -308,13 +325,24 @@ check_repo_layout() {
 select_mode_interactive() {
   [[ -n "${MODE}" ]] && return 0
 
-  echo ""
-  echo -e "${BOLD}Выберите режим установки:${NC}"
-  echo "  1) local    — только этот компьютер (127.0.0.1:80 и :1688)"
-  echo "  2) lan      — KMS доступен в локальной сети, GUI только на localhost"
-  echo "  3) internet — KMS + GUI в интернет (HTTPS, обязательный /setup)"
-  echo ""
-  read -r -p "Режим [1/2/3] (по умолчанию 1): " choice
+  {
+    echo ""
+    echo -e "${BOLD}Выберите режим установки:${NC}"
+    echo "  1) local    — только этот компьютер (127.0.0.1:80 и :1688)"
+    echo "  2) lan      — KMS доступен в локальной сети, GUI только на localhost"
+    echo "  3) internet — KMS + GUI в интернет (HTTPS, обязательный /setup)"
+    echo ""
+  } >/dev/tty 2>/dev/null || {
+    echo ""
+    echo -e "${BOLD}Выберите режим установки:${NC}"
+    echo "  1) local    — только этот компьютер (127.0.0.1:80 и :1688)"
+    echo "  2) lan      — KMS доступен в локальной сети, GUI только на localhost"
+    echo "  3) internet — KMS + GUI в интернет (HTTPS, обязательный /setup)"
+    echo ""
+  }
+
+  local choice=""
+  read_tty choice "Режим [1/2/3] (по умолчанию 1): "
 
   case "${choice:-1}" in
     1|local)  MODE="local" ;;
@@ -425,7 +453,8 @@ setup_tls_certs() {
   echo ""
 
   if confirm "Сгенерировать временный self-signed сертификат для теста?"; then
-    read -r -p "CN / hostname (например kms.example.com): " cn
+    local cn=""
+    read_tty cn "CN / hostname (например kms.example.com): "
     cn="${cn:-localhost}"
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
       -keyout "${cert_dir}/key.pem" \
