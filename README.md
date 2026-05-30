@@ -61,7 +61,31 @@ KMS itself is lightweight (tens of clients on minimal hardware is fine). Most re
 
 ## Installation
 
-### Option A — install script (recommended)
+### Option A — one command (no manual clone)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash
+```
+
+Interactive menu, clones to **`~/kms-gui`** automatically.
+
+Examples:
+
+```bash
+# local, no prompts
+curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash -s -- --mode local --yes
+
+# LAN
+curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash -s -- --mode lan --yes
+
+# internet → /opt/kms-gui, specific release tag
+curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash -s -- \
+  --mode internet --dir /opt/kms-gui --ref v1.8.0 --tz Europe/Moscow --yes
+```
+
+Environment alternatives: `KMS_GUI_DIR=/opt/kms-gui`, `KMS_GUI_REF=v1.8.0`.
+
+### Option B — install script from cloned repo
 
 ```bash
 git clone https://github.com/kissesses/docker-kms-gui.git
@@ -69,21 +93,9 @@ cd docker-kms-gui
 ./scripts/install.sh
 ```
 
-Interactive menu: **local** (localhost), **lan** (KMS on network), **internet** (HTTPS + login).
+Same flags as above (`--mode`, `--dir`, `--ref`, `--yes`, …). Run `./scripts/install.sh --help`.
 
-Non-interactive examples:
-
-```bash
-./scripts/install.sh --mode local --yes
-./scripts/install.sh --mode lan --yes
-./scripts/install.sh --mode internet --yes --tz Europe/Moscow
-./scripts/install.sh --mode local --enable-auth --yes   # with /setup login
-./scripts/install.sh --mode local --build --yes         # build images locally
-```
-
-Run `./scripts/install.sh --help` for all options.
-
-### Option B — ready-made images (manual)
+### Option C — ready-made images (manual)
 
 ```bash
 git clone https://github.com/kissesses/docker-kms-gui.git
@@ -95,7 +107,7 @@ docker compose up -d
 
 Images are pulled from **ghcr.io/kissesses/** — no local build needed.
 
-### Option C — build from source (manual)
+### Option D — build from source (manual)
 
 ```bash
 git clone https://github.com/kissesses/docker-kms-gui.git
@@ -381,7 +393,8 @@ compose.sidecar.yaml
 rootfs/             # nginx, entrypoint, UI, Python backend
 docker/kms/         # KMS server entrypoint
 tests/              # pytest (auth, activation, app)
-scripts/install.sh  # interactive installer (local / lan / internet)
+scripts/install.sh  # installer (local / lan / internet)
+install.sh        # one-liner entry (curl | bash)
 .github/workflows/  # CI build & release
 ```
 

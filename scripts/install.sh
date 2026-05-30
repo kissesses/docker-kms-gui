@@ -5,18 +5,27 @@
 # Репозиторий: https://github.com/kissesses/docker-kms-gui
 #
 # Использование:
-#   ./scripts/install.sh                  # интерактивный выбор режима
-#   ./scripts/install.sh --mode local     # только localhost (127.0.0.1)
-#   ./scripts/install.sh --mode lan       # KMS в LAN, GUI на localhost
-#   ./scripts/install.sh --mode internet  # KMS + GUI в интернет (HTTPS + login)
+#   A) Без clone — одной командой:
+#      curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash
+#      curl -fsSL .../install.sh | bash -s -- --mode local --yes
+#      curl -fsSL .../install.sh | bash -s -- --mode internet --dir /opt/kms-gui --yes
+#
+#   B) Из уже клонированного репозитория:
+#      ./scripts/install.sh                  # интерактивный выбор режима
+#      ./scripts/install.sh --mode local     # только localhost (127.0.0.1)
+#      ./scripts/install.sh --mode lan       # KMS в LAN, GUI на localhost
+#      ./scripts/install.sh --mode internet  # KMS + GUI в интернет (HTTPS + login)
 #
 # Дополнительно:
+#   --dir PATH       каталог установки при auto-clone (по умолчанию ~/kms-gui)
+#   --ref REF        ветка или тег git (по умолчанию main)
 #   --build          собрать образы локально вместо pull
 #   --enable-auth    включить GUI_AUTH_ENABLED (для local/lan)
 #   --yes            не спрашивать подтверждение
 #   --tz Europe/Moscow
 #
-# Запускать из корня репозитория (после git clone).
+# Переменные окружения (альтернатива --dir / --ref):
+#   KMS_GUI_DIR=/opt/kms-gui   KMS_GUI_REF=v1.8.0
 #
 # ── Минимальные требования ───────────────────────────────────────────────────
 #   OS:     Linux x86_64 / aarch64 (или Docker Desktop на macOS/Windows)
@@ -40,10 +49,19 @@ set -euo pipefail
 # --- Константы ----------------------------------------------------------------
 readonly REPO_URL="https://github.com/kissesses/docker-kms-gui.git"
 readonly DEFAULT_TZ="UTC"
+readonly DEFAULT_INSTALL_DIR="${KMS_GUI_DIR:-${HOME}/kms-gui}"
+readonly DEFAULT_REPO_REF="${KMS_GUI_REF:-main}"
 
-# Каталог, где лежит compose.yaml (корень репозитория)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# Каталог скрипта; REPO_ROOT задаётся ниже или в ensure_repo()
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+if [[ -n "${SCRIPT_PATH}" && -f "${SCRIPT_PATH}" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd)"
+  _candidate_root="$(cd "${SCRIPT_DIR}/.." && pwd)"
+else
+  SCRIPT_DIR=""
+  _candidate_root=""
+fi
+REPO_ROOT=""
 
 # --- Параметры по умолчанию (переопределяются аргументами) --------------------
 MODE=""           # local | lan | internet
@@ -52,6 +70,8 @@ ENABLE_AUTH=false # GUI_AUTH_ENABLED=true
 ASSUME_YES=false
 TZ_VALUE="${DEFAULT_TZ}"
 COMPOSE_FILE="compose.yaml"
+INSTALL_DIR="${DEFAULT_INSTALL_DIR}"
+REPO_REF="${DEFAULT_REPO_REF}"
 
 # --- Цвета для вывода (если терминал поддерживает) ---------------------------
 if [[ -t 1 ]]; then
@@ -76,15 +96,23 @@ usage() {
 KMS-GUI installer — local / LAN / internet
 
 Usage:
+  curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash
+  curl -fsSL .../install.sh | bash -s -- --mode local --yes
   ./scripts/install.sh [options]
 
 Options:
   -m, --mode MODE     local | lan | internet
+  -d, --dir PATH      install directory when cloning (default: ~/kms-gui)
+  --ref REF           git branch or tag (default: main)
   -b, --build         build images locally instead of pull
   --enable-auth       enable GUI_AUTH_ENABLED (local/lan)
   -y, --yes           skip confirmations
   --tz TZ             timezone (default: UTC)
   -h, --help          show this help
+
+Environment:
+  KMS_GUI_DIR         same as --dir
+  KMS_GUI_REF         same as --ref
 
 Requirements (minimum):
   Docker Engine 24+, Compose v2.20+, 1 CPU, 512 MB RAM, 2 GB disk, git, curl
@@ -119,6 +147,14 @@ parse_args() {
         ;;
       --tz)
         TZ_VALUE="${2:?Укажите timezone, например Europe/Moscow}"
+        shift 2
+        ;;
+      -d|--dir)
+        INSTALL_DIR="${2:?Укажите каталог установки, например /opt/kms-gui}"
+        shift 2
+        ;;
+      --ref)
+        REPO_REF="${2:?Укажите ветку или тег, например main или v1.8.0}"
         shift 2
         ;;
       -h|--help)
@@ -213,12 +249,59 @@ check_dependencies() {
   ok "Docker готов"
 }
 
-# --- Проверка, что мы в корне репозитория -------------------------------------
-check_repo_layout() {
-  [[ -f "${REPO_ROOT}/compose.yaml" ]] || fail "compose.yaml не найден. Запускайте скрипт из клонированного репозитория."
-  [[ -f "${REPO_ROOT}/.env.example" ]] || fail ".env.example не найден."
+# --- Клонирование репозитория (one-liner / curl | bash) -----------------------
+repo_is_valid() {
+  [[ -f "${1}/compose.yaml" && -f "${1}/.env.example" ]]
+}
+
+ensure_repo() {
+  if [[ -z "${REPO_ROOT}" && -n "${_candidate_root}" ]] && repo_is_valid "${_candidate_root}"; then
+    REPO_ROOT="${_candidate_root}"
+  fi
+
+  if repo_is_valid "${REPO_ROOT}"; then
+    cd "${REPO_ROOT}"
+    ok "Рабочий каталог: ${REPO_ROOT}"
+    return 0
+  fi
+
+  command -v git >/dev/null 2>&1 || fail "git не найден — нужен для загрузки репозитория без ручного clone."
+
+  INSTALL_DIR="$(cd "${INSTALL_DIR}" 2>/dev/null && pwd || echo "${INSTALL_DIR}")"
+  info "Репозиторий не найден рядом со скриптом — установка в ${INSTALL_DIR} (ref: ${REPO_REF})"
+
+  if [[ -d "${INSTALL_DIR}/.git" ]] && repo_is_valid "${INSTALL_DIR}"; then
+    REPO_ROOT="${INSTALL_DIR}"
+    cd "${REPO_ROOT}"
+    if confirm "Каталог уже существует. Обновить из git (${REPO_REF})?"; then
+      info "git fetch / checkout ${REPO_REF}…"
+      git fetch --depth 1 origin "${REPO_REF}" 2>/dev/null || git fetch origin
+      git checkout "${REPO_REF}" 2>/dev/null || git checkout -B "${REPO_REF}" "origin/${REPO_REF}"
+      git pull --ff-only origin "${REPO_REF}" 2>/dev/null || true
+      ok "Репозиторий обновлён"
+    else
+      ok "Используем существующий каталог без обновления"
+    fi
+    return 0
+  fi
+
+  if [[ -e "${INSTALL_DIR}" ]]; then
+    fail "Каталог ${INSTALL_DIR} занят, но это не KMS-GUI. Укажите другой: --dir /path"
+  fi
+
+  info "git clone ${REPO_URL} → ${INSTALL_DIR}…"
+  git clone --depth 1 --branch "${REPO_REF}" "${REPO_URL}" "${INSTALL_DIR}" \
+    || fail "Не удалось клонировать. Проверьте сеть и ref (--ref ${REPO_REF})."
+
+  REPO_ROOT="${INSTALL_DIR}"
   cd "${REPO_ROOT}"
-  ok "Рабочий каталог: ${REPO_ROOT}"
+  ok "Репозиторий загружен: ${REPO_ROOT}"
+}
+
+# --- Проверка layout после ensure_repo ----------------------------------------
+check_repo_layout() {
+  repo_is_valid "${REPO_ROOT}" || fail "compose.yaml не найден в ${REPO_ROOT}"
+  cd "${REPO_ROOT}"
 }
 
 # --- Интерактивный выбор режима -----------------------------------------------
@@ -449,7 +532,10 @@ print_summary() {
   esac
 
   echo ""
+  echo "  Каталог установки: ${REPO_ROOT}"
+  echo ""
   echo "  Полезные команды:"
+  echo "    cd ${REPO_ROOT}"
   echo "    docker compose -f ${COMPOSE_FILE} ps"
   echo "    docker compose -f ${COMPOSE_FILE} logs -f"
   echo "    docker compose -f ${COMPOSE_FILE} pull && docker compose -f ${COMPOSE_FILE} up -d"
@@ -468,6 +554,7 @@ main() {
 
   check_dependencies
   check_system_hints
+  ensure_repo
   check_repo_layout
   select_mode_interactive
 
