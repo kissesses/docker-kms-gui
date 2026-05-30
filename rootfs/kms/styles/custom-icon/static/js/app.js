@@ -62,7 +62,7 @@ const PyKmsApp = (function() {
     if (darkIcon) darkIcon.style.display = isLight ? 'none' : 'block';
     if (lightIcon) lightIcon.style.display = isLight ? 'block' : 'none';
     document.querySelector('meta[name="theme-color"]')?.setAttribute(
-      'content', isLight ? '#f0f4f8' : '#0a0f1a'
+      'content', isLight ? '#e5e5ea' : '#000000'
     );
   }
 
@@ -187,8 +187,8 @@ const PyKmsApp = (function() {
     const r = Math.min(cx, cy) - 8;
     let start = -Math.PI / 2;
     const slices = [
-      { v: windows, c: '#34d399' },
-      { v: office, c: '#60a5fa' }
+      { v: windows, c: '#0a84ff' },
+      { v: office, c: '#5ac8fa' }
     ];
     slices.forEach(function(s) {
       if (s.v <= 0) return;
@@ -203,7 +203,7 @@ const PyKmsApp = (function() {
     });
     ctx.beginPath();
     ctx.arc(cx, cy, r * 0.55, 0, Math.PI * 2);
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-surface') || '#121a2b';
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--glass-bg') || 'rgba(28,28,30,0.58)';
     ctx.fill();
   }
 
