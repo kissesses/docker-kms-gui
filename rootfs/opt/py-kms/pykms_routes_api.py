@@ -95,6 +95,30 @@ def api_activations():
         return jsonify({'error': str(e)}), 500
 
 
+@api_bp.route('/api/v1/protocol')
+def api_protocol():
+    import pykms_protocol as protocol
+    try:
+        env_check()
+        return jsonify(protocol.build_protocol_overview())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/api/v1/clients/<client_id>/<application_id>/session')
+def api_client_session(client_id, application_id):
+    import pykms_protocol as protocol
+    try:
+        env_check()
+        clients = load_clients()
+        client = protocol.find_client(clients, client_id, application_id)
+        if not client:
+            return jsonify({'error': 'Not found'}), 404
+        return jsonify(protocol.build_client_session(client))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @api_bp.route('/api/v1/clients/<client_id>/<application_id>', methods=['DELETE'])
 def api_delete_client(client_id, application_id):
     from pykms_services import delete_client as svc_delete

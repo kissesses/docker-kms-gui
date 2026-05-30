@@ -5,6 +5,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.10.0] — 2026-05-30
+
+### Added
+
+- **Protocol page** (`/protocol`) — KMS activation flow, request/response fields, policy reference
+- **Client session modal** — per-client data exchange (received / sent / schedule)
+- **API** — `GET /api/v1/protocol`, `GET /api/v1/clients/<id>/<app>/session`
+
+### Changed
+
+- **UI v2** — sidebar layout, glass cards, hero banners, cyan/indigo palette
+- Dashboard links to protocol overview; clients show health badges
+
+---
+
 ## [1.9.0] — 2026-05-30
 
 ### Added

@@ -3,16 +3,15 @@
 {% block title %}Dashboard · KMS-GUI{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="page-header-row">
-        <div>
-            <h1 class="page-title">Dashboard</h1>
-            <p class="page-subtitle">KMS server overview and live statistics</p>
-        </div>
-        <span class="status-pill mobile-only">
-            <span class="status-dot" id="status-dot-mobile"></span>
-            <span id="status-text-mobile">Checking…</span>
-        </span>
+<div class="hero-banner hero-banner-compact">
+    <div class="hero-copy">
+        <p class="hero-kicker">{{ t('dashboard.kicker') }}</p>
+        <h1 class="hero-title">{{ t('nav.dashboard') }}</h1>
+        <p class="hero-subtitle">{{ t('dashboard.subtitle') }}</p>
+    </div>
+    <div class="hero-actions">
+        <a href="/protocol" class="btn btn-primary">{{ t('protocol.explore') }}</a>
+        <a href="/clients" class="btn btn-ghost">{{ t('nav.clients') }}</a>
     </div>
 </div>
 
@@ -24,96 +23,56 @@
 {% set win_pct = ((stats.count_clients_windows / total * 100) | round(1)) if total > 0 else 0 %}
 {% set office_pct = ((stats.count_clients_office / total * 100) | round(1)) if total > 0 else 0 %}
 
-<div id="dashboard-stats" class="stat-grid">
-    <div class="stat-card">
-        <div class="stat-card-head">
-            <span class="stat-label">Total Clients</span>
-            <div class="stat-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            </div>
-        </div>
+<div id="dashboard-stats" class="stat-grid stat-grid-modern">
+    <div class="stat-card glass-card stat-card-accent">
+        <div class="stat-card-head"><span class="stat-label">{{ t('dashboard.total_clients') }}</span></div>
         <div class="stat-value" data-stat="count_clients">{{ stats.count_clients if stats else '—' }}</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-card-head">
-            <span class="stat-label">Windows</span>
-            <div class="stat-icon green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-            </div>
-        </div>
+    <div class="stat-card glass-card">
+        <div class="stat-card-head"><span class="stat-label">Windows</span></div>
         <div class="stat-value" data-stat="count_clients_windows">{{ stats.count_clients_windows if stats else '—' }}</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-card-head">
-            <span class="stat-label">Office</span>
-            <div class="stat-icon amber">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </div>
-        </div>
+    <div class="stat-card glass-card">
+        <div class="stat-card-head"><span class="stat-label">Office</span></div>
         <div class="stat-value" data-stat="count_clients_office">{{ stats.count_clients_office if stats else '—' }}</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-card-head">
-            <span class="stat-label">Products</span>
-            <div class="stat-icon indigo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            </div>
-        </div>
+    <div class="stat-card glass-card">
+        <div class="stat-card-head"><span class="stat-label">{{ t('nav.products') }}</span></div>
         <div class="stat-value accent" data-stat="count_products">{{ stats.count_products if stats else '—' }}</div>
     </div>
 </div>
 
 <div class="panel-grid">
-    <div class="panel">
-        <h2 class="panel-title">Server Status</h2>
+    <div class="glass-card panel">
+        <h2 class="panel-title">{{ t('dashboard.server_status') }}</h2>
         <dl class="info-list">
-            <div class="info-row">
-                <dt>Uptime</dt>
-                <dd id="stat-uptime" class="mono">{{ stats.uptime_seconds if stats else 0 }}s</dd>
-            </div>
-            <div class="info-row">
-                <dt>Version</dt>
-                <dd>{{ stats.version if stats and stats.version else 'N/A' }}</dd>
-            </div>
-            <div class="info-row">
-                <dt>Database</dt>
-                <dd class="mono" title="{{ stats.db_path if stats else '' }}">{{ stats.db_path if stats else 'N/A' }}</dd>
-            </div>
+            <div class="info-row"><dt>Uptime</dt><dd id="stat-uptime" class="mono">{{ stats.uptime_seconds if stats else 0 }}s</dd></div>
+            <div class="info-row"><dt>Version</dt><dd>{{ stats.version if stats and stats.version else 'N/A' }}</dd></div>
+            {% if protocol_overview %}
+            <div class="info-row"><dt>KMS port</dt><dd class="mono">:{{ protocol_overview.transport.port }}</dd></div>
+            <div class="info-row"><dt>{{ t('protocol.renewal') }}</dt><dd>{{ protocol_overview.policy.renewal_interval_fmt }}</dd></div>
+            {% endif %}
         </dl>
         {% if total > 0 %}
         <div class="panel-divider"></div>
-        <div class="stat-label">Client distribution</div>
         <canvas id="client-chart" width="320" height="160" aria-label="Client distribution chart"></canvas>
         <div class="dist-bar" id="dist-bar">
             <div class="dist-segment win" id="dist-win" style="width: {{ win_pct }}%"></div>
             <div class="dist-segment office" id="dist-office" style="width: {{ office_pct }}%"></div>
         </div>
-        <div class="dist-legend">
-            <span class="win">Windows {{ win_pct }}%</span>
-            <span class="office">Office {{ office_pct }}%</span>
-        </div>
         {% endif %}
     </div>
 
-    <div class="panel">
-        <h2 class="panel-title">Quick Actions</h2>
+    <div class="glass-card panel">
+        <h2 class="panel-title">{{ t('dashboard.quick_actions') }}</h2>
         <div class="quick-grid">
-            <a href="/clients" class="quick-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                View Clients
+            <a href="/protocol" class="quick-link quick-link-featured">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h4m4-6h2m0 12h2"/></svg>
+                {{ t('protocol.explore') }}
             </a>
-            <a href="/products" class="quick-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                Product Keys
-            </a>
-            <a href="/api/v1/clients/export" class="quick-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export CSV
-            </a>
-            <a href="/api/v1/stats" class="quick-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                API Stats
-            </a>
+            <a href="/clients" class="quick-link">{{ t('nav.clients') }}</a>
+            <a href="/products" class="quick-link">{{ t('nav.products') }}</a>
+            <a href="/api/v1/clients/export" class="quick-link">{{ t('nav.export') }}</a>
         </div>
     </div>
 </div>

@@ -77,7 +77,7 @@
 {% if clients %}
 <div id="clients-grid" class="card-grid">
     {% for client in clients %}
-    <article class="entity-card client-card client-row"
+    <article class="entity-card client-card client-row glass-card"
         data-name="{{ client.machineName | lower }}"
         data-ip="{{ client.machineIp | lower }}"
         data-app="{{ client.applicationId | lower }}"
@@ -101,6 +101,7 @@
             </div>
             <div class="entity-card-badges">
                 <span class="badge badge-neutral">{{ client.applicationId }}</span>
+                <span class="badge health-{{ client.health | default('unknown') }}">{{ client.health_note | default(client.health) }}</span>
                 <span class="badge {% if client.licenseStatus == 'Activated' %}badge-ok{% else %}badge-warn{% endif %}">
                     {% if client.licenseStatus == 'Notifications Mode' %}Notify{% else %}{{ client.licenseStatus }}{% endif %}
                 </span>
@@ -128,6 +129,12 @@
                 <dd><span class="convert_timestamp">{{ client.lastRequestTime }}</span></dd>
             </div>
         </dl>
+        <button type="button" class="btn btn-ghost btn-block client-session-btn"
+            data-client-id="{{ client.clientMachineId }}"
+            data-app-id="{{ client.applicationId }}"
+            data-machine-name="{{ client.machineName }}">
+            {{ t('protocol.view_session') }}
+        </button>
     </article>
     {% endfor %}
 </div>

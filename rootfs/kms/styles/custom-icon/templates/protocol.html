@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t('protocol.title') }} · KMS-GUI{% endblock %}
+
+{% block content %}
+<div class="hero-banner">
+    <div class="hero-copy">
+        <p class="hero-kicker">{{ t('protocol.kicker') }}</p>
+        <h1 class="hero-title">{{ t('protocol.title') }}</h1>
+        <p class="hero-subtitle">{{ t('protocol.subtitle') }}</p>
+    </div>
+    {% if overview %}
+    <div class="hero-metrics">
+        <div class="hero-metric">
+            <span class="hero-metric-label">Port</span>
+            <span class="hero-metric-value mono">{{ overview.transport.port }}</span>
+        </div>
+        <div class="hero-metric">
+            <span class="hero-metric-label">{{ t('protocol.renewal') }}</span>
+            <span class="hero-metric-value">{{ overview.policy.renewal_interval_fmt }}</span>
+        </div>
+        <div class="hero-metric">
+            <span class="hero-metric-label">{{ t('protocol.client_count') }}</span>
+            <span class="hero-metric-value">{{ overview.policy.client_count }}</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% elif overview %}
+
+<section class="section-block">
+    <h2 class="section-title">{{ t('protocol.flow_title') }}</h2>
+    <div class="flow-track">
+        {% for step in overview.flow_steps %}
+        <div class="flow-node flow-node-{{ step.from }}">
+            <div class="flow-node-badge">{{ step.id }}</div>
+            <div class="flow-node-body glass-card">
+                <div class="flow-node-from">{{ 'Client' if step.from == 'client' else 'KMS Server' }}</div>
+                <h3 class="flow-node-title">{{ step.title }}</h3>
+                <p class="flow-node-detail">{{ step.detail }}</p>
+            </div>
+        </div>
+        {% if not loop.last %}<div class="flow-connector" aria-hidden="true"></div>{% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+<div class="panel-grid panel-grid-2">
+    <section class="glass-card panel">
+        <div class="panel-head">
+            <span class="direction-badge direction-client">{{ t('protocol.client_sends') }}</span>
+            <h2 class="panel-title">{{ t('protocol.request_fields') }}</h2>
+        </div>
+        <div class="field-grid">
+            {% for field in overview.client_request_fields %}
+            <article class="field-card">
+                <div class="field-card-head">
+                    <code class="field-key">{{ field.key }}</code>
+                    <span class="field-type">{{ field.type }}</span>
+                </div>
+                <h3 class="field-label">{{ field.label }}</h3>
+                <p class="field-desc">{{ field.description }}</p>
+                {% if field.stored %}<span class="field-tag">SQLite</span>{% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="glass-card panel">
+        <div class="panel-head">
+            <span class="direction-badge direction-server">{{ t('protocol.server_sends') }}</span>
+            <h2 class="panel-title">{{ t('protocol.response_fields') }}</h2>
+        </div>
+        <div class="field-grid">
+            {% for field in overview.server_response_fields %}
+            <article class="field-card">
+                <div class="field-card-head">
+                    <code class="field-key">{{ field.key }}</code>
+                    <span class="field-type">{{ field.type }}</span>
+                </div>
+                <h3 class="field-label">{{ field.label }}</h3>
+                <p class="field-desc">{{ field.description }}</p>
+                {% if field.stored %}<span class="field-tag">SQLite</span>{% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<section class="glass-card panel">
+    <h2 class="panel-title">{{ t('protocol.policy_title') }}</h2>
+    <p class="panel-desc">{{ t('protocol.policy_desc') }}</p>
+    <dl class="info-list info-list-cols">
+        <div class="info-row"><dt>{{ t('protocol.client_count') }}</dt><dd>{{ overview.policy.client_count }}</dd></div>
+        <div class="info-row"><dt>{{ t('protocol.activation') }}</dt><dd>{{ overview.policy.activation_interval_fmt }} ({{ overview.policy.activation_interval_minutes }} min)</dd></div>
+        <div class="info-row"><dt>{{ t('protocol.renewal') }}</dt><dd>{{ overview.policy.renewal_interval_fmt }} ({{ overview.policy.renewal_interval_minutes }} min)</dd></div>
+        <div class="info-row"><dt>HWID</dt><dd class="mono">{{ overview.policy.hwid }}</dd></div>
+        <div class="info-row"><dt>{{ t('protocol.validity') }}</dt><dd>{{ overview.policy.licensing_validity_days }} days</dd></div>
+        <div class="info-row"><dt>Wire format</dt><dd class="mono">{{ overview.transport.wire_format }}</dd></div>
+    </dl>
+    <div class="quick-grid">
+        <a href="/clients" class="quick-link">{{ t('nav.clients') }}</a>
+        <a href="/api/v1/protocol" class="quick-link">API JSON</a>
+        <a href="{{ url_for('admin.admin_activations_page') }}" class="quick-link">{{ t('admin.activations') }}</a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>document.addEventListener('DOMContentLoaded', function() { PyKmsApp.initCommon(); });</script>
+{% endblock %}

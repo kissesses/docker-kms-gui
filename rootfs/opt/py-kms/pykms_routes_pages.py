@@ -5,6 +5,7 @@ import time
 from flask import Blueprint, render_template
 
 import pykms_activation as activation
+import pykms_protocol as protocol
 from pykms_services import build_stats, client_counts, load_clients, product_counts
 
 pages_bp = Blueprint('pages', __name__)
@@ -14,14 +15,24 @@ pages_bp = Blueprint('pages', __name__)
 def dashboard():
     error = None
     stats = None
+    overview = None
     try:
         clients = load_clients()
         stats = build_stats(clients)
+        overview = protocol.build_protocol_overview()
     except Exception as e:
         error = str(e)
         stats = build_stats([])
+        try:
+            overview = protocol.build_protocol_overview()
+        except Exception:
+            overview = None
     return render_template(
-        'dashboard.html', path='/', error=error, stats=stats,
+        'dashboard.html',
+        path='/',
+        error=error,
+        stats=stats,
+        protocol_overview=overview,
     ), 200 if error is None else 500
 
 
@@ -51,6 +62,22 @@ def clients_page():
     ), 200 if error is None else 500
 
 
+@pages_bp.route('/protocol')
+def protocol_page():
+    error = None
+    overview = None
+    try:
+        overview = protocol.build_protocol_overview()
+    except Exception as e:
+        error = str(e)
+    return render_template(
+        'protocol.html',
+        path='/protocol/',
+        error=error,
+        overview=overview,
+    ), 200 if error is None else 500
+
+
 @pages_bp.route('/products')
 def products():
     items, noglvk, count_products, count_windows, count_office = product_counts()
@@ -67,7 +94,6 @@ def products():
 
 @pages_bp.route('/license')
 def license_page():
-    import os
     from pykms_config import config
     with open(config.LICENSE_PATH, 'r', encoding='utf-8') as f:
         return render_template('license.html', path='/license/', license=f.read())

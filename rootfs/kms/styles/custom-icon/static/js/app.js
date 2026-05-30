@@ -73,25 +73,38 @@ const PyKmsApp = (function() {
   }
 
   function initMobileNav() {
-    const btn = document.getElementById('mobile-menu-toggle');
-    const nav = document.getElementById('mobile-nav');
-    if (btn && nav) {
-      btn.addEventListener('click', function() {
-        const isOpen = nav.classList.toggle('open');
-        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      });
+    const toggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (!toggle || !sidebar) return;
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      if (backdrop) backdrop.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
     }
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      if (backdrop) backdrop.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+
+    toggle.addEventListener('click', function() {
+      if (sidebar.classList.contains('open')) closeSidebar();
+      else openSidebar();
+    });
+    if (backdrop) backdrop.addEventListener('click', closeSidebar);
+    sidebar.querySelectorAll('.sidebar-link').forEach(function(link) {
+      link.addEventListener('click', closeSidebar);
+    });
   }
 
   function setServerStatus(online, label) {
-    ['status-dot', 'status-dot-mobile'].forEach(function(id) {
-      const dot = document.getElementById(id);
-      if (dot) dot.classList.toggle('live', online);
-    });
-    ['status-text', 'status-text-mobile'].forEach(function(id) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = label;
-    });
+    const dot = document.getElementById('status-dot');
+    const el = document.getElementById('status-text');
+    if (dot) dot.classList.toggle('live', online);
+    if (el) el.textContent = label;
   }
 
   function updateDistBar(data) {
@@ -253,8 +266,63 @@ const PyKmsApp = (function() {
     cards.forEach(function(card) { grid.appendChild(card); });
   }
 
+  function initClientSessionModal() {
+    const modal = document.getElementById('client-modal');
+    const body = document.getElementById('client-modal-body');
+    const title = document.getElementById('client-modal-title');
+    if (!modal || !body) return;
+
+    function closeModal() {
+      modal.hidden = true;
+      modal.setAttribute('aria-hidden', 'true');
+      body.innerHTML = '';
+    }
+
+    modal.querySelector('.modal-close')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) closeModal();
+    });
+
+    document.querySelectorAll('.client-session-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const clientId = btn.dataset.clientId;
+        const appId = btn.dataset.appId;
+        const machine = btn.dataset.machineName || 'Client';
+        title.textContent = machine;
+        body.innerHTML = '<p class="panel-desc">Loading session…</p>';
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        fetchJson('/api/v1/clients/' + encodeURIComponent(clientId) + '/' + encodeURIComponent(appId) + '/session')
+          .then(function(data) {
+            if (data.error) {
+              body.innerHTML = '<div class="alert alert-error">' + data.error + '</div>';
+              return;
+            }
+            body.innerHTML = renderClientSession(data);
+            convertTimestamps();
+          })
+          .catch(function() {
+            body.innerHTML = '<div class="alert alert-error">Failed to load session</div>';
+          });
+      });
+    });
+  }
+
+  function renderClientSession(data) {
+    function rows(obj) {
+      return Object.keys(obj || {}).map(function(key) {
+        return '<div class="info-row"><dt>' + key + '</dt><dd class="mono">' + (obj[key] ?? '—') + '</dd></div>';
+      }).join('');
+    }
+    return ''
+      + '<section class="modal-section"><h3 class="panel-subtitle">Received from client</h3><dl class="info-list">' + rows(data.received_from_client) + '</dl></section>'
+      + '<section class="modal-section"><h3 class="panel-subtitle">Sent to client</h3><dl class="info-list">' + rows(data.sent_to_client) + '</dl></section>'
+      + '<section class="modal-section"><h3 class="panel-subtitle">Schedule</h3><dl class="info-list">' + rows(data.schedule) + '</dl></section>';
+  }
+
   function initClientsTable() {
     initCommon();
+    initClientSessionModal();
 
     const search = document.getElementById('client-search');
     const filter = document.getElementById('client-filter-app');

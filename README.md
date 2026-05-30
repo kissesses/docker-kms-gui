@@ -333,6 +333,8 @@ Full list: [`.env.example`](.env.example)
 | `GET /api/v1/clients` | Client list (JSON). Query: `q`, `app`, `status`, `health` |
 | `GET /api/v1/clients/export` | CSV export |
 | `GET /api/v1/activations` | Policy + client bindings + renewal health |
+| `GET /api/v1/protocol` | KMS protocol overview (fields, flow, policy) |
+| `GET /api/v1/clients/<id>/<app>/session` | Last known client ↔ server data exchange |
 | `GET /livez` | Liveness probe |
 | `GET /readyz` | Readiness probe |
 
