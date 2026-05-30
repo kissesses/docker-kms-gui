@@ -14,7 +14,7 @@ services:
     volumes:
       - kms-data:/kms/var
     ports:
-      - "${KMS_BIND:-${BIND_ADDRESS:-127.0.0.1}}}:${KMS_PORT:-1688}:1688/tcp"
+      - "${KMS_BIND:-127.0.0.1}:${KMS_PORT:-1688}:1688/tcp"
     restart: unless-stopped
 
   gui:
@@ -45,7 +45,7 @@ services:
     volumes:
       - ./nginx/sidecar.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "${GUI_BIND:-${BIND_ADDRESS:-127.0.0.1}}}:${GUI_PORT:-3000}:80/tcp"
+      - "${GUI_BIND:-127.0.0.1}:${GUI_PORT:-3000}:80/tcp"
     restart: unless-stopped
 
 volumes:

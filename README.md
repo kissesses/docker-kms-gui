@@ -342,6 +342,8 @@ When `GUI_AUTH_ENABLED=true`, all routes except `/livez`, `/readyz`, `/login`, `
 
 | Problem | What to check |
 |---------|---------------|
+| `invalid IP address: 0.0.0.0}` | Typo in `.env` — remove trailing `}` from `KMS_BIND` / `GUI_BIND`. Run `git pull` (nested compose `${…:-${…}}` fixed in v1.8.x). |
+| `unknown profile` / wrong logs command | No compose profiles — use `docker compose -f compose.internet.yaml logs -f` (not `--profile`) |
 | GUI not opening | `docker compose ps` — wait until `gui` is healthy; check `GUI_BIND` and port |
 | Client cannot activate | Firewall on host port 1688; `KMS_BIND=0.0.0.0` for remote clients; correct IP in `slmgr /skms` |
 | `/setup` redirects to dashboard | Admin already created — use `/login` |

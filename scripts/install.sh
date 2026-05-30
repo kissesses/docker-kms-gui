@@ -484,6 +484,14 @@ set_env_var() {
   local value="$2"
   local file="${REPO_ROOT}/.env"
 
+  # Убрать случайные символы из bind-адресов (типичная ошибка: 0.0.0.0})
+  value="${value//$'\r'/}"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  value="${value%%\}}"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+
   if grep -q "^${key}=" "${file}" 2>/dev/null; then
     # macOS и Linux совместимая замена
     if sed --version >/dev/null 2>&1; then
@@ -494,6 +502,21 @@ set_env_var() {
   else
     echo "${key}=${value}" >> "${file}"
   fi
+}
+
+# --- Починка bind-переменных в существующем .env ------------------------------
+fix_env_binds() {
+  local file="${REPO_ROOT}/.env"
+  [[ -f "${file}" ]] || return 0
+  local key val
+  for key in KMS_BIND GUI_BIND BIND_ADDRESS; do
+    val="$(grep -m1 "^${key}=" "${file}" 2>/dev/null | cut -d= -f2- || true)"
+    [[ -n "${val}" ]] || continue
+    if [[ "${val}" == *"}"* ]]; then
+      warn "Исправляем ${key}=${val} → без лишних символов"
+      set_env_var "${key}" "${val}"
+    fi
+  done
 }
 
 # --- Создание .env для выбранного режима --------------------------------------
@@ -524,6 +547,8 @@ setup_env_file() {
   case "${MODE}" in
     local)
       set_env_var "BIND_ADDRESS" "127.0.0.1"
+      set_env_var "KMS_BIND" "127.0.0.1"
+      set_env_var "GUI_BIND" "127.0.0.1"
       set_env_var "GUI_PORT" "80"
       set_env_var "NGINX_TLS_ENABLED" "false"
       if [[ "${ENABLE_AUTH}" == true ]]; then
@@ -559,6 +584,8 @@ setup_env_file() {
   if [[ "${MODE}" == "local" && "${ENABLE_AUTH}" == true ]]; then
     set_env_var "GUI_AUTH_ENABLED" "true"
   fi
+
+  fix_env_binds
 }
 
 # --- TLS-сертификаты (internet) -----------------------------------------------
@@ -693,6 +720,7 @@ print_summary() {
   echo "    cd ${REPO_ROOT}"
   echo "    docker compose -f ${COMPOSE_FILE} ps"
   echo "    docker compose -f ${COMPOSE_FILE} logs -f"
+  echo "    docker compose -f ${COMPOSE_FILE} logs -f gui"
   echo "    docker compose -f ${COMPOSE_FILE} pull && docker compose -f ${COMPOSE_FILE} up -d"
   echo ""
   echo "  Документация: README.md, SECURITY.md"
