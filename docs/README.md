@@ -15,7 +15,7 @@ Copy [`.env.example`](../.env.example) to `.env`. For internet, use `./scripts/i
 
 | Variable | Default | Notes |
 |----------|---------|--------|
-| `KMS_VERSION` / `GUI_VERSION` | `1.10.0` | Image tags on ghcr.io |
+| `KMS_VERSION` / `GUI_VERSION` | `1.11.0` | Image tags on ghcr.io |
 | `KMS_BIND` / `GUI_BIND` | `127.0.0.1` | Use `0.0.0.0` for remote KMS or public GUI |
 | `KMS_PORT` | `1688` | KMS on host |
 | `GUI_HTTP_PORT` | `80` | Host port → container HTTP |

@@ -7,23 +7,33 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+---
+
+## [1.11.0] — 2026-05-30
+
+### Added
+
+- **GVLK picker** — compact `/keys` page (master-detail, keyboard nav) and login modal with Windows/Office activation guide
+- **README** — bilingual RU/EN quick start with Russia VPS tips
+
 ### Changed
 
-- Documentation moved to `docs/` (`SECURITY.md`, `CHANGELOG.md`)
-- Root **README** trimmed to install and daily use; API, Docker images, troubleshooting in `docs/README.md`
-- **Dockerfiles** simplified (grouped ENV, removed redundant defaults)
-- **Single `Dockerfile`** with `--target kms` / `--target gui`; removed `Dockerfile.kms`
-- **Single `.env.example`** and **`compose.yaml`** for all modes; removed `.env.internet.example` and `compose.internet.yaml` (install.sh applies mode settings)
+- **UI v3** — iOS dark glass aesthetic, top header (sidebar removed), refreshed admin diagnostics
+- Documentation moved to `docs/` (`SECURITY.md`, `CHANGELOG.md`); root README trimmed to install and daily use
+- **Single `Dockerfile`** (`--target kms` / `--target gui`), **`.env.example`**, and **`compose.yaml`** for all deploy modes (`install.sh --mode local|lan|internet`)
 - **`pytest.ini`** — only `testpaths = tests`
+
+### Fixed
+
+- Header nav overlap and stuck “Checking” status on admin pages
+- Public GVLK picker on login page
 
 ### Removed
 
 - Sidecar deployment (`compose.sidecar.yaml`, `nginx/`) — use built-in nginx in the GUI container
-- Release screenshot tooling (`scripts/screenshots/`, `seed-demo-db.py`, `capture-screenshots.sh`)
-- Stale metadata (`.json`), unused `img/`, duplicate `favicon.ico`, `RELEASE.md` (merged into README)
-- Legacy **`products.html`** and dead `/products` UI code (`/products` still redirects to `/keys`)
-- Root **`install.sh`** — use **`scripts/install.sh`** only (curl one-liner and `./scripts/install.sh`)
-- **`Dockerfile.kms`**, **`.env.internet.example`**, **`compose.internet.yaml`**
+- Release screenshot tooling, stale metadata, unused assets
+- Legacy **`products.html`** and dead `/products` UI (`/products` redirects to `/keys`)
+- Root **`install.sh`**, **`Dockerfile.kms`**, **`.env.internet.example`**, **`compose.internet.yaml`**
 
 ---
 
