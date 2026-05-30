@@ -78,12 +78,14 @@ curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/insta
 # LAN
 curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash -s -- --mode lan --yes
 
-# internet → /opt/kms-gui, specific release tag
+# internet → /opt/kms-gui, pin image version
 curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash -s -- \
-  --mode internet --dir /opt/kms-gui --ref v1.8.0 --tz Europe/Moscow --yes
+  --mode internet --dir /opt/kms-gui --version 1.8.0 --tz Europe/Moscow --yes
 ```
 
-Environment alternatives: `KMS_GUI_DIR=/opt/kms-gui`, `KMS_GUI_REF=v1.8.0`.
+Environment alternatives: `KMS_GUI_DIR=/opt/kms-gui`, `KMS_VERSION=1.8.0`.
+
+> **`--ref v1.8.0`** still works (treated as image version). Git clone always uses **`main`** so the installer is present.
 
 ### Option B — install script from cloned repo
 
@@ -93,7 +95,7 @@ cd docker-kms-gui
 ./scripts/install.sh
 ```
 
-Same flags as above (`--mode`, `--dir`, `--ref`, `--yes`, …). Run `./scripts/install.sh --help`.
+Same flags as above (`--mode`, `--dir`, `--version`, `--yes`, …). Run `./scripts/install.sh --help`.
 
 ### Option C — ready-made images (manual)
 

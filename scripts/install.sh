@@ -18,7 +18,8 @@
 #
 # Дополнительно:
 #   --dir PATH       каталог установки при auto-clone (по умолчанию ~/kms-gui)
-#   --ref REF        ветка или тег git (по умолчанию main)
+#   --version VER    версия Docker-образов KMS/GUI (например 1.8.0)
+#   --ref REF        устарело: v1.x трактуется как --version; git clone всегда main
 #   --build          собрать образы локально вместо pull
 #   --enable-auth    включить GUI_AUTH_ENABLED (для local/lan)
 #   --yes            не спрашивать подтверждение
@@ -26,7 +27,7 @@
 #   --tz Europe/Moscow
 #
 # Переменные окружения (альтернатива --dir / --ref):
-#   KMS_GUI_DIR=/opt/kms-gui   KMS_GUI_REF=v1.8.0
+#   KMS_GUI_DIR=/opt/kms-gui   KMS_VERSION=1.8.0
 #
 # ── Минимальные требования ───────────────────────────────────────────────────
 #   OS:     Linux x86_64 / aarch64 (или Docker Desktop на macOS/Windows)
@@ -51,7 +52,7 @@ set -euo pipefail
 readonly REPO_URL="https://github.com/kissesses/docker-kms-gui.git"
 readonly DEFAULT_TZ="UTC"
 readonly DEFAULT_INSTALL_DIR="${KMS_GUI_DIR:-${HOME}/kms-gui}"
-readonly DEFAULT_REPO_REF="${KMS_GUI_REF:-main}"
+readonly DEFAULT_REPO_REF="${KMS_GUI_GIT_REF:-main}"
 
 # Каталог скрипта; REPO_ROOT задаётся ниже или в ensure_repo()
 SCRIPT_PATH="${BASH_SOURCE[0]:-}"
@@ -74,6 +75,7 @@ COMPOSE_FILE="compose.yaml"
 INSTALL_DIR="${DEFAULT_INSTALL_DIR}"
 REPO_REF="${DEFAULT_REPO_REF}"
 SKIP_DOCKER_INSTALL=false
+IMAGE_VERSION="${KMS_VERSION:-${GUI_VERSION:-}}"
 DOCKER=()
 
 # --- Цвета для вывода (если терминал поддерживает) ---------------------------
@@ -106,7 +108,8 @@ Usage:
 Options:
   -m, --mode MODE     local | lan | internet
   -d, --dir PATH      install directory when cloning (default: ~/kms-gui)
-  --ref REF           git branch or tag (default: main)
+  --version, -V VER   Docker image tag for kms + kms-gui (e.g. 1.8.0)
+  --ref REF           deprecated: v1.x → image version; git clone uses main
   -b, --build         build images locally instead of pull
   --enable-auth       enable GUI_AUTH_ENABLED (local/lan)
   -y, --yes           skip confirmations
@@ -117,7 +120,10 @@ Options:
 
 Environment:
   KMS_GUI_DIR         same as --dir
-  KMS_GUI_REF         same as --ref
+  KMS_VERSION         same as --version (also sets GUI_VERSION)
+
+Environment:
+  KMS_GUI_GIT_REF     git branch for clone (default: main)
 
 Requirements (minimum):
   Docker Engine 24+, Compose v2.20+, 1 CPU, 512 MB RAM, 2 GB disk, git, curl
@@ -162,8 +168,18 @@ parse_args() {
         INSTALL_DIR="${2:?Укажите каталог установки, например /opt/kms-gui}"
         shift 2
         ;;
+      --version|-V)
+        IMAGE_VERSION="${2#v}"
+        shift 2
+        ;;
       --ref)
-        REPO_REF="${2:?Укажите ветку или тег, например main или v1.8.0}"
+        local ref="${2:?}"
+        if [[ "${ref}" =~ ^v?[0-9]+\.[0-9]+ ]]; then
+          warn "--ref ${ref} → версия образов ${ref#v} (git clone: ${DEFAULT_REPO_REF})"
+          IMAGE_VERSION="${ref#v}"
+        else
+          REPO_REF="${ref}"
+        fi
         shift 2
         ;;
       -h|--help)
@@ -408,10 +424,18 @@ ensure_repo() {
     return 0
   fi
 
+  # Уже клонировано bootstrap-скриптом (install.sh в корне)
+  INSTALL_DIR="$(cd "${INSTALL_DIR}" 2>/dev/null && pwd || echo "${INSTALL_DIR}")"
+  if repo_is_valid "${INSTALL_DIR}"; then
+    REPO_ROOT="${INSTALL_DIR}"
+    cd "${REPO_ROOT}"
+    ok "Рабочий каталог: ${REPO_ROOT}"
+    return 0
+  fi
+
   command -v git >/dev/null 2>&1 || fail "git не найден — нужен для загрузки репозитория без ручного clone."
 
-  INSTALL_DIR="$(cd "${INSTALL_DIR}" 2>/dev/null && pwd || echo "${INSTALL_DIR}")"
-  info "Репозиторий не найден рядом со скриптом — установка в ${INSTALL_DIR} (ref: ${REPO_REF})"
+  info "Репозиторий не найден — установка в ${INSTALL_DIR} (git: ${REPO_REF})"
 
   if [[ -d "${INSTALL_DIR}/.git" ]] && repo_is_valid "${INSTALL_DIR}"; then
     REPO_ROOT="${INSTALL_DIR}"
@@ -586,6 +610,12 @@ setup_env_file() {
   fi
 
   fix_env_binds
+
+  if [[ -n "${IMAGE_VERSION}" ]]; then
+    set_env_var "KMS_VERSION" "${IMAGE_VERSION}"
+    set_env_var "GUI_VERSION" "${IMAGE_VERSION}"
+    info "Docker-образы: ghcr.io/kissesses/kms:${IMAGE_VERSION}, kms-gui:${IMAGE_VERSION}"
+  fi
 }
 
 # --- TLS-сертификаты (internet) -----------------------------------------------
