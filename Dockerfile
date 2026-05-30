@@ -9,6 +9,7 @@ ARG NGINX_VERSION=1.30.2
 ARG BUILD_VERSION=dev
 ARG APP_UID=1000
 ARG APP_GID=1000
+ARG IMAGE_SOURCE=https://github.com/kissesses/docker-kms-gui
 
 # ── Shared py-kms source ───────────────────────────────────────────────────
 FROM alpine:3.22 AS pykms-src
@@ -25,6 +26,9 @@ ARG BUILD_VERSION
 ARG APP_UID
 ARG APP_GID
 ARG PYKMS_COMMIT
+ARG IMAGE_SOURCE
+
+LABEL org.opencontainers.image.source="${IMAGE_SOURCE}"
 
 ENV IP=0.0.0.0 \
     PORT=1688 \
@@ -74,6 +78,9 @@ ARG BUILD_VERSION
 ARG APP_UID
 ARG APP_GID
 ARG PYKMS_COMMIT
+ARG IMAGE_SOURCE
+
+LABEL org.opencontainers.image.source="${IMAGE_SOURCE}"
 
 ENV APP_ROOT=/kms \
     APP_UID=${APP_UID} \
