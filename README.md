@@ -2,21 +2,100 @@
 
 **Maintainer:** [kissesses](https://github.com/kissesses)
 
-Standalone Docker stack for KMS activation server + web GUI with **nginx 1.30.2**, dashboard, REST API and modern UI.
+Docker stack: **KMS activation server** (py-kms, port 1688) + **web dashboard** (nginx 1.30.2, port 80/443).
 
 > Forked from [11notes/docker-KMS-GUI](https://github.com/11notes/docker-KMS-GUI) — fully rewritten, no dependency on abandoned upstream images.
 
-## Features
+## What you get
 
-- **kissesses/kms** — py-kms server (port 1688)
-- **kissesses/kms-gui** — web interface (port 80)
-- nginx **1.30.2** reverse proxy (CVE-2026-9256 fix)
-- Dashboard, clients, products, license pages
-- REST API: `/api/v1/stats`, `/api/v1/clients`, CSV export
-- Basic Auth, optional TLS, sidecar nginx mode
-- Localhost bind by default — see [SECURITY.md](SECURITY.md)
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| **kms** | `ghcr.io/kissesses/kms` | 1688 | Windows / Office activation (KMS protocol) |
+| **gui** | `ghcr.io/kissesses/kms-gui` | 80 or 443 | Dashboard, clients, products, admin panel, REST API |
 
-## Quick start
+Both containers share one SQLite volume (`kms-data`) — client list and admin settings persist across restarts.
+
+---
+
+## Requirements
+
+### Minimum
+
+| | |
+|---|---|
+| **OS** | Linux **x86_64** or **aarch64** (also macOS / Windows with [Docker Desktop](https://www.docker.com/products/docker-desktop/)) |
+| **Docker** | Engine **24.0+**, Compose plugin **v2.20+** (`docker compose version`) |
+| **CPU** | 1 core |
+| **RAM** | **512 MB** free for Docker + 2 containers |
+| **Disk** | **2 GB** free (images ~300–500 MB + SQLite volume) |
+| **Network** | Outbound internet for `docker compose pull` (first install) |
+| **Tools** | `git`, `curl` (install script healthcheck) |
+
+**Ports on the host** (depends on mode):
+
+| Mode | Ports |
+|------|-------|
+| local | `127.0.0.1:80` (GUI), `127.0.0.1:1688` (KMS) |
+| lan | `127.0.0.1:80` (GUI), `0.0.0.0:1688` (KMS) |
+| internet | `0.0.0.0:443` + `80` (GUI), `0.0.0.0:1688` (KMS) |
+
+**Internet mode additionally:** TLS certificate `cert.pem` + `key.pem` in `./certs/` (or generate a test cert via `scripts/install.sh`).
+
+**Build from source (`--build`):** +**2 GB** disk, `git` inside Docker build, stable network (py-kms is cloned during image build).
+
+### Recommended
+
+| | |
+|---|---|
+| **CPU** | 2+ cores |
+| **RAM** | **2 GB+** (comfortable headroom for Docker, nginx, gunicorn, py-kms) |
+| **Disk** | **10 GB+** (image updates, logs, client database growth) |
+| **Network** | Static LAN IP or DNS A-record for the server |
+| **Security** | `GUI_AUTH_ENABLED=true` whenever GUI or KMS is reachable outside localhost |
+| **Internet** | Valid TLS cert (Let's Encrypt, Cloudflare Origin); firewall allows **1688/tcp** and **443/tcp** only |
+| **LAN** | `KMS_BIND=0.0.0.0`, `GUI_BIND=127.0.0.1` — KMS for clients, GUI not exposed to LAN |
+
+KMS itself is lightweight (tens of clients on minimal hardware is fine). Most resource use comes from Docker and the web stack, not activation traffic.
+
+---
+
+## Installation
+
+### Option A — install script (recommended)
+
+```bash
+git clone https://github.com/kissesses/docker-kms-gui.git
+cd docker-kms-gui
+./scripts/install.sh
+```
+
+Interactive menu: **local** (localhost), **lan** (KMS on network), **internet** (HTTPS + login).
+
+Non-interactive examples:
+
+```bash
+./scripts/install.sh --mode local --yes
+./scripts/install.sh --mode lan --yes
+./scripts/install.sh --mode internet --yes --tz Europe/Moscow
+./scripts/install.sh --mode local --enable-auth --yes   # with /setup login
+./scripts/install.sh --mode local --build --yes         # build images locally
+```
+
+Run `./scripts/install.sh --help` for all options.
+
+### Option B — ready-made images (manual)
+
+```bash
+git clone https://github.com/kissesses/docker-kms-gui.git
+cd docker-kms-gui
+cp .env.example .env
+docker compose pull
+docker compose up -d
+```
+
+Images are pulled from **ghcr.io/kissesses/** — no local build needed.
+
+### Option C — build from source (manual)
 
 ```bash
 git clone https://github.com/kissesses/docker-kms-gui.git
@@ -25,127 +104,288 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Open **http://localhost** — web GUI (bound to `127.0.0.1` by default)  
-KMS clients connect to **127.0.0.1:1688**
+Use this if you changed code locally or need a version that is not published yet.
 
-## Compose
-
-```yaml
-services:
-  kms:
-    image: ghcr.io/kissesses/kms:1.8.0
-    ports: ["127.0.0.1:1688:1688"]
-    volumes: [kms-data:/kms/var]
-
-  gui:
-    image: ghcr.io/kissesses/kms-gui:1.8.0
-    ports: ["127.0.0.1:80:80"]
-    volumes: [kms-data:/kms/var]
-    depends_on:
-      kms:
-        condition: service_healthy
-```
-
-Or build locally — see [`compose.yaml`](compose.yaml).
-
-## Sidecar nginx
+### Check that it works
 
 ```bash
-docker compose -f compose.sidecar.yaml up -d --build
+docker compose ps          # both services should be "healthy"
+curl -s http://127.0.0.1/livez   # → OK
 ```
 
-GUI on **http://localhost:3000** via external nginx 1.30.2.
+Open **http://127.0.0.1** — dashboard.  
+KMS endpoint for clients: **127.0.0.1:1688** (localhost only by default).
 
-## Internet deployment
+---
 
-KMS and GUI public — protected by **application login** (not nginx Basic Auth):
+## After install — what to do
 
-```bash
-cp .env.internet.example .env
-# add TLS certs to ./certs/
-docker compose -f compose.internet.yaml up -d
+### 1. Activate a Windows client
+
+On the machine you want to activate, point it to your KMS server:
+
+```cmd
+slmgr /skms YOUR_SERVER_IP:1688
+slmgr /ato
 ```
 
-First visit: **`https://your-server/setup`** — create administrator account.
+Replace `YOUR_SERVER_IP` with the host where Docker runs (`127.0.0.1` on the same PC, or LAN IP if you opened KMS to the network — see [LAN](#lan-same-network) below).
 
-Or enable auth on default compose:
+Office (example):
+
+```cmd
+cd "C:\Program Files\Microsoft Office\Office16"
+cscript ospp.vbs /sethst:YOUR_SERVER_IP
+cscript ospp.vbs /act
+```
+
+GVLK keys for each product are on the **Products** page in the GUI.
+
+### 2. Monitor clients
+
+| Page | URL | What it shows |
+|------|-----|---------------|
+| Dashboard | `/` | Stats, uptime, client chart |
+| Clients | `/clients` | Activated machines (auto-refreshes every 30 s) |
+| Products | `/products` | GVLK keys by category (copy to clipboard) |
+| License | `/license` | py-kms license text |
+
+REST API (same data): `/api/v1/stats`, `/api/v1/clients`, `/api/v1/clients/export`, `/api/v1/activations`.
+
+### 3. Admin panel (optional)
+
+By default the GUI is open on localhost without login. Admin routes are **hidden** until you enable auth.
+
+**Enable application login** — edit `.env`:
 
 ```env
 GUI_AUTH_ENABLED=true
+```
+
+Restart and create the administrator on first visit:
+
+```bash
 docker compose up -d
 ```
 
-See [SECURITY.md](SECURITY.md) for full checklist.
+1. Open **http://127.0.0.1/setup** — create account (password ≥ 12 characters)
+2. Sign in at **/login**
+3. Manage at **/admin**:
+   - **Account** — change password
+   - **Activations** — KMS policy, client bindings, renewal health, remove stale clients
+   - **Security** — auth status overview
+   - **Audit** — log of admin actions
 
-## Environment
+> If you need `/admin` without login on a trusted LAN (not recommended on internet), set `ADMIN_PUBLIC=true`.
+
+### 4. Change KMS limits (client count, renewal interval)
+
+Defaults are in `.env`:
+
+```env
+KMS_CLIENT_COUNT=26
+KMS_ACTIVATION_INTERVAL=120      # minutes
+KMS_RENEWAL_INTERVAL=10080       # minutes (7 days)
+KMS_HWID=RANDOM
+```
+
+After changing values:
+
+```bash
+docker compose up -d
+docker compose restart kms
+```
+
+You can also edit policy in **Admin → Activations** (saved to `kms-policy.json`); still restart the `kms` container so py-kms picks up env changes.
+
+---
+
+## Deployment profiles
+
+### Local / home (default)
+
+Best for a single PC or home lab. GUI and KMS bound to **127.0.0.1** — not reachable from other machines.
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+Optional extra protection — nginx Basic Auth in `.env`:
+
+```env
+NGINX_BASIC_AUTH_USER=admin
+NGINX_BASIC_AUTH_PASS=your-long-random-password
+```
+
+### LAN (same network)
+
+Allow other PCs on your network to activate:
+
+```env
+KMS_BIND=0.0.0.0          # KMS on all interfaces
+GUI_BIND=127.0.0.1        # GUI stays local-only (recommended)
+GUI_AUTH_ENABLED=true     # recommended if GUI is ever exposed
+```
+
+```bash
+docker compose up -d
+```
+
+Clients use `slmgr /skms 192.168.x.x:1688` where `192.168.x.x` is your Docker host IP.
+
+### Internet (KMS + GUI public)
+
+KMS and GUI on the internet — **must** use HTTPS and application login:
+
+```bash
+cp .env.internet.example .env
+mkdir -p certs
+# Place cert.pem and key.pem in ./certs/
+docker compose -f compose.internet.yaml pull
+docker compose -f compose.internet.yaml up -d
+```
+
+First visit: **`https://your-domain/setup`** — create administrator.
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `KMS_BIND` | `0.0.0.0` | Remote Windows clients |
+| `GUI_BIND` | `0.0.0.0` | Web panel over HTTPS |
+| `GUI_AUTH_ENABLED` | `true` | Required in internet mode |
+| `NGINX_TLS_ENABLED` | `true` | Encrypt login and sessions |
+| `GUI_PORT` | `443` | HTTPS |
+
+Full checklist: [SECURITY.md](SECURITY.md).
+
+### Sidecar nginx
+
+External nginx in front of Gunicorn (no in-container nginx):
+
+```bash
+docker compose -f compose.sidecar.yaml up -d
+```
+
+GUI on **http://localhost:3000**. Add Basic Auth via [`nginx/sidecar-auth.conf.example`](nginx/sidecar-auth.conf.example).
+
+---
+
+## Update to a new version
+
+```bash
+# in .env — set new tags, e.g.:
+# KMS_VERSION=1.8.0
+# GUI_VERSION=1.8.0
+
+docker compose pull
+docker compose up -d
+```
+
+Data in volume `kms-data` (clients, admin account, audit log) is kept.
+
+---
+
+## Environment variables
 
 | Variable | Default | Description |
-|---|---|---|
-| `BIND_ADDRESS` | 127.0.0.1 | Default bind for both services |
-| `KMS_BIND` | — | Override KMS host bind |
-| `GUI_BIND` | — | Override GUI host bind |
-| `TZ` | UTC | Timezone |
-| `KMS_LOGLEVEL` | INFO | KMS server log level |
-| `GUI_AUTH_ENABLED` | false | Application login (`/setup`, `/login`) |
-| `NGINX_ENABLED` | true | In-container nginx |
-| `NGINX_BASIC_AUTH_USER/PASS` | — | nginx basic auth (alternative to app login) |
-| `NGINX_TLS_ENABLED` | false | TLS termination |
-| `TLS_CERT_DIR` | ./certs | Host path mounted to `/etc/nginx/certs` |
-| `DEBUG` | — | Enable debug logs (blocked in internet mode) |
+|----------|---------|-------------|
+| `KMS_VERSION` / `GUI_VERSION` | `1.8.0` | Image tags from ghcr.io |
+| `BIND_ADDRESS` | `127.0.0.1` | Default bind for both services |
+| `KMS_BIND` / `GUI_BIND` | — | Override bind per service |
+| `KMS_PORT` | `1688` | KMS host port |
+| `GUI_PORT` | `80` | GUI host port (`443` in internet profile) |
+| `TZ` | `UTC` | Timezone |
+| `KMS_LOGLEVEL` | `INFO` | KMS server log level |
+| `KMS_CLIENT_COUNT` | `26` | Max simultaneous KMS clients |
+| `KMS_ACTIVATION_INTERVAL` | `120` | Activation interval (minutes) |
+| `KMS_RENEWAL_INTERVAL` | `10080` | Renewal interval (minutes) |
+| `KMS_HWID` | `RANDOM` | HWID mode for py-kms |
+| `GUI_AUTH_ENABLED` | `false` | Application login (`/setup`, `/login`) |
+| `ADMIN_PUBLIC` | `false` | Show `/admin` without login when auth is off |
+| `NGINX_BASIC_AUTH_USER/PASS` | — | nginx Basic Auth (alternative to app login) |
+| `NGINX_TLS_ENABLED` | `false` | TLS termination in GUI container |
+| `TLS_CERT_DIR` | `./certs` | Host path → `/etc/nginx/certs` |
+| `DEBUG` | — | Debug logs (blocked in internet mode) |
 
 Full list: [`.env.example`](.env.example)
+
+---
 
 ## API
 
 | Endpoint | Description |
-|---|---|
+|----------|-------------|
 | `GET /api/v1/stats` | Server statistics (JSON) |
 | `GET /api/v1/clients` | Client list (JSON) |
 | `GET /api/v1/clients/export` | CSV export |
-| `GET /api/v1/activations` | Activation policy + client bindings (JSON) |
-| `GET /livez` | Health check |
+| `GET /api/v1/activations` | Policy + client bindings + renewal health |
+| `GET /livez` | Liveness probe |
+| `GET /readyz` | Readiness probe |
 
-## Build manually
+When `GUI_AUTH_ENABLED=true`, all routes except `/livez`, `/readyz`, `/login`, `/setup` require a session.
+
+---
+
+## Troubleshooting
+
+| Problem | What to check |
+|---------|---------------|
+| GUI not opening | `docker compose ps` — wait until `gui` is healthy; check `GUI_BIND` and port |
+| Client cannot activate | Firewall on host port 1688; `KMS_BIND=0.0.0.0` for remote clients; correct IP in `slmgr /skms` |
+| `/setup` redirects to dashboard | Admin already created — use `/login` |
+| `/admin` redirects to dashboard | Enable `GUI_AUTH_ENABLED=true` or set `ADMIN_PUBLIC=true` |
+| Policy changes not applied | Restart KMS: `docker compose restart kms`; update `.env` if you changed env vars |
+| HTTPS certificate errors | Files must be named `cert.pem` and `key.pem` in `./certs/` |
+
+Logs:
+
+```bash
+docker compose logs -f kms
+docker compose logs -f gui
+```
+
+---
+
+## Build images manually
 
 ```bash
 docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.8.0 .
 docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.8.0 .
 ```
 
+---
+
 ## Security
 
-See [SECURITY.md](SECURITY.md) for personal deployment checklist.
+See [SECURITY.md](SECURITY.md) for threat model, rate limits, CSRF, and deployment checklist.
 
-## Releases
+---
 
-See [RELEASE.md](RELEASE.md) and [CHANGELOG.md](CHANGELOG.md).
+## Releases & CI
 
-```bash
-git tag v1.8.0
-git push origin v1.8.0
-```
+- [CHANGELOG.md](CHANGELOG.md) — version history  
+- [RELEASE.md](RELEASE.md) — maintainer release process  
 
-GitHub Actions builds and pushes both images to **ghcr.io/kissesses/**.
+Tag `v*` on `main` triggers GitHub Actions: build → Grype scan → pytest → push to **ghcr.io/kissesses/** → GitHub Release with screenshots.
 
-## CI
-
-| Trigger | Action |
-|---|---|
-| Push to `main` | Build only (no publish) |
-| Tag `v*` | Build + push to ghcr.io + GitHub Release |
-| `workflow_dispatch` | Build + push to ghcr.io |
+---
 
 ## Project structure
 
 ```
 Dockerfile          # Web GUI image
 Dockerfile.kms      # KMS server image
-compose.yaml        # Default stack
+compose.yaml        # Default stack (local / LAN)
+compose.internet.yaml
 compose.sidecar.yaml
-rootfs/             # nginx, entrypoint, UI, backend
+rootfs/             # nginx, entrypoint, UI, Python backend
 docker/kms/         # KMS server entrypoint
+tests/              # pytest (auth, activation, app)
+scripts/install.sh  # interactive installer (local / lan / internet)
 .github/workflows/  # CI build & release
 ```
+
+---
 
 ## Credits
 
