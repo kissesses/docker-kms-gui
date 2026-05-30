@@ -351,6 +351,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" https://your-server/api/v1/stats
 | Problem | What to check |
 |---------|---------------|
 | `invalid IP address: 0.0.0.0}` | Typo in `.env` — remove trailing `}` from `KMS_BIND` / `GUI_BIND`. Run `git pull` (nested compose `${…:-${…}}` fixed in v1.8.x). |
+| GUI intermittently down / 502 | Low RAM (OOM), gunicorn crash, or SQLite lock — see below; check `docker compose logs gui` |
 | `unknown profile` / wrong logs command | No compose profiles — use `docker compose -f compose.internet.yaml logs -f` (not `--profile`) |
 | GUI not opening | `docker compose ps` — wait until `gui` is healthy; check `GUI_BIND` and port |
 | Client cannot activate | Firewall on host port 1688; `KMS_BIND=0.0.0.0` for remote clients; correct IP in `slmgr /skms` |
@@ -364,6 +365,22 @@ Logs:
 ```bash
 docker compose logs -f kms
 docker compose logs -f gui
+```
+
+### GUI drops and recovers
+
+Common causes on small VPS (~512 MB RAM):
+
+1. **OOM** — kernel kills gunicorn; container or gunicorn restarts → brief outage. **Fix:** 2 GB+ RAM or add swap.
+2. **SQLite lock** — KMS writes `kms.db` while GUI reads; rare `database is locked` errors. **Fix:** updated builds retry reads automatically.
+3. **502 from nginx** — gunicorn was busy or restarting. **Fix:** gunicorn auto-restart + proxy timeouts (in recent images).
+
+Check:
+
+```bash
+docker compose logs gui --tail 100
+dmesg | grep -i oom    # host OOM kills
+free -h
 ```
 
 ---

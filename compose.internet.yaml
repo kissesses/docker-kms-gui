@@ -57,6 +57,12 @@ services:
       - "${GUI_BIND:-0.0.0.0}:${GUI_PORT:-443}:443/tcp"
       - "${GUI_BIND:-0.0.0.0}:80:80/tcp"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
     security_opt:
       - no-new-privileges:true
 

@@ -81,6 +81,9 @@ server {
         limit_req zone=api_limit burst=10 nodelay;
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -99,6 +102,9 @@ server {
         limit_req zone=general_limit burst=30 nodelay;
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -129,6 +135,11 @@ if [ -z "${1}" ]; then
 
   cd /opt/py-kms
 
+  GUNICORN_WORKERS="${GUNICORN_WORKERS:-1}"
+  GUNICORN_THREADS="${GUNICORN_THREADS:-4}"
+  GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-120}"
+  GUNICORN_MAX_REQUESTS="${GUNICORN_MAX_REQUESTS:-1000}"
+
   if [ "${NGINX_ENABLED}" = "true" ]; then
     GUNICORN_BIND_ADDR="${GUNICORN_BIND:-127.0.0.1:8080}"
   else
@@ -136,13 +147,25 @@ if [ -z "${1}" ]; then
     _log "nginx disabled, gunicorn on ${GUNICORN_BIND_ADDR}"
   fi
 
-  gunicorn \
-    --log-level "${LOG_LEVEL}" \
-    --bind "${GUNICORN_BIND_ADDR}" \
-    --user "${APP_UID:-1000}" \
-    --group kms \
-    pykms_WebUI:app &
-  GUNICORN_PID=$!
+  _start_gunicorn() {
+    gunicorn \
+      --log-level "${LOG_LEVEL}" \
+      --bind "${GUNICORN_BIND_ADDR}" \
+      --user "${APP_UID:-1000}" \
+      --group kms \
+      --workers "${GUNICORN_WORKERS}" \
+      --threads "${GUNICORN_THREADS}" \
+      --worker-class gthread \
+      --timeout "${GUNICORN_TIMEOUT}" \
+      --graceful-timeout 30 \
+      --max-requests "${GUNICORN_MAX_REQUESTS}" \
+      --max-requests-jitter 100 \
+      --preload \
+      pykms_WebUI:app &
+    GUNICORN_PID=$!
+  }
+
+  _start_gunicorn
 
   if [ "${NGINX_ENABLED}" = "true" ]; then
     _validate_security
@@ -154,17 +177,22 @@ if [ -z "${1}" ]; then
     _log "nginx ${NGINX_VERSION} listening on port ${NGINX_PORT}"
   fi
 
-  _log "started (version ${APP_VERSION})"
+  _log "started (version ${APP_VERSION}, gunicorn workers=${GUNICORN_WORKERS} threads=${GUNICORN_THREADS})"
 
-  while kill -0 "${GUNICORN_PID}" 2>/dev/null; do
-    if [ -n "${NGINX_PID}" ] && ! kill -0 "${NGINX_PID}" 2>/dev/null; then
-      break
-    fi
-    sleep 1
+  while true; do
+    while kill -0 "${GUNICORN_PID}" 2>/dev/null; do
+      if [ -n "${NGINX_PID}" ] && ! kill -0 "${NGINX_PID}" 2>/dev/null; then
+        _log "nginx exited"
+        _shutdown
+        exit 1
+      fi
+      sleep 1
+    done
+
+    _log "gunicorn exited — restarting in 2s"
+    sleep 2
+    _start_gunicorn
   done
-
-  _shutdown
-  exit 1
 fi
 
 exec "$@"

@@ -68,17 +68,27 @@ def env_check():
 
 def load_clients():
     env_check()
-    clients = sql_get_all(config.DB_PATH)
-    if clients:
-        for client in clients:
-            if 'machineIp' not in client and 'lastRequestIP' in client:
-                client['machineIp'] = client['lastRequestIP']
-    return clients
+    import time
+    last_err = None
+    for attempt in range(5):
+        try:
+            clients = sql_get_all(config.DB_PATH)
+            if clients:
+                for client in clients:
+                    if 'machineIp' not in client and 'lastRequestIP' in client:
+                        client['machineIp'] = client['lastRequestIP']
+            return clients
+        except sqlite3.OperationalError as e:
+            last_err = e
+            if 'locked' not in str(e).lower():
+                raise
+            time.sleep(0.2 * (attempt + 1))
+    raise last_err
 
 
 def delete_client(client_machine_id, application_id):
     env_check()
-    with sqlite3.connect(config.DB_PATH) as con:
+    with sqlite3.connect(config.DB_PATH, timeout=10) as con:
         cur = con.execute(
             'DELETE FROM clients WHERE clientMachineId = ? AND applicationId = ?',
             (client_machine_id, application_id),
