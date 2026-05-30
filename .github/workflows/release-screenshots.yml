@@ -17,12 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: main
 
       - name: Capture release screenshots
         run: |
           chmod +x .github/scripts/capture-screenshots.sh
-          .github/scripts/capture-screenshots.sh /tmp/release-screenshots
+          .github/scripts/capture-screenshots.sh release-screenshots
 
       - name: Generate release notes
         id: notes
@@ -42,5 +42,5 @@ jobs:
           tag_name: ${{ inputs.tag }}
           name: Release ${{ inputs.tag }}
           body: ${{ steps.notes.outputs.body }}
-          files: /tmp/release-screenshots/*.png
+          files: release-screenshots/*.png
           overwrite_files: true
