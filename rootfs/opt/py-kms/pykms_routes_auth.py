@@ -2,6 +2,7 @@
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
+from pykms_config import config
 import pykms_audit as audit
 import pykms_auth as auth
 import pykms_csrf as csrf
@@ -71,7 +72,13 @@ def login_page():
             return redirect(nxt)
         audit.log('login_failed', request.form.get('username', ''))
         error = 'Invalid username or password'
-    return render_template('login.html', path='/login/', error=error, next_url=nxt)
+    return render_template(
+        'login.html',
+        path='/login/',
+        error=error,
+        next_url=nxt,
+        keys_public=config.KEYS_PUBLIC,
+    )
 
 
 @auth_bp.route('/logout', methods=['POST'])

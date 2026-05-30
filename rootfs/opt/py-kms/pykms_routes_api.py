@@ -9,7 +9,8 @@ import pykms_activation as activation
 import pykms_audit as audit
 import pykms_auth as auth
 from pykms_routes_auth import current_user
-from pykms_services import build_stats, env_check, filter_clients, load_clients, uptime_seconds
+from pykms_config import config
+from pykms_services import build_stats, env_check, filter_clients, flatten_product_keys, load_clients, uptime_seconds
 
 api_bp = Blueprint('api', __name__)
 
@@ -18,6 +19,8 @@ api_bp = Blueprint('api', __name__)
 def require_api_auth():
     if request.path in ('/livez', '/readyz'):
         return None
+    if request.path == '/api/v1/keys/public':
+        return None
     if not request.path.startswith('/api/'):
         return None
     if not auth.api_protection_enabled():
@@ -25,6 +28,26 @@ def require_api_auth():
     if auth.verify_api_bearer() or current_user():
         return None
     return jsonify({'error': 'Unauthorized'}), 401
+
+
+@api_bp.route('/api/v1/keys/public')
+def api_keys_public():
+    if not config.KEYS_PUBLIC:
+        return jsonify({'error': 'Forbidden'}), 403
+    try:
+        keys, _ = flatten_product_keys()
+        return jsonify([
+            {
+                'category': row['category'],
+                'name': row['name'],
+                'gvlk': row['gvlk'],
+                'type': row['type'],
+            }
+            for row in keys
+            if row['gvlk']
+        ])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @api_bp.route('/api/v1/stats')

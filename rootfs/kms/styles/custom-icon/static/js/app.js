@@ -530,6 +530,151 @@ const PyKmsApp = (function() {
     filterKeys();
   }
 
+  function initLoginKeysPicker(labels) {
+    labels = labels || {};
+    const openBtn = document.getElementById('open-keys-picker');
+    const modal = document.getElementById('keys-picker-modal');
+    if (!openBtn || !modal) return;
+
+    const search = document.getElementById('keys-picker-search');
+    const typeFilter = document.getElementById('keys-picker-type');
+    const list = document.getElementById('keys-picker-list');
+    const status = document.getElementById('keys-picker-status');
+    const result = document.getElementById('keys-picker-result');
+    const nameEl = document.getElementById('keys-picker-name');
+    const metaEl = document.getElementById('keys-picker-meta');
+    const keyEl = document.getElementById('keys-picker-key');
+    const copyBtn = document.getElementById('keys-picker-copy');
+
+    let keysCache = null;
+    let loading = false;
+    let selectedIndex = -1;
+
+    function closeModal() {
+      modal.hidden = true;
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openModal() {
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      loadKeys();
+      if (search) {
+        search.value = '';
+        setTimeout(function() { search.focus(); }, 50);
+      }
+    }
+
+    function setStatus(text) {
+      if (status) status.textContent = text || '';
+    }
+
+    function loadKeys() {
+      if (keysCache) {
+        renderList();
+        return;
+      }
+      if (loading) return;
+      loading = true;
+      setStatus(labels.loading || 'Loading…');
+      fetchJson('/api/v1/keys/public')
+        .then(function(data) {
+          keysCache = Array.isArray(data) ? data : [];
+          renderList();
+        })
+        .catch(function() {
+          setStatus(labels.error || 'Could not load keys');
+          if (list) list.innerHTML = '';
+          if (result) result.hidden = true;
+        })
+        .finally(function() { loading = false; });
+    }
+
+    function filteredKeys() {
+      if (!keysCache) return [];
+      const q = (search?.value || '').toLowerCase();
+      const type = typeFilter?.value || '';
+      return keysCache.filter(function(row) {
+        if (type && row.type !== type) return false;
+        if (!q) return true;
+        const hay = (row.category + ' ' + row.name + ' ' + row.gvlk).toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    function selectKey(row, index) {
+      selectedIndex = index;
+      if (!row || !result || !keyEl) {
+        if (result) result.hidden = true;
+        return;
+      }
+      list?.querySelectorAll('.keys-picker-item').forEach(function(el, i) {
+        el.classList.toggle('selected', i === index);
+      });
+      if (nameEl) nameEl.textContent = row.name;
+      if (metaEl) metaEl.textContent = row.category;
+      keyEl.textContent = row.gvlk;
+      keyEl.classList.remove('copied');
+      result.hidden = false;
+    }
+
+    function renderList() {
+      if (!list) return;
+      const rows = filteredKeys();
+      list.innerHTML = '';
+      selectedIndex = -1;
+      if (result) result.hidden = true;
+
+      if (!rows.length) {
+        setStatus(labels.empty || 'No products found');
+        return;
+      }
+
+      setStatus((labels.visible || '{n}').replace('{n}', String(rows.length)));
+
+      rows.forEach(function(row, index) {
+        const li = document.createElement('li');
+        li.className = 'keys-picker-item';
+        li.setAttribute('role', 'option');
+        li.tabIndex = 0;
+        li.innerHTML = '<span class="keys-picker-item-name"></span><span class="keys-picker-item-cat"></span>';
+        li.querySelector('.keys-picker-item-name').textContent = row.name;
+        li.querySelector('.keys-picker-item-cat').textContent = row.category;
+        li.addEventListener('click', function() { selectKey(row, index); });
+        li.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectKey(row, index);
+          }
+        });
+        list.appendChild(li);
+      });
+
+      selectKey(rows[0], 0);
+    }
+
+    openBtn.addEventListener('click', openModal);
+    modal.querySelector('.modal-close')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+
+    if (search) search.addEventListener('input', renderList);
+    if (typeFilter) typeFilter.addEventListener('change', renderList);
+    if (keyEl) {
+      keyEl.addEventListener('click', function() { copyGvlk(keyEl); });
+      keyEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); copyGvlk(keyEl); }
+      });
+    }
+    if (copyBtn && keyEl) {
+      copyBtn.addEventListener('click', function() { copyGvlk(keyEl); });
+    }
+  }
+
   return {
     initCommon: initCommon,
     initDashboard: initDashboard,
@@ -538,6 +683,7 @@ const PyKmsApp = (function() {
     initActivationsLive: initActivationsLive,
     initProducts: initProducts,
     initKeys: initKeys,
+    initLoginKeysPicker: initLoginKeysPicker,
     showToast: showToast,
     convertTimestamps: convertTimestamps
   };

@@ -1,11 +1,11 @@
 {% extends 'auth_base.html' %}
 
-{% block title %}Sign in · KMS-GUI{% endblock %}
-{% block auth_subtitle %}Sign in{% endblock %}
+{% block title %}{{ t('login.title') }} · KMS-GUI{% endblock %}
+{% block auth_subtitle %}{{ t('login.subtitle') }}{% endblock %}
 
 {% block content %}
-<h1 class="auth-title">Welcome back</h1>
-<p class="auth-desc">Sign in to access the KMS administration panel.</p>
+<h1 class="auth-title">{{ t('login.heading') }}</h1>
+<p class="auth-desc">{{ t('login.desc') }}</p>
 
 {% if error %}
 <div class="alert alert-error">{{ error }}</div>
@@ -15,17 +15,72 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="next" value="{{ next_url }}">
 
-    <label class="form-label" for="username">Username</label>
+    <label class="form-label" for="username">{{ t('login.username') }}</label>
     <input class="input form-input" type="text" id="username" name="username" required autocomplete="username" autofocus>
 
-    <label class="form-label" for="password">Password</label>
+    <label class="form-label" for="password">{{ t('login.password') }}</label>
     <input class="input form-input" type="password" id="password" name="password" required autocomplete="current-password">
 
     <label class="form-check">
         <input type="checkbox" name="remember" value="on">
-        <span>Remember me for 7 days</span>
+        <span>{{ t('login.remember') }}</span>
     </label>
 
-    <button type="submit" class="btn btn-primary auth-submit">Sign in</button>
+    <button type="submit" class="btn btn-primary auth-submit">{{ t('login.submit') }}</button>
 </form>
+
+{% if keys_public %}
+<div class="auth-divider"><span>{{ t('login.or') }}</span></div>
+<button type="button" id="open-keys-picker" class="btn btn-ghost btn-block auth-keys-open">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+    {{ t('login.keys_button') }}
+</button>
+{% endif %}
 {% endblock %}
+
+{% if keys_public %}
+{% block modals %}
+<div id="keys-picker-modal" class="modal-overlay keys-picker-overlay" hidden aria-hidden="true">
+    <div class="modal-panel keys-picker-panel" role="dialog" aria-modal="true" aria-labelledby="keys-picker-title">
+        <header class="modal-header keys-picker-header">
+            <div>
+                <h2 id="keys-picker-title" class="modal-title">{{ t('login.keys_modal_title') }}</h2>
+                <p class="keys-picker-subtitle">{{ t('login.keys_modal_desc') }}</p>
+            </div>
+            <button type="button" class="btn btn-icon modal-close" aria-label="{{ t('login.close') }}">&times;</button>
+        </header>
+        <div class="modal-body keys-picker-body">
+            <div class="keys-picker-toolbar">
+                <input id="keys-picker-search" type="search" class="input" placeholder="{{ t('keys.search') }}" aria-label="{{ t('keys.search') }}">
+                <select id="keys-picker-type" class="select" aria-label="{{ t('keys.filter_type') }}">
+                    <option value="">{{ t('keys.all_types') }}</option>
+                    <option value="windows">Windows</option>
+                    <option value="office">Office</option>
+                </select>
+            </div>
+            <p id="keys-picker-status" class="keys-picker-status" aria-live="polite"></p>
+            <ul id="keys-picker-list" class="keys-picker-list" role="listbox" aria-label="{{ t('keys.col_product') }}"></ul>
+            <div id="keys-picker-result" class="keys-picker-result" hidden>
+                <p id="keys-picker-name" class="keys-picker-name"></p>
+                <p id="keys-picker-meta" class="keys-picker-meta"></p>
+                <code id="keys-picker-key" class="gvlk-key gvlk-key-compact" tabindex="0" title="{{ t('keys.copy_hint') }}"></code>
+                <button type="button" id="keys-picker-copy" class="btn btn-primary btn-block keys-picker-copy">{{ t('keys.copy') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  PyKmsApp.initLoginKeysPicker({
+    loading: {{ t('login.keys_loading') | tojson }},
+    empty: {{ t('login.keys_empty') | tojson }},
+    error: {{ t('login.keys_error') | tojson }},
+    visible: {{ t('keys.visible') | tojson }}
+  });
+});
+</script>
+{% endblock %}
+{% endif %}
