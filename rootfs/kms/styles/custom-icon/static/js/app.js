@@ -116,10 +116,14 @@ const PyKmsApp = (function() {
     const el = document.getElementById('status-text');
     const dotM = document.getElementById('status-dot-mobile');
     const elM = document.getElementById('status-text-mobile');
+    const pill = document.getElementById('server-status');
+    const pillM = document.getElementById('server-status-mobile');
     if (dot) dot.classList.toggle('live', online);
     if (el) el.textContent = label;
     if (dotM) dotM.classList.toggle('live', online);
     if (elM) elM.textContent = label;
+    if (pill) pill.title = label;
+    if (pillM) pillM.title = label;
   }
 
   function updateDistBar(data) {

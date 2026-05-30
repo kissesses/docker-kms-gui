@@ -75,60 +75,89 @@
     </div>
 </div>
 
-<div class="panel">
-    <h2 class="panel-title">{{ t('ops.webhook_title') }}</h2>
-    <p class="panel-desc">{{ t('ops.webhook_desc') }}</p>
-    <dl class="info-list">
-        <div class="info-row">
-            <dt>Status</dt>
-            <dd>{% if ops_status.webhook_configured %}<span class="badge badge-ok">Configured</span>{% else %}<span class="badge badge-neutral">Not set</span>{% endif %}</dd>
+<div class="panel panel-compact">
+    <div class="panel-head">
+        <div>
+            <h2 class="panel-title">{{ t('ops.webhook_title') }}</h2>
+            <p class="panel-desc">{{ t('ops.webhook_desc') }}</p>
         </div>
-    </dl>
-    <pre class="mono panel-code">WEBHOOK_URL=https://example.com/hook
+        {% if ops_status.webhook_configured %}
+        <span class="badge badge-ok">Configured</span>
+        {% else %}
+        <span class="badge badge-neutral">Not set</span>
+        {% endif %}
+    </div>
+    <pre class="mono panel-code panel-code-sm">WEBHOOK_URL=https://example.com/hook
 WEBHOOK_SECRET=optional-shared-secret
 WEBHOOK_EVENTS=client_new,client_unhealthy
 WEBHOOK_INTERVAL=60</pre>
 </div>
 
-<div class="panel glass-card">
-    <h2 class="panel-title">{{ t('ops.diagnostics_title') }}</h2>
-    <p class="panel-desc">{{ t('ops.diagnostics_desc') }}</p>
-    {% if diagnostics %}
-    <dl class="info-list info-list-cols">
-        <div class="info-row"><dt>Uptime</dt><dd class="mono">{{ diagnostics.uptime_seconds }}s</dd></div>
-        <div class="info-row"><dt>Process RSS</dt><dd class="mono">{{ diagnostics.process_rss_mb or 'n/a' }} MB</dd></div>
-        {% if diagnostics.memory.available %}
-        <div class="info-row"><dt>Host RAM free</dt><dd class="mono">{{ diagnostics.memory.available_mb }} / {{ diagnostics.memory.total_mb }} MB</dd></div>
-        {% endif %}
-        <div class="info-row"><dt>Restart events</dt><dd class="mono">{{ diagnostics.restart_events }}</dd></div>
-        <div class="info-row"><dt>Worker timeouts</dt><dd class="mono">{{ diagnostics.worker_timeout_events }}</dd></div>
-        <div class="info-row"><dt>Gunicorn workers</dt><dd class="mono">{{ diagnostics.gunicorn.workers }}</dd></div>
-        <div class="info-row"><dt>Gunicorn timeout</dt><dd class="mono">{{ diagnostics.gunicorn.timeout }}s</dd></div>
-        <div class="info-row"><dt>Gunicorn preload</dt><dd class="mono">{{ diagnostics.gunicorn.preload }}</dd></div>
-        <div class="info-row"><dt>Threads</dt><dd class="mono">{{ diagnostics.gunicorn.threads }}</dd></div>
-    </dl>
-    {% if diagnostics.recommendations %}
-    <ul class="admin-list">
-        {% for tip in diagnostics.recommendations %}
-        <li>{{ tip }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% if diagnostics.supervisor_log_tail %}
-    <div class="panel-divider"></div>
-    <h3 class="panel-subtitle">{{ t('ops.supervisor_log') }}</h3>
-    <pre class="mono panel-code log-tail">{% for line in diagnostics.supervisor_log_tail %}{{ line }}
-{% endfor %}</pre>
-    {% endif %}
-    {% if diagnostics.slow_log_tail %}
-    <div class="panel-divider"></div>
-    <h3 class="panel-subtitle">Slow requests (&gt;2s)</h3>
-    <pre class="mono panel-code log-tail">{% for line in diagnostics.slow_log_tail %}{{ line }}
-{% endfor %}</pre>
-    {% endif %}
-    <div class="quick-grid">
-        <a href="/api/v1/diagnostics" class="quick-link">API JSON</a>
+<div class="panel glass-card diag-panel">
+    <div class="diag-head">
+        <div>
+            <h2 class="panel-title">{{ t('ops.diagnostics_title') }}</h2>
+            <p class="panel-desc">{{ t('ops.diagnostics_desc') }}</p>
+        </div>
+        <a href="/api/v1/diagnostics" class="btn btn-ghost btn-sm">API JSON</a>
     </div>
+
+    {% if diagnostics %}
+    <div class="diag-stat-grid">
+        <div class="diag-stat">
+            <span class="diag-stat-label">Uptime</span>
+            <span class="diag-stat-value mono">{{ diagnostics.uptime_seconds }}s</span>
+        </div>
+        {% if diagnostics.memory.available %}
+        <div class="diag-stat">
+            <span class="diag-stat-label">RAM free</span>
+            <span class="diag-stat-value mono">{{ diagnostics.memory.available_mb }}<span class="diag-stat-unit"> MB</span></span>
+        </div>
+        {% endif %}
+        <div class="diag-stat{% if diagnostics.restart_events > 0 %} diag-stat-warn{% endif %}">
+            <span class="diag-stat-label">Restarts</span>
+            <span class="diag-stat-value mono">{{ diagnostics.restart_events }}</span>
+        </div>
+        <div class="diag-stat{% if diagnostics.worker_timeout_events > 0 %} diag-stat-warn{% endif %}">
+            <span class="diag-stat-label">Worker timeouts</span>
+            <span class="diag-stat-value mono">{{ diagnostics.worker_timeout_events }}</span>
+        </div>
+    </div>
+
+    <div class="diag-details">
+        <div class="diag-detail"><span class="diag-detail-label">Process RSS</span><span class="diag-detail-value mono">{{ diagnostics.process_rss_mb or 'n/a' }} MB</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">Gunicorn workers</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.workers }}</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">Threads</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.threads }}</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">Timeout</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.timeout }}s</span></div>
+        <div class="diag-detail"><span class="diag-detail-label">Preload</span><span class="diag-detail-value mono">{{ diagnostics.gunicorn.preload }}</span></div>
+        {% if diagnostics.memory.available %}
+        <div class="diag-detail"><span class="diag-detail-label">RAM total</span><span class="diag-detail-value mono">{{ diagnostics.memory.total_mb }} MB</span></div>
+        {% endif %}
+    </div>
+
+    {% if diagnostics.recommendations %}
+    <div class="diag-notes">
+        {% for tip in diagnostics.recommendations %}
+        <p class="diag-note">{{ tip }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if diagnostics.supervisor_log_tail %}
+    <details class="diag-log" open>
+        <summary>{{ t('ops.supervisor_log') }}</summary>
+        <pre class="mono diag-log-body">{% for line in diagnostics.supervisor_log_tail %}{{ line }}
+{% endfor %}</pre>
+    </details>
+    {% endif %}
+
+    {% if diagnostics.slow_log_tail %}
+    <details class="diag-log">
+        <summary>Slow requests (&gt;2s)</summary>
+        <pre class="mono diag-log-body">{% for line in diagnostics.slow_log_tail %}{{ line }}
+{% endfor %}</pre>
+    </details>
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}
