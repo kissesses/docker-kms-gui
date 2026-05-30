@@ -5,6 +5,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [Unreleased]
+
+### Removed
+
+- Sidecar deployment (`compose.sidecar.yaml`, `nginx/`) — use built-in nginx in the GUI container
+- Release screenshot tooling (`scripts/screenshots/`, `seed-demo-db.py`, `capture-screenshots.sh`)
+- Stale metadata (`.json`), unused `img/`, duplicate `favicon.ico`, `RELEASE.md` (merged into README)
+
+---
+
 ## [1.10.2] — 2026-05-30
 
 ### Fixed

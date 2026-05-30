@@ -272,16 +272,6 @@ First visit: **`https://your-domain/setup`** — create administrator.
 
 Full checklist: [SECURITY.md](SECURITY.md).
 
-### Sidecar nginx
-
-External nginx in front of Gunicorn (no in-container nginx):
-
-```bash
-docker compose -f compose.sidecar.yaml up -d
-```
-
-GUI on **http://localhost:3000**. Add Basic Auth via [`nginx/sidecar-auth.conf.example`](nginx/sidecar-auth.conf.example).
-
 ---
 
 ## Update to a new version
@@ -412,27 +402,24 @@ See [SECURITY.md](SECURITY.md) for threat model, rate limits, CSRF, and deployme
 
 ## Releases & CI
 
-- [CHANGELOG.md](CHANGELOG.md) — version history  
-- [RELEASE.md](RELEASE.md) — maintainer release process  
+- [CHANGELOG.md](CHANGELOG.md) — version history
 
-Tag `v*` on `main` triggers GitHub Actions: build → Grype scan → pytest → push to **ghcr.io/kissesses/** → GitHub Release with screenshots.
+Tag `v*` on `main` triggers GitHub Actions: build → Grype scan → pytest → push to **ghcr.io/kissesses/** → GitHub Release.
 
 ---
 
 ## Project structure
 
 ```
-Dockerfile          # Web GUI image
-Dockerfile.kms      # KMS server image
-compose.yaml        # Default stack (local / LAN)
-compose.internet.yaml
-compose.sidecar.yaml
-rootfs/             # nginx, entrypoint, UI, Python backend
-docker/kms/         # KMS server entrypoint
-tests/              # pytest (auth, activation, app)
-scripts/install.sh  # installer (local / lan / internet)
-install.sh        # one-liner entry (curl | bash)
-.github/workflows/  # CI build & release
+Dockerfile / Dockerfile.kms   # Docker images
+compose.yaml                  # Local / LAN
+compose.internet.yaml         # Public HTTPS + auth
+rootfs/                       # nginx, entrypoint, UI, Python backend
+docker/kms/                   # KMS server entrypoint
+tests/                        # pytest
+scripts/install.sh            # installer
+install.sh                    # one-liner (curl | bash)
+.github/workflows/build.yml   # CI
 ```
 
 ---

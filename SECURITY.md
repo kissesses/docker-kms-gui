@@ -37,8 +37,7 @@ This stack is designed for **home / lab use**:
 | Profile | Compose file | Use case |
 |---------|--------------|----------|
 | **Local** (default) | `compose.yaml` | `127.0.0.1` only |
-| **Internet** | `compose.internet.yaml` | KMS public, GUI localhost + TLS + auth |
-| **Sidecar** | `compose.sidecar.yaml` | External nginx; add auth via `sidecar-auth.conf.example` |
+| **Internet** | `compose.internet.yaml` | KMS + GUI public, TLS + auth |
 
 ---
 
@@ -103,17 +102,6 @@ When `GUI_AUTH_ENABLED=true`, nginx Basic Auth is optional (double auth is possi
 KMS_BIND=0.0.0.0      # KMS for LAN clients
 GUI_BIND=127.0.0.1    # GUI local only
 ```
-
----
-
-## Sidecar auth
-
-```bash
-cp nginx/sidecar-auth.conf.example nginx/sidecar-auth.conf
-htpasswd -cb nginx/.htpasswd admin your-strong-password
-```
-
-Mount in `compose.sidecar.yaml` (see example file comments).
 
 ---
 

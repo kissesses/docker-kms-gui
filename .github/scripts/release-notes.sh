@@ -12,7 +12,6 @@ fi
 
 VERSION="${TAG#v}"
 export RELEASE_TAG="$TAG"
-export INCLUDE_SCREENSHOTS="${INCLUDE_SCREENSHOTS:-0}"
 export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-kissesses/docker-kms-gui}"
 
 if [[ ! -f "$CHANGELOG" ]]; then
@@ -38,24 +37,6 @@ else:
     print(f"# 🚀 Release v{version}\n")
     print(f"> Personal KMS stack by [kissesses](https://github.com/kissesses)\n")
     print(body)
-
-if os.environ.get("INCLUDE_SCREENSHOTS") == "1":
-    repo = os.environ.get("GITHUB_REPOSITORY", "kissesses/docker-kms-gui")
-    tag = os.environ.get("RELEASE_TAG", f"v{version}")
-    base = f"https://github.com/{repo}/releases/download/{tag}"
-    print("\n---\n")
-    print("## 📸 Screenshots\n")
-    shots = [
-        ("dashboard.png", "Dashboard"),
-        ("dashboard-light.png", "Dashboard — light theme"),
-        ("clients.png", "Clients"),
-        ("products.png", "Products"),
-        ("setup.png", "Initial setup — create administrator"),
-        ("admin-activations.png", "KMS activation policy & client bindings"),
-    ]
-    for fname, title in shots:
-        print(f"<details open>\n<summary><strong>{title}</strong></summary>\n\n")
-        print(f"![{title}]({base}/{fname})\n\n</details>\n")
 
 print("\n---\n")
 print("## 📦 Docker images\n")

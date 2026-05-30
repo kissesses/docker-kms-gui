@@ -1,8 +1,0 @@
-# Copy to sidecar-auth.conf and generate htpasswd:
-#   htpasswd -cb nginx/.htpasswd admin your-strong-password
-# Then mount in compose.sidecar.yaml:
-#   - ./nginx/sidecar-auth.conf:/etc/nginx/conf.d/sidecar-auth.conf:ro
-#   - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
-
-auth_basic "KMS GUI";
-auth_basic_user_file /etc/nginx/.htpasswd;
