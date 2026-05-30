@@ -395,9 +395,9 @@ const PyKmsApp = (function() {
   }
 
   function sortKeyRows(mode) {
-    const tbody = document.getElementById('keys-tbody');
-    if (!tbody) return;
-    const rows = Array.from(tbody.querySelectorAll('.keys-row'));
+    const list = document.getElementById('keys-list');
+    if (!list) return;
+    const rows = Array.from(list.querySelectorAll('.keys-row'));
     const typeOrder = { windows: 0, office: 1, other: 2 };
 
     rows.sort(function(a, b) {
@@ -421,7 +421,7 @@ const PyKmsApp = (function() {
       return 0;
     });
 
-    rows.forEach(function(row) { tbody.appendChild(row); });
+    rows.forEach(function(row) { list.appendChild(row); });
   }
 
   function filterKeys() {
@@ -449,28 +449,153 @@ const PyKmsApp = (function() {
   function initKeys() {
     initCommon();
 
-    const tbody = document.getElementById('keys-tbody');
-    if (tbody) {
-      Array.from(tbody.querySelectorAll('.keys-row')).forEach(function(row, index) {
+    const page = document.getElementById('keys-page');
+    const list = document.getElementById('keys-list');
+    const empty = document.getElementById('keys-detail-empty');
+    const panel = document.getElementById('keys-detail-panel');
+    const nameEl = document.getElementById('keys-detail-name');
+    const metaEl = document.getElementById('keys-detail-meta');
+    const typeEl = document.getElementById('keys-detail-type');
+    const gvlkEl = document.getElementById('keys-detail-gvlk');
+    const copyBtn = document.getElementById('keys-detail-copy');
+    const guideRoot = document.getElementById('keys-page-guide');
+    const guideTabs = guideRoot?.querySelectorAll('.keys-guide-tab') || [];
+    const guideWindows = document.getElementById('keys-page-guide-windows');
+    const guideOffice = document.getElementById('keys-page-guide-office');
+    const kmsHost = page?.dataset.kmsHost || window.location.hostname || 'localhost';
+
+    let selectedRow = null;
+
+    if (list) {
+      Array.from(list.querySelectorAll('.keys-row')).forEach(function(row, index) {
         row.dataset.defaultIndex = String(index);
       });
     }
 
-    bindGvlkCopy(document.querySelectorAll('.gvlk-key'));
+    function guideTypeForRow(row) {
+      if (!row) return 'windows';
+      return row.dataset.type === 'office' ? 'office' : 'windows';
+    }
 
-    document.querySelectorAll('.keys-copy-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        const keyEl = btn.closest('.keys-row')?.querySelector('.gvlk-key');
-        if (keyEl) copyGvlk(keyEl);
+    function setGuideTab(type) {
+      guideTabs.forEach(function(tab) {
+        const active = tab.dataset.guide === type;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
       });
+      if (guideWindows) guideWindows.classList.toggle('hidden', type !== 'windows');
+      if (guideOffice) guideOffice.classList.toggle('hidden', type !== 'office');
+    }
+
+    function updateGuideCommands(gvlk) {
+      if (!guideRoot) return;
+      guideRoot.querySelectorAll('.guide-cmd-key').forEach(function(el) {
+        const kind = el.dataset.guideKind || 'windows';
+        el.textContent = kind === 'office'
+          ? 'cscript ospp.vbs /inpkey:' + (gvlk || 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX')
+          : 'slmgr /ipk ' + (gvlk || 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX');
+      });
+      guideRoot.querySelectorAll('.guide-cmd-host').forEach(function(el) {
+        const kind = el.dataset.guideKind || 'windows';
+        el.textContent = kind === 'office'
+          ? 'cscript ospp.vbs /sethst:' + kmsHost
+          : 'slmgr /skms ' + kmsHost + ':1688';
+      });
+    }
+
+    function bindGuideCommands() {
+      if (!guideRoot) return;
+      guideRoot.querySelectorAll('.guide-cmd').forEach(function(el) {
+        el.addEventListener('click', function() { copyGvlk(el); });
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); copyGvlk(el); }
+        });
+      });
+    }
+
+    function selectRow(row) {
+      selectedRow = row;
+      list?.querySelectorAll('.keys-row').forEach(function(el) {
+        el.classList.toggle('selected', el === row);
+        el.setAttribute('aria-selected', el === row ? 'true' : 'false');
+      });
+
+      if (!row || !panel || !gvlkEl) {
+        if (empty) empty.hidden = false;
+        if (panel) panel.hidden = true;
+        return;
+      }
+
+      const gvlk = row.dataset.gvlk || '';
+      const product = row.dataset.product || '';
+      const category = row.dataset.cat || '';
+      const type = row.dataset.type || 'other';
+
+      if (empty) empty.hidden = true;
+      panel.hidden = false;
+      if (nameEl) nameEl.textContent = product;
+      if (metaEl) metaEl.textContent = category;
+      if (typeEl) {
+        typeEl.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+        typeEl.className = 'badge keys-type-badge keys-type-' + type;
+      }
+      gvlkEl.textContent = gvlk;
+      gvlkEl.classList.remove('copied');
+      setGuideTab(guideTypeForRow(row));
+      updateGuideCommands(gvlk);
+    }
+
+    function visibleRows() {
+      return Array.from(list?.querySelectorAll('.keys-row:not(.hidden)') || []);
+    }
+
+    function bindRow(row) {
+      row.addEventListener('click', function() { selectRow(row); });
+      row.addEventListener('keydown', function(e) {
+        const rows = visibleRows();
+        const idx = rows.indexOf(row);
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectRow(row);
+        } else if (e.key === 'ArrowDown' && idx >= 0 && idx < rows.length - 1) {
+          e.preventDefault();
+          rows[idx + 1].focus();
+        } else if (e.key === 'ArrowUp' && idx > 0) {
+          e.preventDefault();
+          rows[idx - 1].focus();
+        }
+      });
+    }
+
+    list?.querySelectorAll('.keys-row').forEach(bindRow);
+
+    if (gvlkEl) {
+      gvlkEl.addEventListener('click', function() { copyGvlk(gvlkEl); });
+      gvlkEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); copyGvlk(gvlkEl); }
+      });
+    }
+
+    if (copyBtn && gvlkEl) {
+      copyBtn.addEventListener('click', function() { copyGvlk(gvlkEl); });
+    }
+
+    guideTabs.forEach(function(tab) {
+      tab.addEventListener('click', function() { setGuideTab(tab.dataset.guide || 'windows'); });
     });
 
     const search = document.getElementById('keys-search');
     const typeFilter = document.getElementById('keys-filter-type');
     const sortSelect = document.getElementById('keys-sort');
 
-    if (search) search.addEventListener('input', filterKeys);
-    if (typeFilter) typeFilter.addEventListener('change', filterKeys);
+    if (search) search.addEventListener('input', function() {
+      filterKeys();
+      if (selectedRow && selectedRow.classList.contains('hidden')) selectRow(null);
+    });
+    if (typeFilter) typeFilter.addEventListener('change', function() {
+      filterKeys();
+      if (selectedRow && selectedRow.classList.contains('hidden')) selectRow(null);
+    });
     if (sortSelect) {
       sortSelect.addEventListener('change', function() {
         sortKeyRows(sortSelect.value || 'default');
@@ -479,6 +604,11 @@ const PyKmsApp = (function() {
     }
 
     filterKeys();
+    bindGuideCommands();
+    updateGuideCommands('');
+
+    const first = visibleRows()[0];
+    if (first) selectRow(first);
   }
 
   function initLoginKeysPicker(labels) {

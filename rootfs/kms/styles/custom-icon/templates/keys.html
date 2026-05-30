@@ -3,96 +3,127 @@
 {% block title %}{{ t('keys.title') }} · KMS-GUI{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header keys-page-header">
     <div class="page-header-row">
         <div>
             <h1 class="page-title">{{ t('keys.title') }}</h1>
             <p class="page-subtitle">{{ t('keys.subtitle') }}</p>
         </div>
-        <div class="page-actions">
+        <div class="page-actions keys-page-badges">
             <span class="badge badge-neutral">{{ count_with_gvlk }} {{ t('keys.with_key') }}</span>
+            <span class="badge badge-neutral">Windows {{ count_products_windows }}</span>
+            <span class="badge badge-neutral">Office {{ count_products_office }}</span>
         </div>
     </div>
 </div>
 
-<div class="keys-stats stat-grid stat-grid-compact">
-    <div class="stat-card stat-card-compact">
-        <div class="stat-card-head"><span class="stat-label">{{ t('keys.total') }}</span></div>
-        <div class="stat-value">{{ count_products + filtered }}</div>
-    </div>
-    <div class="stat-card stat-card-compact">
-        <div class="stat-card-head"><span class="stat-label">Windows</span></div>
-        <div class="stat-value">{{ count_products_windows }}</div>
-    </div>
-    <div class="stat-card stat-card-compact">
-        <div class="stat-card-head"><span class="stat-label">Office</span></div>
-        <div class="stat-value">{{ count_products_office }}</div>
-    </div>
-    <div class="stat-card stat-card-compact">
-        <div class="stat-card-head"><span class="stat-label">{{ t('keys.other') }}</span></div>
-        <div class="stat-value">{{ filtered }}</div>
-    </div>
-</div>
-
-<div class="toolbar-row keys-toolbar">
-    <input id="keys-search" type="search" placeholder="{{ t('keys.search') }}" class="input input-search" aria-label="{{ t('keys.search') }}">
-    <select id="keys-filter-type" class="select" aria-label="{{ t('keys.filter_type') }}">
-        <option value="">{{ t('keys.all_types') }}</option>
-        <option value="windows">Windows</option>
-        <option value="office">Office</option>
-        <option value="other">{{ t('keys.other') }}</option>
-    </select>
-    <select id="keys-sort" class="select" aria-label="{{ t('keys.sort') }}">
-        <option value="default">{{ t('keys.sort_default') }}</option>
-        <option value="name">{{ t('keys.sort_name') }}</option>
-        <option value="category">{{ t('keys.sort_category') }}</option>
-        <option value="type">{{ t('keys.sort_type') }}</option>
-    </select>
-</div>
-
-<p id="keys-count" class="keys-result-count" aria-live="polite" data-label="{{ t('keys.visible') }}"></p>
-
-<div class="table-wrap keys-table-wrap">
-    <table class="data-table keys-table" id="keys-table">
-        <thead>
-            <tr>
-                <th scope="col" class="keys-col-type">{{ t('keys.col_type') }}</th>
-                <th scope="col" class="keys-col-category">{{ t('keys.col_category') }}</th>
-                <th scope="col" class="keys-col-product">{{ t('keys.col_product') }}</th>
-                <th scope="col" class="keys-col-gvlk">{{ t('keys.col_gvlk') }}</th>
-                <th scope="col" class="keys-col-action"><span class="sr-only">{{ t('keys.copy') }}</span></th>
-            </tr>
-        </thead>
-        <tbody id="keys-tbody">
+<div class="keys-page" id="keys-page" data-kms-host="{{ kms_host }}">
+    <aside class="keys-page-sidebar glass-card">
+        <div class="keys-page-toolbar">
+            <input id="keys-search" type="search" placeholder="{{ t('keys.search') }}" class="input input-search" aria-label="{{ t('keys.search') }}">
+            <div class="keys-page-toolbar-row">
+                <select id="keys-filter-type" class="select" aria-label="{{ t('keys.filter_type') }}">
+                    <option value="">{{ t('keys.all_types') }}</option>
+                    <option value="windows">Windows</option>
+                    <option value="office">Office</option>
+                    <option value="other">{{ t('keys.other') }}</option>
+                </select>
+                <select id="keys-sort" class="select" aria-label="{{ t('keys.sort') }}">
+                    <option value="default">{{ t('keys.sort_default') }}</option>
+                    <option value="name">{{ t('keys.sort_name') }}</option>
+                    <option value="category">{{ t('keys.sort_category') }}</option>
+                    <option value="type">{{ t('keys.sort_type') }}</option>
+                </select>
+            </div>
+        </div>
+        <p id="keys-count" class="keys-page-status" aria-live="polite" data-label="{{ t('keys.visible') }}"></p>
+        <ul id="keys-list" class="keys-page-list" role="listbox" aria-label="{{ t('keys.col_product') }}">
             {% for row in keys %}
-            <tr class="keys-row"
+            {% if row.gvlk %}
+            <li class="keys-page-item keys-row"
+                role="option"
+                tabindex="0"
                 data-search="{{ row.search }}"
                 data-type="{{ row.type }}"
                 data-category="{{ row.category | lower }}"
-                data-name="{{ row.name | lower }}">
-                <td class="keys-col-type">
-                    <span class="badge keys-type-badge keys-type-{{ row.type }}">{{ row.type | capitalize }}</span>
-                </td>
-                <td class="keys-col-category">{{ row.category }}</td>
-                <td class="keys-col-product">{{ row.name }}</td>
-                <td class="keys-col-gvlk">
-                    {% if row.gvlk %}
-                    <code class="gvlk-key gvlk-key-compact" tabindex="0" title="{{ t('keys.copy_hint') }}">{{ row.gvlk }}</code>
-                    {% else %}
-                    <span class="gvlk-na">{{ t('keys.no_key') }}</span>
-                    {% endif %}
-                </td>
-                <td class="keys-col-action">
-                    {% if row.gvlk %}
-                    <button type="button" class="btn btn-icon keys-copy-btn" title="{{ t('keys.copy') }}" aria-label="{{ t('keys.copy') }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    </button>
-                    {% endif %}
-                </td>
-            </tr>
+                data-name="{{ row.name | lower }}"
+                data-gvlk="{{ row.gvlk }}"
+                data-product="{{ row.name }}"
+                data-cat="{{ row.category }}">
+                <span class="keys-page-item-type keys-type-badge keys-type-{{ row.type }}">{{ row.type | capitalize }}</span>
+                <span class="keys-page-item-text">
+                    <span class="keys-page-item-name">{{ row.name }}</span>
+                    <span class="keys-page-item-cat">{{ row.category }}</span>
+                </span>
+            </li>
+            {% endif %}
             {% endfor %}
-        </tbody>
-    </table>
+        </ul>
+    </aside>
+
+    <section class="keys-page-detail glass-card" aria-live="polite">
+        <div id="keys-detail-empty" class="keys-page-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            <p>{{ t('keys.select_hint') }}</p>
+        </div>
+
+        <div id="keys-detail-panel" class="keys-page-panel" hidden>
+            <header class="keys-page-panel-head">
+                <div>
+                    <p id="keys-detail-meta" class="keys-page-meta"></p>
+                    <h2 id="keys-detail-name" class="keys-page-product"></h2>
+                </div>
+                <span id="keys-detail-type" class="badge keys-type-badge"></span>
+            </header>
+
+            <div class="keys-page-key-block">
+                <span class="keys-page-key-label">{{ t('keys.col_gvlk') }}</span>
+                <code id="keys-detail-gvlk" class="gvlk-key gvlk-key-compact" tabindex="0" title="{{ t('keys.copy_hint') }}"></code>
+                <button type="button" id="keys-detail-copy" class="btn btn-primary keys-page-copy">{{ t('keys.copy') }}</button>
+            </div>
+
+            <details class="keys-picker-guide keys-page-guide" id="keys-page-guide" open>
+                <summary class="keys-picker-guide-summary">{{ t('login.guide_title') }}</summary>
+                <div class="keys-picker-guide-tabs" role="tablist">
+                    <button type="button" class="keys-guide-tab active" data-guide="windows" role="tab" aria-selected="true">{{ t('login.guide_tab_windows') }}</button>
+                    <button type="button" class="keys-guide-tab" data-guide="office" role="tab" aria-selected="false">{{ t('login.guide_tab_office') }}</button>
+                </div>
+                <p class="keys-picker-guide-host">{{ t('login.guide_host').replace('{host}', kms_host) }}</p>
+                <p class="keys-picker-guide-hint">{{ t('login.guide_key_hint') }}</p>
+
+                <ol class="keys-picker-steps" id="keys-page-guide-windows" data-guide-panel="windows">
+                    <li>{{ t('login.guide_win_1') }}</li>
+                    <li>
+                        <span>{{ t('login.guide_win_2') }}</span>
+                        <code class="guide-cmd guide-cmd-key" data-guide-kind="windows" tabindex="0" title="{{ t('keys.copy_hint') }}">slmgr /ipk XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_win_3') }}</span>
+                        <code class="guide-cmd guide-cmd-host" data-guide-kind="windows" tabindex="0" title="{{ t('keys.copy_hint') }}">slmgr /skms {{ kms_host }}:1688</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_win_4') }}</span>
+                        <code class="guide-cmd" tabindex="0" title="{{ t('keys.copy_hint') }}">slmgr /ato</code>
+                    </li>
+                </ol>
+                <ol class="keys-picker-steps hidden" id="keys-page-guide-office" data-guide-panel="office">
+                    <li>{{ t('login.guide_off_1') }}</li>
+                    <li>
+                        <span>{{ t('login.guide_off_2') }}</span>
+                        <code class="guide-cmd guide-cmd-key" data-guide-kind="office" tabindex="0" title="{{ t('keys.copy_hint') }}">cscript ospp.vbs /inpkey:XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_off_3') }}</span>
+                        <code class="guide-cmd guide-cmd-host" data-guide-kind="office" tabindex="0" title="{{ t('keys.copy_hint') }}">cscript ospp.vbs /sethst:{{ kms_host }}</code>
+                    </li>
+                    <li>
+                        <span>{{ t('login.guide_off_4') }}</span>
+                        <code class="guide-cmd" tabindex="0" title="{{ t('keys.copy_hint') }}">cscript ospp.vbs /act</code>
+                    </li>
+                </ol>
+            </details>
+        </div>
+    </section>
 </div>
 {% endblock %}
 

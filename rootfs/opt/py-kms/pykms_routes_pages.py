@@ -2,7 +2,7 @@
 
 import time
 
-from flask import Blueprint, redirect, render_template, url_for
+from flask import Blueprint, redirect, render_template, request, url_for
 
 import pykms_activation as activation
 import pykms_protocol as protocol
@@ -89,6 +89,7 @@ def keys_page():
     keys, noglvk = flatten_product_keys()
     _, _, count_products, count_windows, count_office = product_counts()
     with_gvlk = sum(1 for row in keys if row['gvlk'])
+    kms_host = (request.host or 'localhost').split(':')[0]
     return render_template(
         'keys.html',
         path='/keys/',
@@ -98,6 +99,7 @@ def keys_page():
         count_products_windows=count_windows,
         count_products_office=count_office,
         count_with_gvlk=with_gvlk,
+        kms_host=kms_host,
     )
 
 
