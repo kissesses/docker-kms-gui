@@ -19,6 +19,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Release screenshot tooling (`scripts/screenshots/`, `seed-demo-db.py`, `capture-screenshots.sh`)
 - Stale metadata (`.json`), unused `img/`, duplicate `favicon.ico`, `RELEASE.md` (merged into README)
 - Legacy **`products.html`** and dead `/products` UI code (`/products` still redirects to `/keys`)
+- Root **`install.sh`** — use **`scripts/install.sh`** only (curl one-liner and `./scripts/install.sh`)
 
 ---
 

@@ -5,12 +5,12 @@
 # Репозиторий: https://github.com/kissesses/docker-kms-gui
 #
 # Использование:
-#   A) Без clone — одной командой:
-#      curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash
-#      curl -fsSL .../install.sh | bash -s -- --mode local --yes
-#      curl -fsSL .../install.sh | bash -s -- --mode internet --dir /opt/kms-gui --yes
+#   A) Одной командой (curl | bash):
+#      curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/scripts/install.sh | bash
+#      curl -fsSL .../scripts/install.sh | bash -s -- --mode local --yes
+#      curl -fsSL .../scripts/install.sh | bash -s -- --mode internet --dir /opt/kms-gui --yes
 #
-#   B) Из уже клонированного репозитория:
+#   B) Из клонированного репозитория:
 #      ./scripts/install.sh                  # интерактивный выбор режима
 #      ./scripts/install.sh --mode local     # только localhost (127.0.0.1)
 #      ./scripts/install.sh --mode lan       # KMS в LAN, GUI на localhost
@@ -101,8 +101,8 @@ usage() {
 KMS-GUI installer — local / LAN / internet
 
 Usage:
-  curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash
-  curl -fsSL .../install.sh | bash -s -- --mode local --yes
+  curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/scripts/install.sh | bash
+  curl -fsSL .../scripts/install.sh | bash -s -- --mode local --yes
   ./scripts/install.sh [options]
 
 Options:
@@ -422,7 +422,7 @@ ensure_repo() {
     return 0
   fi
 
-  # Уже клонировано bootstrap-скриптом (install.sh в корне)
+  # Каталог уже существует (повторный запуск или clone вручную)
   INSTALL_DIR="$(cd "${INSTALL_DIR}" 2>/dev/null && pwd || echo "${INSTALL_DIR}")"
   if repo_is_valid "${INSTALL_DIR}"; then
     REPO_ROOT="${INSTALL_DIR}"

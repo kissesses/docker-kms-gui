@@ -47,20 +47,29 @@ Fork [11notes/docker-KMS-GUI](https://github.com/11notes/docker-KMS-GUI) · дв
 **Одной командой** (Linux, установщик на русском):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/scripts/install.sh | bash
 ```
 
 **VPS / сервер в РФ** — типичный сценарий:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash -s -- \
+curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/scripts/install.sh | bash -s -- \
   --mode internet \
   --dir /opt/kms-gui \
   --tz Europe/Moscow \
   --yes
 ```
 
-**Вручную:**
+**Из клона репозитория:**
+
+```bash
+git clone https://github.com/kissesses/docker-kms-gui.git
+cd docker-kms-gui
+./scripts/install.sh              # интерактивно
+./scripts/install.sh --help       # все опции
+```
+
+**Вручную без установщика:**
 
 ```bash
 git clone https://github.com/kissesses/docker-kms-gui.git
@@ -226,18 +235,16 @@ docker compose -f compose.internet.yaml up -d --build gui
 ### 🚀 Quick start
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kissesses/docker-kms-gui/main/scripts/install.sh | bash
 ```
 
 ```bash
 git clone https://github.com/kissesses/docker-kms-gui.git
 cd docker-kms-gui
-cp .env.example .env
-docker compose pull && docker compose up -d
+./scripts/install.sh
+# or manual: cp .env.example .env && docker compose pull && docker compose up -d
 curl -s http://127.0.0.1/livez    # → OK
 ```
-
-Open **http://127.0.0.1** — dashboard. Clients use **`HOST:1688`**.
 
 ### 🌐 Deployment modes
 
