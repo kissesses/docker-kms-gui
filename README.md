@@ -33,12 +33,12 @@ KMS clients connect to **127.0.0.1:1688**
 ```yaml
 services:
   kms:
-    image: ghcr.io/kissesses/kms:1.6.0
+    image: ghcr.io/kissesses/kms:1.6.1
     ports: ["127.0.0.1:1688:1688"]
     volumes: [kms-data:/kms/var]
 
   gui:
-    image: ghcr.io/kissesses/kms-gui:1.6.0
+    image: ghcr.io/kissesses/kms-gui:1.6.1
     ports: ["127.0.0.1:80:80"]
     volumes: [kms-data:/kms/var]
     depends_on:
@@ -56,11 +56,25 @@ docker compose -f compose.sidecar.yaml up -d --build
 
 GUI on **http://localhost:3000** via external nginx 1.30.2.
 
+## Internet deployment
+
+KMS public, GUI localhost-only (VPN/SSH tunnel for dashboard):
+
+```bash
+cp .env.internet.example .env
+# set password, add TLS certs to ./certs/
+docker compose -f compose.internet.yaml up -d
+```
+
+See [SECURITY.md](SECURITY.md) for full checklist.
+
 ## Environment
 
 | Variable | Default | Description |
 |---|---|---|
-| `BIND_ADDRESS` | 127.0.0.1 | Host bind for published ports |
+| `BIND_ADDRESS` | 127.0.0.1 | Default bind for both services |
+| `KMS_BIND` | — | Override KMS host bind |
+| `GUI_BIND` | — | Override GUI host bind |
 | `TZ` | UTC | Timezone |
 | `KMS_LOGLEVEL` | INFO | KMS server log level |
 | `KMS_GUI_STYLE` | custom-icon | UI theme (`custom-icon`, `py-kms`) |
@@ -82,8 +96,8 @@ Full list: [`.env.example`](.env.example)
 ## Build manually
 
 ```bash
-docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.6.0 .
-docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.6.0 .
+docker build -f Dockerfile.kms -t ghcr.io/kissesses/kms:1.6.1 .
+docker build -f Dockerfile -t ghcr.io/kissesses/kms-gui:1.6.1 .
 ```
 
 ## Security
@@ -95,8 +109,8 @@ See [SECURITY.md](SECURITY.md) for personal deployment checklist.
 See [RELEASE.md](RELEASE.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ```bash
-git tag v1.6.0
-git push origin v1.6.0
+git tag v1.6.1
+git push origin v1.6.1
 ```
 
 GitHub Actions builds and pushes both images to **ghcr.io/kissesses/**.

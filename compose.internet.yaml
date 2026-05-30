@@ -1,4 +1,11 @@
-name: kms
+# Internet deployment: KMS public, GUI localhost-only (VPN/SSH tunnel for dashboard)
+#
+# Usage:
+#   cp .env.internet.example .env
+#   # mount TLS certs to gui: /etc/nginx/certs/cert.pem + key.pem
+#   docker compose -f compose.internet.yaml up -d
+
+name: kms-internet
 
 services:
   kms:
@@ -16,7 +23,7 @@ services:
     volumes:
       - kms-data:/kms/var
     ports:
-      - "${KMS_BIND:-${BIND_ADDRESS:-127.0.0.1}}}:${KMS_PORT:-1688}:1688/tcp"
+      - "${KMS_BIND:-0.0.0.0}:${KMS_PORT:-1688}:1688/tcp"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pgrep", "-f", "pykms_Server.py"]
@@ -37,18 +44,22 @@ services:
         condition: service_healthy
     environment:
       TZ: ${TZ:-UTC}
-      NGINX_ENABLED: ${NGINX_ENABLED:-true}
+      INTERNET_MODE: "true"
+      NGINX_ENABLED: "true"
       NGINX_PORT: "80"
-      NGINX_BASIC_AUTH_USER: ${NGINX_BASIC_AUTH_USER:-}
-      NGINX_BASIC_AUTH_PASS: ${NGINX_BASIC_AUTH_PASS:-}
-      NGINX_TLS_ENABLED: ${NGINX_TLS_ENABLED:-false}
+      NGINX_TLS_ENABLED: ${NGINX_TLS_ENABLED:-true}
+      NGINX_BASIC_AUTH_USER: ${NGINX_BASIC_AUTH_USER:?Set NGINX_BASIC_AUTH_USER in .env}
+      NGINX_BASIC_AUTH_PASS: ${NGINX_BASIC_AUTH_PASS:?Set NGINX_BASIC_AUTH_PASS in .env}
       KMS_GUI_STYLE: ${KMS_GUI_STYLE:-custom-icon}
-      DEBUG: ${DEBUG:-}
     volumes:
       - kms-data:/kms/var
+      - ${TLS_CERT_DIR:-./certs}:/etc/nginx/certs:ro
     ports:
-      - "${GUI_BIND:-${BIND_ADDRESS:-127.0.0.1}}}:${GUI_PORT:-80}:80/tcp"
+      - "${GUI_BIND:-127.0.0.1}:${GUI_PORT:-443}:443/tcp"
+      - "${GUI_BIND:-127.0.0.1}:80:80/tcp"
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   kms-data:

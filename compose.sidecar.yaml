@@ -6,15 +6,15 @@ services:
       context: .
       dockerfile: Dockerfile.kms
       args:
-        BUILD_VERSION: ${KMS_VERSION:-1.6.0}
-    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.6.0}
+        BUILD_VERSION: ${KMS_VERSION:-1.6.1}
+    image: ghcr.io/kissesses/kms:${KMS_VERSION:-1.6.1}
     environment:
       TZ: ${TZ:-UTC}
       LOGLEVEL: ${KMS_LOGLEVEL:-INFO}
     volumes:
       - kms-data:/kms/var
     ports:
-      - "${BIND_ADDRESS:-127.0.0.1}:${KMS_PORT:-1688}:1688/tcp"
+      - "${KMS_BIND:-${BIND_ADDRESS:-127.0.0.1}}}:${KMS_PORT:-1688}:1688/tcp"
     restart: unless-stopped
 
   gui:
@@ -22,8 +22,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BUILD_VERSION: ${GUI_VERSION:-1.6.0}
-    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.6.0}
+        BUILD_VERSION: ${GUI_VERSION:-1.6.1}
+    image: ghcr.io/kissesses/kms-gui:${GUI_VERSION:-1.6.1}
     depends_on:
       kms:
         condition: service_healthy
@@ -45,7 +45,7 @@ services:
     volumes:
       - ./nginx/sidecar.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "${BIND_ADDRESS:-127.0.0.1}:${GUI_PORT:-3000}:80/tcp"
+      - "${GUI_BIND:-${BIND_ADDRESS:-127.0.0.1}}}:${GUI_PORT:-3000}:80/tcp"
     restart: unless-stopped
 
 volumes:

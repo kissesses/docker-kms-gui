@@ -10,7 +10,7 @@ This stack is designed for **home / lab use**:
 - Web dashboard with client data and REST API
 - Shared SQLite database between containers
 
-**Do not expose directly to the public internet without hardening.**
+**Do not expose the Web GUI to the public internet without hardening.**
 
 ---
 
@@ -21,58 +21,85 @@ This stack is designed for **home / lab use**:
 | nginx 1.30.2 | CVE-2026-9256 patched; no risky rewrite rules |
 | Reverse proxy | Gunicorn on `127.0.0.1:8080` only (default mode) |
 | Headers | CSP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy |
-| API | Rate limit 30 req/s on `/api/` |
+| Rate limits | 10 req/s on `/`, 30 req/s on `/api/` |
 | TLS | Optional; HSTS when TLS enabled |
 | Auth | Optional HTTP Basic Auth via nginx |
 | Build | py-kms pinned to specific commit (supply chain) |
+| CI | Trivy scan (CRITICAL/HIGH), Dependabot updates |
 
 ---
 
-## Recommended settings (personal use)
+## Deployment profiles
 
-### 1. Bind to localhost only
+| Profile | Compose file | Use case |
+|---------|--------------|----------|
+| **Local** (default) | `compose.yaml` | `127.0.0.1` only |
+| **Internet** | `compose.internet.yaml` | KMS public, GUI localhost + TLS + auth |
+| **Sidecar** | `compose.sidecar.yaml` | External nginx; add auth via `sidecar-auth.conf.example` |
 
-In `.env`:
+---
+
+## Local / home (recommended)
 
 ```env
 BIND_ADDRESS=127.0.0.1
-```
-
-Default in `compose.yaml` — services not reachable from LAN/internet.
-
-To allow LAN access intentionally: `BIND_ADDRESS=0.0.0.0`
-
-### 2. Enable Basic Auth on Web GUI
-
-```env
 NGINX_BASIC_AUTH_USER=admin
-NGINX_BASIC_AUTH_PASS=your-strong-password-here
+NGINX_BASIC_AUTH_PASS=long-random-password-here
 ```
-
-Without this, anyone who can reach port 80 sees all clients and can export CSV.
-
-### 3. Do not expose KMS port publicly
-
-Port **1688** should stay on localhost or internal Docker network.  
-Only your own machines need KMS access.
-
-### 4. Use TLS behind reverse proxy (optional)
-
-For remote access use VPN, Tailscale, or nginx TLS with valid certificates:
-
-```env
-NGINX_TLS_ENABLED=true
-# mount cert.pem and key.pem to /etc/nginx/certs/
-```
-
-### 5. Keep images updated
 
 ```bash
-docker compose pull
+cp .env.example .env
 docker compose up -d
 ```
 
-Watch [GitHub Releases](https://github.com/kissesses/docker-kms-gui/releases) for security updates.
+---
+
+## Internet deployment
+
+**Never expose port 80/443 to the world.** Only KMS port 1688 should be public.
+
+```bash
+cp .env.internet.example .env
+# Edit .env — set strong password, place cert.pem + key.pem in ./certs/
+docker compose -f compose.internet.yaml up -d
+```
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `KMS_BIND` | `0.0.0.0` | Windows clients connect from internet |
+| `GUI_BIND` | `127.0.0.1` | Dashboard only via SSH tunnel / Tailscale |
+| `NGINX_BASIC_AUTH_*` | **Required** | Enforced by `INTERNET_MODE=true` |
+| `NGINX_TLS_ENABLED` | `true` | HTTPS for local GUI access |
+| `DEBUG` | empty | Blocked in internet mode |
+
+Access GUI remotely:
+
+```bash
+ssh -L 8443:127.0.0.1:443 user@your-server
+# browser: https://localhost:8443
+```
+
+Or use **Tailscale** — no port forwarding for GUI.
+
+---
+
+## Split bind (LAN)
+
+```env
+KMS_BIND=0.0.0.0      # KMS for LAN clients
+GUI_BIND=127.0.0.1    # GUI local only
+```
+
+---
+
+## Sidecar auth
+
+```bash
+cp nginx/sidecar-auth.conf.example nginx/sidecar-auth.conf
+htpasswd -cb nginx/.htpasswd admin your-strong-password
+```
+
+Mount in `compose.sidecar.yaml` (see example file comments).
 
 ---
 
@@ -80,12 +107,11 @@ Watch [GitHub Releases](https://github.com/kissesses/docker-kms-gui/releases) fo
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| GUI container runs nginx as root | Low (local) | Acceptable for personal Docker; use localhost bind |
-| API has no separate auth token | Medium | Enable Basic Auth; don't expose port 80 |
-| KMS protocol unencrypted on 1688 | Medium | Localhost bind only |
-| Sidecar mode: no built-in auth | Medium | Add auth to `nginx/sidecar.conf` or use in-container nginx |
-| Password in env vars | Low | Visible via `docker inspect`; use Docker secrets for production |
-| py-kms upstream trust | Low | Commit pinned in Dockerfile; review before updating pin |
+| GUI container runs nginx as root | Low (local) | Bind GUI to localhost |
+| API has no separate auth token | Medium | Basic Auth; don't expose port 80 |
+| KMS protocol unencrypted on 1688 | Medium | Expected for KMS; limit exposure |
+| Password in env vars | Low | Docker secrets for production |
+| py-kms upstream trust | Low | Commit pinned in Dockerfile |
 
 ---
 

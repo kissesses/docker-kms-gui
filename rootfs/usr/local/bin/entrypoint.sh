@@ -33,6 +33,23 @@ EOF
   fi
 }
 
+_validate_security() {
+  if [ "${INTERNET_MODE}" = "true" ]; then
+    if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then
+      _log "ERROR: INTERNET_MODE requires NGINX_BASIC_AUTH_USER and NGINX_BASIC_AUTH_PASS"
+      exit 1
+    fi
+    if [ "${DEBUG}" != "" ]; then
+      _log "ERROR: DEBUG must not be enabled in INTERNET_MODE"
+      exit 1
+    fi
+    _log "internet mode: auth required, GUI should bind to localhost only"
+  fi
+  if [ -n "${NGINX_BASIC_AUTH_PASS}" ] && [ ${#NGINX_BASIC_AUTH_PASS} -lt 12 ]; then
+    _log "WARNING: NGINX_BASIC_AUTH_PASS is shorter than 12 characters — use a longer password"
+  fi
+}
+
 _configure_tls() {
   if [ "${NGINX_TLS_ENABLED}" = "true" ]; then
     if [ ! -f "${NGINX_TLS_CERT}" ] || [ ! -f "${NGINX_TLS_KEY}" ]; then
@@ -51,6 +68,8 @@ server {
     add_header X-Content-Type-Options nosniff always;
     add_header X-Frame-Options SAMEORIGIN always;
     add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self';" always;
     location /api/ {
         limit_req zone=api_limit burst=10 nodelay;
         proxy_pass http://127.0.0.1:8080;
@@ -61,6 +80,7 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
     location / {
+        limit_req zone=general_limit burst=30 nodelay;
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
@@ -118,6 +138,7 @@ if [ -z "${1}" ]; then
   GUNICORN_PID=$!
 
   if [ "${NGINX_ENABLED}" = "true" ]; then
+    _validate_security
     _configure_auth
     _configure_tls
     if [ -z "${NGINX_BASIC_AUTH_USER}" ] || [ -z "${NGINX_BASIC_AUTH_PASS}" ]; then

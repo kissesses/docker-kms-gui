@@ -74,9 +74,36 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
+  security-scan:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - file: Dockerfile.kms
+            image: kms
+          - file: Dockerfile
+            image: kms-gui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image for scan
+        run: docker build -f ${{ matrix.file }} -t scan:${{ matrix.image }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: scan:${{ matrix.image }}
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [build, security-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

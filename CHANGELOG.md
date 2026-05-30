@@ -5,6 +5,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.6.1] — 2026-05-30
+
+### Security
+
+- **`compose.internet.yaml`** — KMS public (`0.0.0.0:1688`), GUI localhost-only (`127.0.0.1:443`)
+- **`INTERNET_MODE`** — requires Basic Auth, blocks DEBUG
+- Rate limit on all GUI routes (10 req/s, brute-force protection)
+- TLS block: CSP, Permissions-Policy, general rate limit
+- Sidecar nginx: CSP + rate limits + auth example
+- **Trivy** image scan in CI; **Dependabot** for Docker, Actions, npm
+- Split **`KMS_BIND`** / **`GUI_BIND`** in compose files
+
+### Added
+
+- `.env.internet.example` — internet deployment template
+- `nginx/sidecar-auth.conf.example` — Basic Auth for sidecar mode
+
+---
+
 ## [1.6.0] — 2026-05-30
 
 ### Added
