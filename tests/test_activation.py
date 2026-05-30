@@ -42,3 +42,32 @@ def test_health_activated_client(monkeypatch):
     }
     row = activation.enrich_client(client, policy, now)
     assert row['health'] == 'healthy'
+
+
+def test_iso_last_request_time():
+    from pykms_services import parse_ts
+
+    iso = '2026-05-30T20:18:39'
+    base = parse_ts(iso)
+    assert base is not None
+    policy = {
+        'client_count': 26,
+        'activation_interval_minutes': 120,
+        'renewal_interval_minutes': 10080,
+        'hwid': 'RANDOM',
+        'port': 1688,
+        'host': 'kms',
+        'licensing_validity_days': 180,
+    }
+    client = {
+        'clientMachineId': 'x',
+        'machineName': 'PC',
+        'applicationId': 'Windows',
+        'licenseStatus': 'Activated',
+        'lastRequestTime': iso,
+        'kmsEpid': 'e',
+        'requestCount': 1,
+    }
+    row = activation.enrich_client(client, policy, base + 3600)
+    assert row['health'] == 'healthy'
+    assert row['last_seen_fmt'] != 'Never'

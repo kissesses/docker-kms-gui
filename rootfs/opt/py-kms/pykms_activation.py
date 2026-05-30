@@ -4,6 +4,8 @@ import json
 import os
 import time
 
+from pykms_services import format_ts, parse_ts
+
 POLICY_FILE = os.environ.get('KMS_POLICY_FILE', '/kms/var/kms-policy.json')
 LICENSING_VALIDITY_DAYS = 180
 
@@ -51,7 +53,7 @@ def _normalize_policy(data):
         'port': int(data.get('port', 1688)),
         'host': str(data.get('host', 'kms')),
         'licensing_validity_days': int(data.get('licensing_validity_days', LICENSING_VALIDITY_DAYS)),
-        'updated_at': data.get('updated_at'),
+        'updated_at': parse_ts(data.get('updated_at')),
         'pending_kms_restart': bool(data.get('pending_kms_restart', False)),
     }
 
@@ -91,19 +93,13 @@ def format_duration(minutes):
     return f'{days:.1f} d' if minutes % 1440 else f'{minutes // 1440} d'
 
 
-def _format_ts(ts):
-    if not ts:
-        return 'Never'
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(ts)))
-
-
 def _health_status(client, policy, now):
     status = (client.get('licenseStatus') or '').strip()
-    last = client.get('lastRequestTime')
-    if not last:
+    last = parse_ts(client.get('lastRequestTime'))
+    if last is None:
         return 'unknown', 'No contact recorded'
 
-    age_min = max(0, (now - int(last)) / 60)
+    age_min = max(0, (now - last) / 60)
     renewal_min = policy['renewal_interval_minutes']
     activation_min = policy['activation_interval_minutes']
 
@@ -124,15 +120,15 @@ def _health_status(client, policy, now):
 
 def enrich_client(client, policy, now=None):
     now = now or int(time.time())
-    last = client.get('lastRequestTime')
+    last = parse_ts(client.get('lastRequestTime'))
     renewal_sec = policy['renewal_interval_minutes'] * 60
     activation_sec = policy['activation_interval_minutes'] * 60
 
-    next_renewal = int(last) + renewal_sec if last else None
-    next_activation = int(last) + activation_sec if last else None
-    license_horizon = int(last) + policy['licensing_validity_days'] * 86400 if last else None
+    next_renewal = last + renewal_sec if last is not None else None
+    next_activation = last + activation_sec if last is not None else None
+    license_horizon = last + policy['licensing_validity_days'] * 86400 if last is not None else None
 
-    age_min = max(0, (now - int(last)) / 60) if last else None
+    age_min = max(0, (now - last) / 60) if last is not None else None
     health, health_note = _health_status(client, policy, now)
 
     app_id = client.get('applicationId', '')
@@ -143,11 +139,11 @@ def enrich_client(client, policy, now=None):
 
     return {
         **client,
-        'last_seen_fmt': _format_ts(last),
+        'last_seen_fmt': format_ts(last),
         'next_renewal_ts': next_renewal,
-        'next_renewal_fmt': _format_ts(next_renewal),
-        'next_activation_fmt': _format_ts(next_activation),
-        'license_horizon_fmt': _format_ts(license_horizon),
+        'next_renewal_fmt': format_ts(next_renewal),
+        'next_activation_fmt': format_ts(next_activation),
+        'license_horizon_fmt': format_ts(license_horizon),
         'minutes_since_contact': int(age_min) if age_min is not None else None,
         'since_contact_fmt': format_duration(age_min),
         'health': health,
@@ -184,7 +180,7 @@ def build_activation_overview(clients, policy=None, now=None):
             **policy,
             'activation_interval_fmt': format_duration(policy['activation_interval_minutes']),
             'renewal_interval_fmt': format_duration(policy['renewal_interval_minutes']),
-            'updated_at_fmt': _format_ts(policy.get('updated_at')) if policy.get('updated_at') else 'From environment',
+            'updated_at_fmt': format_ts(policy.get('updated_at')) if policy.get('updated_at') else 'From environment',
             'client_threshold_windows': 25,
             'client_threshold_office': 5,
             'threshold_windows_met': policy['client_count'] >= 25,
