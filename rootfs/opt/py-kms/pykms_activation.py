@@ -58,7 +58,19 @@ def _normalize_policy(data):
     }
 
 
+def _parse_int(value, label):
+    if value is None or str(value).strip() == '':
+        raise ValueError(f'{label} is required')
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        raise ValueError(f'{label} must be a number')
+
+
 def save_policy(client_count, activation_interval_minutes, renewal_interval_minutes, hwid=None):
+    client_count = _parse_int(client_count, 'Client count')
+    activation_interval_minutes = _parse_int(activation_interval_minutes, 'Activation interval')
+    renewal_interval_minutes = _parse_int(renewal_interval_minutes, 'Renewal interval')
     if client_count < 1 or client_count > 9999:
         raise ValueError('Client count must be 1–9999')
     if activation_interval_minutes < 15 or activation_interval_minutes > 43200:
@@ -66,9 +78,9 @@ def save_policy(client_count, activation_interval_minutes, renewal_interval_minu
     if renewal_interval_minutes < 15 or renewal_interval_minutes > 43200:
         raise ValueError('Renewal interval must be 15–43200 minutes')
     policy = load_policy()
-    policy['client_count'] = int(client_count)
-    policy['activation_interval_minutes'] = int(activation_interval_minutes)
-    policy['renewal_interval_minutes'] = int(renewal_interval_minutes)
+    policy['client_count'] = client_count
+    policy['activation_interval_minutes'] = activation_interval_minutes
+    policy['renewal_interval_minutes'] = renewal_interval_minutes
     if hwid:
         policy['hwid'] = str(hwid).strip() or 'RANDOM'
     policy['updated_at'] = int(time.time())

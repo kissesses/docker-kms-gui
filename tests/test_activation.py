@@ -12,7 +12,7 @@ def policy_file(tmp_path, monkeypatch):
 
 
 def test_save_and_load_policy(policy_file):
-    saved = activation.save_policy(30, 120, 10080, 'RANDOM')
+    saved = activation.save_policy('30', '120', '10080', 'RANDOM')
     assert saved['client_count'] == 30
     assert saved['pending_kms_restart'] is True
     loaded = activation.load_policy()
