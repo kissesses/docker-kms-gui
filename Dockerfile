@@ -12,7 +12,7 @@ ARG APP_GID=1000
 ARG IMAGE_SOURCE=https://github.com/kissesses/docker-kms-gui
 
 # ── Shared py-kms source ───────────────────────────────────────────────────
-FROM alpine:3.22 AS pykms-src
+FROM alpine:3.24 AS pykms-src
 ARG PYKMS_REPO
 ARG PYKMS_COMMIT
 RUN apk add --no-cache git \
@@ -20,7 +20,7 @@ RUN apk add --no-cache git \
   && cd /src && git checkout "${PYKMS_COMMIT}"
 
 # ── KMS server (port 1688) ───────────────────────────────────────────────────
-FROM alpine:3.22 AS kms
+FROM alpine:3.24 AS kms
 
 ARG BUILD_VERSION
 ARG APP_UID
@@ -71,7 +71,7 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 # ── Web GUI (nginx + gunicorn/Flask) ─────────────────────────────────────────
 FROM nginx:${NGINX_VERSION}-alpine AS nginx
 
-FROM alpine:3.22 AS gui
+FROM alpine:3.24 AS gui
 
 ARG NGINX_VERSION
 ARG BUILD_VERSION
